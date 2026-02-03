@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Itrblueboost\Controller\Admin;
 
+use Configuration;
 use Context;
 use Db;
 use Itrblueboost\Entity\ProductFaq;
+use Itrblueboost\Service\ApiLogger;
 use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
 use PrestaShopBundle\Security\Annotation\AdminSecurity;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,6 +20,16 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class AllProductFaqsController extends FrameworkBundleAdminController
 {
+    /**
+     * @var ApiLogger
+     */
+    private $apiLogger;
+
+    public function __construct()
+    {
+        $this->apiLogger = new ApiLogger();
+    }
+
     /**
      * @AdminSecurity("is_granted('read', request.get('_legacy_controller'))")
      */
@@ -33,10 +45,8 @@ class AllProductFaqsController extends FrameworkBundleAdminController
         $idShop = (int) Context::getContext()->shop->id;
 
         $whereClause = ' WHERE 1=1';
-        if ($statusFilter === 'active') {
-            $whereClause .= ' AND pf.active = 1';
-        } elseif ($statusFilter === 'inactive') {
-            $whereClause .= ' AND pf.active = 0';
+        if ($statusFilter && in_array($statusFilter, ['pending', 'accepted', 'rejected'], true)) {
+            $whereClause .= ' AND pf.status = "' . pSQL($statusFilter) . '"';
         }
 
         // Get total count
@@ -74,6 +84,114 @@ class AllProductFaqsController extends FrameworkBundleAdminController
     /**
      * @AdminSecurity("is_granted('update', request.get('_legacy_controller'))")
      */
+    public function acceptAction(Request $request, int $faqId): JsonResponse
+    {
+        $faq = new ProductFaq($faqId);
+
+        if (!$faq->id) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'FAQ not found.',
+            ]);
+        }
+
+        if ($faq->status === ProductFaq::STATUS_ACCEPTED) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'FAQ is already accepted.',
+            ]);
+        }
+
+        $faq->status = ProductFaq::STATUS_ACCEPTED;
+        $faq->active = true;
+
+        // Sync with API if has API ID
+        if ($faq->hasApiFaqId()) {
+            $idLang = (int) Configuration::get('PS_LANG_DEFAULT');
+            $questionText = is_array($faq->question)
+                ? ($faq->question[$idLang] ?? reset($faq->question))
+                : $faq->question;
+            $answerText = is_array($faq->answer)
+                ? ($faq->answer[$idLang] ?? reset($faq->answer))
+                : $faq->answer;
+
+            $apiResult = $this->updateFaqOnApi((int) $faq->api_faq_id, [
+                'status' => 'accepted',
+                'is_enabled' => true,
+                'question' => $questionText,
+                'answer' => $answerText,
+            ]);
+
+            if (!$apiResult['success']) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'API sync error: ' . ($apiResult['message'] ?? 'Unknown error'),
+                ]);
+            }
+        }
+
+        if (!$faq->update()) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Error updating FAQ.',
+            ]);
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'message' => 'FAQ accepted.',
+        ]);
+    }
+
+    /**
+     * @AdminSecurity("is_granted('update', request.get('_legacy_controller'))")
+     */
+    public function rejectAction(Request $request, int $faqId): JsonResponse
+    {
+        $faq = new ProductFaq($faqId);
+
+        if (!$faq->id) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'FAQ not found.',
+            ]);
+        }
+
+        $rejectionReason = $request->request->get('rejection_reason', '');
+
+        // Sync rejection with API if has API ID
+        if ($faq->hasApiFaqId()) {
+            $apiResult = $this->updateFaqOnApi((int) $faq->api_faq_id, [
+                'status' => 'rejected',
+                'rejection_reason' => $rejectionReason,
+                'is_enabled' => false,
+            ]);
+
+            if (!$apiResult['success']) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'API sync error: ' . ($apiResult['message'] ?? 'Unknown error'),
+                ]);
+            }
+        }
+
+        // Delete FAQ locally
+        if (!$faq->delete()) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Error deleting FAQ.',
+            ]);
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'message' => 'FAQ rejected and deleted.',
+        ]);
+    }
+
+    /**
+     * @AdminSecurity("is_granted('update', request.get('_legacy_controller'))")
+     */
     public function toggleActiveAction(Request $request, int $faqId): JsonResponse
     {
         $faq = new ProductFaq($faqId);
@@ -85,7 +203,22 @@ class AllProductFaqsController extends FrameworkBundleAdminController
             ]);
         }
 
+        // Only allow toggling active for accepted FAQs
+        if ($faq->status !== ProductFaq::STATUS_ACCEPTED) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'FAQ must be accepted before it can be activated.',
+            ]);
+        }
+
         $faq->active = !$faq->active;
+
+        // Sync with API if has API ID
+        if ($faq->hasApiFaqId()) {
+            $this->updateFaqOnApi((int) $faq->api_faq_id, [
+                'is_enabled' => (bool) $faq->active,
+            ]);
+        }
 
         if (!$faq->update()) {
             return new JsonResponse([
@@ -115,6 +248,15 @@ class AllProductFaqsController extends FrameworkBundleAdminController
             ]);
         }
 
+        // If has API ID, sync deletion as rejection
+        if ($faq->hasApiFaqId()) {
+            $this->updateFaqOnApi((int) $faq->api_faq_id, [
+                'status' => 'rejected',
+                'rejection_reason' => 'Deleted by user',
+                'is_enabled' => false,
+            ]);
+        }
+
         if (!$faq->delete()) {
             return new JsonResponse([
                 'success' => false,
@@ -126,5 +268,24 @@ class AllProductFaqsController extends FrameworkBundleAdminController
             'success' => true,
             'message' => 'FAQ deleted.',
         ]);
+    }
+
+    /**
+     * Update FAQ on API.
+     *
+     * @param int $apiFaqId API FAQ ID
+     * @param array<string, mixed> $data Data to send
+     *
+     * @return array{success: bool, message?: string}
+     */
+    private function updateFaqOnApi(int $apiFaqId, array $data): array
+    {
+        $response = $this->apiLogger->updateFaq($apiFaqId, $data, 'product_faq');
+
+        if (!isset($response['success']) || !$response['success']) {
+            return ['success' => false, 'message' => $response['message'] ?? 'Unknown error'];
+        }
+
+        return ['success' => true];
     }
 }

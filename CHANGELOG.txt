@@ -1,0 +1,71 @@
+# Changelog
+
+Toutes les modifications notables de ce module sont documentées dans ce fichier.
+
+## [1.4.4] - 2026-02-03
+
+### Added
+- Modale de motif de refus sur la page "All Category FAQs" (même fonctionnalité que All Product FAQs)
+- Synchronisation API pour les actions accept, reject, toggle et delete dans AllCategoryFaqsController
+
+### Changed
+- AllCategoryFaqsController supprime maintenant la FAQ au lieu de simplement mettre à jour le statut lors du refus (comportement cohérent avec AllProductFaqsController)
+- AllCategoryFaqsController rejectAction vérifie maintenant si la FAQ est acceptée avant de permettre le toggle
+
+### Fixed
+- JavaScript de all_category_faqs réécrit en JavaScript natif avec modale vanilla (compatible PS 1.7, sans dépendance jQuery)
+- Comportement cohérent entre les pages all_product_faqs et all_category_faqs
+- Fichiers modifiés : all_category_faqs/index.html.twig, AllCategoryFaqsController.php
+
+## [1.4.3] - 2026-02-03
+
+### Fixed
+- Réécriture complète de la modale de motif de refus en JavaScript natif (suppression de la dépendance jQuery)
+  - Remplacement du plugin Bootstrap modal de jQuery par des fonctions JavaScript natives (showModal/hideModal)
+  - Ajout de la gestion appropriée du backdrop avec fonctionnalité de fermeture au clic
+  - Ajout du support de la touche Escape pour fermer la modale
+  - Ajout de e.preventDefault() et e.stopPropagation() à tous les gestionnaires de boutons pour éviter les conflits d'événements
+  - Compatibilité complète PS 1.7 sans dépendre du plugin modal jQuery/Bootstrap
+- Fichiers modifiés : all_product_faqs/index.html.twig
+
+## [1.4.2] - 2026-02-03
+
+### Fixed
+- Correction du fonctionnement de la modale de motif de refus sur la page "All Product FAQs" (compatibilité jQuery PS 1.7)
+  - Changement de `$('#rejectModal')` pour utiliser `window.jQuery || window.$` afin d'améliorer la compatibilité multi-versions
+  - Stockage de la référence modale comme variable pour cohérence avec le template product_faq fonctionnel
+  - Remplacement du constructeur `new URL()` par une manipulation de chaîne simplifiée pour la compatibilité navigateurs anciens
+- Fichiers modifiés : all_product_faqs/index.html.twig
+
+## [1.4.1] - 2026-02-03
+
+### Fixed
+- Correction de la compatibilité PrestaShop 1.7.x : résolution du namespace DataColumn
+  - PS 8.x utilise `PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\DataColumn`
+  - PS 1.7.x utilise `PrestaShop\PrestaShop\Core\Grid\Column\Type\DataColumn`
+  - Ajout d'alias de classes dynamiques pour assurer la compatibilité entre les versions
+- Fichiers modifiés : ProductFaqGridDefinitionFactory.php, CategoryFaqGridDefinitionFactory.php
+
+## [1.4.0] - 2026-02-03
+
+### Added
+- Ajout du filtre par status (pending/accepted/rejected) au lieu de active/inactive dans la page "All Product FAQs"
+- Ajout des boutons Accept/Reject pour les FAQ en status "pending"
+- Ajout d'une modale pour saisir le motif de refus lors du rejet
+- Synchronisation avec l'API pour les actions accept/reject/toggle
+
+### Changed
+- Alignement de la page "All Product FAQs" sur la page "All Category FAQs"
+- Le motif de refus est envoyé à l'API lors du rejet
+- Fichiers modifiés : routes.yml, AllProductFaqsController.php, index.html.twig (all_product_faqs)
+
+## [1.3.9] - 2026-02-03
+
+### Changed
+- Correction du positionnement du menu admin "ITR Blue Boost" : déplacement de la section "Modules" vers la section "Configurer"
+- Menu en mode dropdown avec sous-menus (Settings, All images générées, All FAQs produits, All FAQs catégories)
+
+### Fixed
+- Correction de la structure des tabs du back-office PrestaShop via script d'upgrade
+- Script d'upgrade qui crée les tabs manquants et corrige le parent des tabs existants
+- Fichiers modifiés : Installer.php, upgrade-1.3.9.php

@@ -10,11 +10,21 @@ use PrestaShop\PrestaShop\Core\Grid\Action\Row\RowActionCollection;
 use PrestaShop\PrestaShop\Core\Grid\Action\Row\Type\LinkRowAction;
 use PrestaShop\PrestaShop\Core\Grid\Action\Row\Type\SubmitRowAction;
 use PrestaShop\PrestaShop\Core\Grid\Column\ColumnCollection;
-use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\ActionColumn;
-use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\BulkActionColumn;
-use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\DataColumn;
 use PrestaShop\PrestaShop\Core\Grid\Definition\Factory\AbstractGridDefinitionFactory;
 use PrestaShop\PrestaShop\Core\Grid\Filter\FilterCollection;
+
+// PS 8.x uses Common namespace, PS 1.7.x does not
+if (!class_exists('Itrblueboost\Grid\Definition\Factory\DataColumn')) {
+    if (class_exists('PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\DataColumn')) {
+        class_alias('PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\DataColumn', 'Itrblueboost\Grid\Definition\Factory\DataColumn');
+        class_alias('PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\ActionColumn', 'Itrblueboost\Grid\Definition\Factory\ActionColumn');
+        class_alias('PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\BulkActionColumn', 'Itrblueboost\Grid\Definition\Factory\BulkActionColumn');
+    } else {
+        class_alias('PrestaShop\PrestaShop\Core\Grid\Column\Type\DataColumn', 'Itrblueboost\Grid\Definition\Factory\DataColumn');
+        class_alias('PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\ActionColumn', 'Itrblueboost\Grid\Definition\Factory\ActionColumn');
+        class_alias('PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\BulkActionColumn', 'Itrblueboost\Grid\Definition\Factory\BulkActionColumn');
+    }
+}
 
 class ProductFaqGridDefinitionFactory extends AbstractGridDefinitionFactory
 {

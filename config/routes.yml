@@ -55,6 +55,24 @@ itrblueboost_admin_all_product_faqs:
     _controller: Itrblueboost\Controller\Admin\AllProductFaqsController::indexAction
     _legacy_controller: AdminItrblueboostAllProductFaqs
 
+itrblueboost_admin_all_product_faqs_accept:
+  path: itrblueboost/all-product-faqs/{faqId}/accept
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllProductFaqsController::acceptAction
+    _legacy_controller: AdminItrblueboostAllProductFaqs
+  requirements:
+    faqId: \d+
+
+itrblueboost_admin_all_product_faqs_reject:
+  path: itrblueboost/all-product-faqs/{faqId}/reject
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllProductFaqsController::rejectAction
+    _legacy_controller: AdminItrblueboostAllProductFaqs
+  requirements:
+    faqId: \d+
+
 itrblueboost_admin_all_product_faqs_toggle:
   path: itrblueboost/all-product-faqs/{faqId}/toggle
   methods: [POST]

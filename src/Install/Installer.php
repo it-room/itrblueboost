@@ -326,11 +326,11 @@ class Installer
     private function getTabs(): array
     {
         return [
-            // Menu principal (niveau racine)
+            // Menu principal (dans Configurer, en dropdown)
             [
                 'class_name' => 'AdminItrblueboostParent',
                 'visible' => true,
-                'parent_class_name' => 'AdminParentModulesSf',
+                'parent_class_name' => 'CONFIGURE',
                 'wording' => 'ITR Blue Boost',
                 'wording_domain' => 'Modules.Itrblueboost.Admin',
                 'name' => 'ITR Blue Boost',

@@ -78,6 +78,9 @@
             font-weight: 600;
             text-transform: uppercase;
         }
+        .status-pending { background: #ffc107; color: #000; }
+        .status-accepted { background: #28a745; color: #fff; }
+        .status-rejected { background: #dc3545; color: #fff; }
         .status-active { background: #28a745; color: #fff; }
         .status-inactive { background: #6c757d; color: #fff; }
         .faq-card-actions {
@@ -101,6 +104,14 @@
         }
         .btn-action .material-icons {
             font-size: 16px;
+        }
+        .btn-accept {
+            background: #28a745;
+            color: #fff;
+        }
+        .btn-reject {
+            background: #ffc107;
+            color: #000;
         }
         .btn-toggle-active {
             background: #ffc107;
@@ -139,6 +150,11 @@
             justify-content: center;
             padding: 20px;
         }
+        .badge-status-row {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
     </style>
 
     <div class="card">
@@ -154,8 +170,9 @@
                 <label>{{ 'Filter by status:'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
                 <select class="form-control" style="width: auto;" id="statusFilter">
                     <option value="" {{ statusFilter == '' ? 'selected' : '' }}>{{ 'All'|trans({}, 'Admin.Global') }}</option>
-                    <option value="active" {{ statusFilter == 'active' ? 'selected' : '' }}>{{ 'Active'|trans({}, 'Admin.Global') }}</option>
-                    <option value="inactive" {{ statusFilter == 'inactive' ? 'selected' : '' }}>{{ 'Inactive'|trans({}, 'Admin.Global') }}</option>
+                    <option value="pending" {{ statusFilter == 'pending' ? 'selected' : '' }}>{{ 'Pending'|trans({}, 'Admin.Global') }}</option>
+                    <option value="accepted" {{ statusFilter == 'accepted' ? 'selected' : '' }}>{{ 'Accepted'|trans({}, 'Admin.Global') }}</option>
+                    <option value="rejected" {{ statusFilter == 'rejected' ? 'selected' : '' }}>{{ 'Rejected'|trans({}, 'Admin.Global') }}</option>
                 </select>
             </div>
 
@@ -170,9 +187,16 @@
                                     </a>
                                     <span class="product-id">(ID: {{ faq.id_product }})</span>
                                 </div>
-                                <span class="status-badge status-{{ faq.active ? 'active' : 'inactive' }}" id="status-{{ faq.id_itrblueboost_product_faq }}">
-                                    {{ faq.active ? 'Actif'|trans({}, 'Admin.Global') : 'Inactif'|trans({}, 'Admin.Global') }}
-                                </span>
+                                <div class="badge-status-row">
+                                    <span class="status-badge status-{{ faq.status }}" id="status-{{ faq.id_itrblueboost_product_faq }}">
+                                        {{ faq.status }}
+                                    </span>
+                                    {% if faq.status == 'accepted' %}
+                                        <span class="status-badge status-{{ faq.active ? 'active' : 'inactive' }}" id="active-status-{{ faq.id_itrblueboost_product_faq }}">
+                                            {{ faq.active ? 'Actif'|trans({}, 'Admin.Global') : 'Inactif'|trans({}, 'Admin.Global') }}
+                                        </span>
+                                    {% endif %}
+                                </div>
                             </div>
                             <div class="faq-card-body">
                                 <div class="faq-question">{{ faq.question|default('-') }}</div>
@@ -183,14 +207,32 @@
                                     {{ faq.date_add|date('d/m/Y H:i') }}
                                 </div>
                                 <div class="faq-card-actions">
-                                    <button type="button"
-                                            class="btn-action btn-toggle-{{ faq.active ? 'active' : 'inactive' }}"
-                                            id="toggle-btn-{{ faq.id_itrblueboost_product_faq }}"
-                                            data-id="{{ faq.id_itrblueboost_product_faq }}"
-                                            data-url="{{ path('itrblueboost_admin_all_product_faqs_toggle', {faqId: faq.id_itrblueboost_product_faq}) }}"
-                                            title="{{ faq.active ? 'Désactiver'|trans({}, 'Admin.Actions') : 'Activer'|trans({}, 'Admin.Actions') }}">
-                                        <i class="material-icons">{{ faq.active ? 'visibility_off' : 'visibility' }}</i>
-                                    </button>
+                                    {% if faq.status == 'pending' %}
+                                        <button type="button"
+                                                class="btn-action btn-accept"
+                                                data-id="{{ faq.id_itrblueboost_product_faq }}"
+                                                data-url="{{ path('itrblueboost_admin_all_product_faqs_accept', {faqId: faq.id_itrblueboost_product_faq}) }}"
+                                                title="{{ 'Accept'|trans({}, 'Admin.Actions') }}">
+                                            <i class="material-icons">check</i>
+                                        </button>
+                                        <button type="button"
+                                                class="btn-action btn-reject"
+                                                data-id="{{ faq.id_itrblueboost_product_faq }}"
+                                                data-url="{{ path('itrblueboost_admin_all_product_faqs_reject', {faqId: faq.id_itrblueboost_product_faq}) }}"
+                                                title="{{ 'Reject'|trans({}, 'Admin.Actions') }}">
+                                            <i class="material-icons">close</i>
+                                        </button>
+                                    {% endif %}
+                                    {% if faq.status == 'accepted' %}
+                                        <button type="button"
+                                                class="btn-action btn-toggle-{{ faq.active ? 'active' : 'inactive' }}"
+                                                id="toggle-btn-{{ faq.id_itrblueboost_product_faq }}"
+                                                data-id="{{ faq.id_itrblueboost_product_faq }}"
+                                                data-url="{{ path('itrblueboost_admin_all_product_faqs_toggle', {faqId: faq.id_itrblueboost_product_faq}) }}"
+                                                title="{{ faq.active ? 'Disable'|trans({}, 'Admin.Actions') : 'Enable'|trans({}, 'Admin.Actions') }}">
+                                            <i class="material-icons">{{ faq.active ? 'visibility_off' : 'visibility' }}</i>
+                                        </button>
+                                    {% endif %}
                                     <a href="{{ path('itrblueboost_admin_product_faq_edit', {id_product: faq.id_product, faqId: faq.id_itrblueboost_product_faq}) }}"
                                        class="btn-action btn-edit"
                                        title="{{ 'Edit'|trans({}, 'Admin.Actions') }}">
@@ -249,6 +291,31 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Modal for rejection reason -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectModalLabel">{{ 'Reject FAQ'|trans({}, 'Modules.Itrblueboost.Admin') }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="rejectionReason">{{ 'Rejection reason'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                        <textarea class="form-control" id="rejectionReason" rows="3" placeholder="{{ 'Enter the reason for rejection...'|trans({}, 'Modules.Itrblueboost.Admin') }}"></textarea>
+                        <small class="form-text text-muted">{{ 'This reason will be sent to the API.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ 'Cancel'|trans({}, 'Admin.Actions') }}</button>
+                    <button type="button" class="btn btn-danger" id="confirmReject">{{ 'Reject'|trans({}, 'Admin.Actions') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block javascripts %}
@@ -257,21 +324,171 @@
         (function() {
             'use strict';
 
+            var rejectUrl = '';
+            var rejectFaqId = 0;
+            var rejectModalEl = document.getElementById('rejectModal');
+            var rejectModalBackdrop = null;
+
+            // Modal functions (vanilla JS - PS 1.7 compatible)
+            function showModal() {
+                rejectModalEl.style.display = 'block';
+                rejectModalEl.classList.add('show');
+                document.body.classList.add('modal-open');
+
+                // Create backdrop
+                rejectModalBackdrop = document.createElement('div');
+                rejectModalBackdrop.className = 'modal-backdrop fade show';
+                document.body.appendChild(rejectModalBackdrop);
+
+                // Close on backdrop click
+                rejectModalBackdrop.addEventListener('click', hideModal);
+
+                // Close on escape key
+                document.addEventListener('keydown', handleEscapeKey);
+            }
+
+            function hideModal() {
+                rejectModalEl.style.display = 'none';
+                rejectModalEl.classList.remove('show');
+                document.body.classList.remove('modal-open');
+
+                if (rejectModalBackdrop && rejectModalBackdrop.parentNode) {
+                    rejectModalBackdrop.parentNode.removeChild(rejectModalBackdrop);
+                    rejectModalBackdrop = null;
+                }
+
+                document.removeEventListener('keydown', handleEscapeKey);
+
+                // Reset confirm button
+                var confirmBtn = document.getElementById('confirmReject');
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '{{ 'Reject'|trans({}, 'Admin.Actions') }}';
+            }
+
+            function handleEscapeKey(e) {
+                if (e.key === 'Escape' || e.keyCode === 27) {
+                    hideModal();
+                }
+            }
+
+            // Close modal on X button click
+            var closeButtons = rejectModalEl.querySelectorAll('[data-dismiss="modal"], .close');
+            closeButtons.forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    hideModal();
+                });
+            });
+
             // Filter
             document.getElementById('statusFilter').addEventListener('change', function() {
-                var url = new URL(window.location.href);
+                var url = window.location.href.split('?')[0];
+                var params = [];
                 if (this.value) {
-                    url.searchParams.set('status', this.value);
-                } else {
-                    url.searchParams.delete('status');
+                    params.push('status=' + encodeURIComponent(this.value));
                 }
-                url.searchParams.delete('page');
-                window.location.href = url.toString();
+                if (params.length > 0) {
+                    url += '?' + params.join('&');
+                }
+                window.location.href = url;
+            });
+
+            // Accept
+            document.querySelectorAll('.btn-accept').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    var url = this.dataset.url;
+                    var button = this;
+
+                    button.disabled = true;
+                    var originalHtml = button.innerHTML;
+                    button.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert(data.message || 'Error');
+                            button.disabled = false;
+                            button.innerHTML = originalHtml;
+                        }
+                    })
+                    .catch(function() {
+                        alert('Connection error');
+                        button.disabled = false;
+                        button.innerHTML = originalHtml;
+                    });
+                });
+            });
+
+            // Reject - open modal
+            document.querySelectorAll('.btn-reject').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    rejectFaqId = this.dataset.id;
+                    rejectUrl = this.dataset.url;
+                    document.getElementById('rejectionReason').value = '';
+                    showModal();
+                });
+            });
+
+            // Confirm reject
+            document.getElementById('confirmReject').addEventListener('click', function(e) {
+                e.preventDefault();
+
+                var rejectionReason = document.getElementById('rejectionReason').value;
+                var button = this;
+
+                button.disabled = true;
+                var originalHtml = button.innerHTML;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> {{ 'Processing...'|trans({}, 'Admin.Global') }}';
+
+                var formData = new FormData();
+                formData.append('rejection_reason', rejectionReason);
+
+                fetch(rejectUrl, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        hideModal();
+                        var card = document.getElementById('faq-card-' + rejectFaqId);
+                        if (card) {
+                            card.style.transition = 'opacity 0.3s';
+                            card.style.opacity = '0';
+                            setTimeout(function() { card.remove(); }, 300);
+                        }
+                    } else {
+                        alert(data.message || 'Error');
+                        button.disabled = false;
+                        button.innerHTML = originalHtml;
+                    }
+                })
+                .catch(function() {
+                    alert('Connection error');
+                    button.disabled = false;
+                    button.innerHTML = originalHtml;
+                });
             });
 
             // Toggle active
             document.querySelectorAll('.btn-action[data-url*="toggle"]').forEach(function(btn) {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
                     var id = this.dataset.id;
                     var url = this.dataset.url;
                     var button = this;
@@ -283,7 +500,7 @@
                     .then(function(response) { return response.json(); })
                     .then(function(data) {
                         if (data.success) {
-                            var statusBadge = document.getElementById('status-' + id);
+                            var statusBadge = document.getElementById('active-status-' + id);
                             var icon = button.querySelector('i');
 
                             if (data.active) {
@@ -309,7 +526,10 @@
 
             // Delete
             document.querySelectorAll('.btn-delete').forEach(function(btn) {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
                     if (!confirm('{{ 'Are you sure you want to delete this FAQ?'|trans({}, 'Modules.Itrblueboost.Admin') }}')) {
                         return;
                     }

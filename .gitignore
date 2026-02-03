@@ -1,2 +1,5 @@
 uploads/pending/*
 !uploads/pending/index.php
+
+config.xml
+config_*.xml
