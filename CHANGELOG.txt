@@ -2,6 +2,14 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.4.5] - 2026-02-03
+
+### Improved
+- Gestion des erreurs API améliorée dans ProductImageController : capture des messages d'erreur détaillés des réponses API en cas d'erreur HTTP (400, 500, etc.)
+- Messages d'erreur affichent maintenant la raison réelle de l'erreur API au lieu d'un message générique "HTTP error XXX"
+- Ajout de la journalisation du corps complet de la réponse API en cas d'erreur pour faciliter le débogage
+- Support de multiples formats d'erreur : message, error, detail, array errors
+
 ## [1.4.4] - 2026-02-03
 
 ### Added

@@ -603,12 +603,35 @@ class ProductImageController extends FrameworkBundleAdminController
             return ['data' => null, 'error' => 'Connection failed: ' . $curlError];
         }
 
-        if ($httpCode < 200 || $httpCode >= 300) {
-            error_log('ITRBLUEBOOST API HTTP error: ' . $httpCode);
-            return ['data' => null, 'error' => 'HTTP error ' . $httpCode];
-        }
-
+        // Try to decode response even on HTTP errors to get detailed error message
         $decoded = json_decode($response, true);
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            $errorMessage = 'HTTP error ' . $httpCode;
+
+            // Extract detailed error message from API response if available
+            if (is_array($decoded)) {
+                if (!empty($decoded['message'])) {
+                    $errorMessage = $decoded['message'];
+                } elseif (!empty($decoded['error'])) {
+                    $errorMessage = is_array($decoded['error'])
+                        ? ($decoded['error']['message'] ?? json_encode($decoded['error']))
+                        : $decoded['error'];
+                } elseif (!empty($decoded['detail'])) {
+                    $errorMessage = $decoded['detail'];
+                } elseif (!empty($decoded['errors']) && is_array($decoded['errors'])) {
+                    $firstError = reset($decoded['errors']);
+                    $errorMessage = is_array($firstError)
+                        ? ($firstError['message'] ?? json_encode($firstError))
+                        : $firstError;
+                }
+            }
+
+            error_log('ITRBLUEBOOST API HTTP error ' . $httpCode . ': ' . $errorMessage);
+            error_log('ITRBLUEBOOST API response: ' . substr($response, 0, 1000));
+
+            return ['data' => null, 'error' => $errorMessage . ' (HTTP ' . $httpCode . ')'];
+        }
 
         if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
             $errorMsg = json_last_error_msg();
