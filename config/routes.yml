@@ -6,6 +6,120 @@ itrblueboost_configuration:
     _legacy_controller: AdminItrblueboostConfiguration
     _legacy_link: AdminItrblueboostConfiguration
 
+# ==========================================
+# Generated Images (all products)
+# ==========================================
+
+itrblueboost_admin_generated_images:
+  path: itrblueboost/generated-images
+  methods: [GET]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\GeneratedImagesController::indexAction
+    _legacy_controller: AdminItrblueboostGeneratedImages
+
+itrblueboost_admin_generated_images_accept:
+  path: itrblueboost/generated-images/{imageId}/accept
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\GeneratedImagesController::acceptAction
+    _legacy_controller: AdminItrblueboostGeneratedImages
+  requirements:
+    imageId: \d+
+
+itrblueboost_admin_generated_images_reject:
+  path: itrblueboost/generated-images/{imageId}/reject
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\GeneratedImagesController::rejectAction
+    _legacy_controller: AdminItrblueboostGeneratedImages
+  requirements:
+    imageId: \d+
+
+itrblueboost_admin_generated_images_delete:
+  path: itrblueboost/generated-images/{imageId}/delete
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\GeneratedImagesController::deleteAction
+    _legacy_controller: AdminItrblueboostGeneratedImages
+  requirements:
+    imageId: \d+
+
+# ==========================================
+# All Product FAQs
+# ==========================================
+
+itrblueboost_admin_all_product_faqs:
+  path: itrblueboost/all-product-faqs
+  methods: [GET]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllProductFaqsController::indexAction
+    _legacy_controller: AdminItrblueboostAllProductFaqs
+
+itrblueboost_admin_all_product_faqs_toggle:
+  path: itrblueboost/all-product-faqs/{faqId}/toggle
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllProductFaqsController::toggleActiveAction
+    _legacy_controller: AdminItrblueboostAllProductFaqs
+  requirements:
+    faqId: \d+
+
+itrblueboost_admin_all_product_faqs_delete:
+  path: itrblueboost/all-product-faqs/{faqId}/delete
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllProductFaqsController::deleteAction
+    _legacy_controller: AdminItrblueboostAllProductFaqs
+  requirements:
+    faqId: \d+
+
+# ==========================================
+# All Category FAQs
+# ==========================================
+
+itrblueboost_admin_all_category_faqs:
+  path: itrblueboost/all-category-faqs
+  methods: [GET]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllCategoryFaqsController::indexAction
+    _legacy_controller: AdminItrblueboostAllCategoryFaqs
+
+itrblueboost_admin_all_category_faqs_accept:
+  path: itrblueboost/all-category-faqs/{faqId}/accept
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllCategoryFaqsController::acceptAction
+    _legacy_controller: AdminItrblueboostAllCategoryFaqs
+  requirements:
+    faqId: \d+
+
+itrblueboost_admin_all_category_faqs_reject:
+  path: itrblueboost/all-category-faqs/{faqId}/reject
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllCategoryFaqsController::rejectAction
+    _legacy_controller: AdminItrblueboostAllCategoryFaqs
+  requirements:
+    faqId: \d+
+
+itrblueboost_admin_all_category_faqs_toggle:
+  path: itrblueboost/all-category-faqs/{faqId}/toggle
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllCategoryFaqsController::toggleActiveAction
+    _legacy_controller: AdminItrblueboostAllCategoryFaqs
+  requirements:
+    faqId: \d+
+
+itrblueboost_admin_all_category_faqs_delete:
+  path: itrblueboost/all-category-faqs/{faqId}/delete
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllCategoryFaqsController::deleteAction
+    _legacy_controller: AdminItrblueboostAllCategoryFaqs
+  requirements:
+    faqId: \d+
+
 itrblueboost_admin_product_faq_index:
   path: itrblueboost/product/{id_product}/faq
   methods: [GET]

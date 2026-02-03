@@ -1,0 +1,2 @@
+uploads/pending/*
+!uploads/pending/index.php

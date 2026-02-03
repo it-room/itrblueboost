@@ -1,0 +1,218 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% block content %}
+    <style>
+        .faq-table {
+            width: 100%;
+        }
+        .faq-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            padding: 12px;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .faq-table td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+        .faq-table tr:hover {
+            background: #f8f9fa;
+        }
+        .faq-question {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .faq-answer {
+            color: #666;
+            font-size: 13px;
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .entity-link {
+            color: #25b9d7;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .entity-link:hover {
+            text-decoration: underline;
+        }
+        .type-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .type-product { background: #007bff; color: #fff; }
+        .type-category { background: #6f42c1; color: #fff; }
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-active, .status-accepted { background: #28a745; color: #fff; }
+        .status-inactive, .status-pending { background: #ffc107; color: #000; }
+        .status-rejected { background: #dc3545; color: #fff; }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .pagination-wrapper {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+    </style>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-header-title">
+                <i class="material-icons">help_outline</i>
+                {{ 'Generated FAQs'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                <span class="badge badge-primary ml-2">{{ totalFaqs }}</span>
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="filter-bar">
+                <label>{{ 'Type:'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                <select class="form-control" style="width: auto;" id="typeFilter">
+                    <option value="" {{ typeFilter == '' ? 'selected' : '' }}>{{ 'All'|trans({}, 'Admin.Global') }}</option>
+                    <option value="product" {{ typeFilter == 'product' ? 'selected' : '' }}>{{ 'Product'|trans({}, 'Admin.Global') }}</option>
+                    <option value="category" {{ typeFilter == 'category' ? 'selected' : '' }}>{{ 'Category'|trans({}, 'Admin.Global') }}</option>
+                </select>
+            </div>
+
+            {% if faqs|length > 0 %}
+                <div class="table-responsive">
+                    <table class="faq-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">{{ 'Type'|trans({}, 'Admin.Global') }}</th>
+                                <th style="width: 200px;">{{ 'Entity'|trans({}, 'Admin.Global') }}</th>
+                                <th>{{ 'Question / Answer'|trans({}, 'Modules.Itrblueboost.Admin') }}</th>
+                                <th style="width: 100px;">{{ 'Status'|trans({}, 'Admin.Global') }}</th>
+                                <th style="width: 140px;">{{ 'Date'|trans({}, 'Admin.Global') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for faq in faqs %}
+                                <tr>
+                                    <td>
+                                        <span class="type-badge type-{{ faq.faq_type }}">
+                                            {{ faq.faq_type == 'product' ? 'Produit' : 'Catégorie' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if faq.faq_type == 'product' %}
+                                            <a href="{{ path('admin_product_form', {id: faq.id_product}) }}" class="entity-link" target="_blank">
+                                                {{ faq.entity_name|default('Product #' ~ faq.id_product) }}
+                                            </a>
+                                        {% else %}
+                                            <a href="{{ path('admin_categories_edit', {categoryId: faq.id_category}) }}" class="entity-link" target="_blank">
+                                                {{ faq.entity_name|default('Category #' ~ faq.id_category) }}
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="faq-question">{{ faq.question|default('-') }}</div>
+                                        <div class="faq-answer">{{ faq.answer|default('-')|striptags|slice(0, 200) }}{% if faq.answer|length > 200 %}...{% endif %}</div>
+                                    </td>
+                                    <td>
+                                        {% if faq.faq_type == 'product' %}
+                                            <span class="status-badge status-{{ faq.active ? 'active' : 'inactive' }}">
+                                                {{ faq.active ? 'Actif' : 'Inactif' }}
+                                            </span>
+                                        {% else %}
+                                            <span class="status-badge status-{{ faq.status }}">
+                                                {{ faq.status }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ faq.date_add|date('d/m/Y H:i') }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if totalPages > 1 %}
+                    <div class="pagination-wrapper">
+                        <nav>
+                            <ul class="pagination">
+                                {% if currentPage > 1 %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ path('itrblueboost_admin_generated_faqs', {page: currentPage - 1, type: typeFilter, status: statusFilter}) }}">
+                                            <i class="material-icons">chevron_left</i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% for p in 1..totalPages %}
+                                    {% if p >= currentPage - 2 and p <= currentPage + 2 %}
+                                        <li class="page-item {{ p == currentPage ? 'active' : '' }}">
+                                            <a class="page-link" href="{{ path('itrblueboost_admin_generated_faqs', {page: p, type: typeFilter, status: statusFilter}) }}">{{ p }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if currentPage < totalPages %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ path('itrblueboost_admin_generated_faqs', {page: currentPage + 1, type: typeFilter, status: statusFilter}) }}">
+                                            <i class="material-icons">chevron_right</i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="material-icons">quiz</i>
+                    <h4>{{ 'No FAQs generated yet'|trans({}, 'Modules.Itrblueboost.Admin') }}</h4>
+                    <p class="text-muted">{{ 'Generated FAQs will appear here.'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function() {
+            'use strict';
+
+            document.getElementById('typeFilter').addEventListener('change', function() {
+                var url = new URL(window.location.href);
+                if (this.value) {
+                    url.searchParams.set('type', this.value);
+                } else {
+                    url.searchParams.delete('type');
+                }
+                url.searchParams.delete('page');
+                window.location.href = url.toString();
+            });
+        })();
+    </script>
+{% endblock %}

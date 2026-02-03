@@ -94,12 +94,15 @@ class Installer
             'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'itrblueboost_product_faq` (
                 `id_itrblueboost_product_faq` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
                 `id_product` INT(11) UNSIGNED NOT NULL,
+                `api_faq_id` INT(11) UNSIGNED NULL,
+                `status` VARCHAR(20) DEFAULT \'pending\',
                 `position` INT(11) UNSIGNED NOT NULL DEFAULT 0,
                 `active` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
                 `date_add` DATETIME NOT NULL,
                 `date_upd` DATETIME NOT NULL,
                 PRIMARY KEY (`id_itrblueboost_product_faq`),
-                KEY `id_product` (`id_product`)
+                KEY `id_product` (`id_product`),
+                KEY `status` (`status`)
             ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8mb4',
 
             'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'itrblueboost_product_faq_lang` (
@@ -204,9 +207,10 @@ class Installer
     private function installTabs(): bool
     {
         $tabs = $this->getTabs();
+        $createdTabs = [];
 
         foreach ($tabs as $tabData) {
-            if (!$this->installTab($tabData)) {
+            if (!$this->installTab($tabData, $createdTabs)) {
                 return false;
             }
         }
@@ -216,12 +220,14 @@ class Installer
 
     /**
      * @param array<string, mixed> $tabData
+     * @param array<string, int> $createdTabs Reference to store created tab IDs
      */
-    private function installTab(array $tabData): bool
+    private function installTab(array $tabData, array &$createdTabs): bool
     {
         $tabId = Tab::getIdFromClassName($tabData['class_name']);
 
         if ($tabId) {
+            $createdTabs[$tabData['class_name']] = $tabId;
             return true;
         }
 
@@ -229,9 +235,21 @@ class Installer
         $tab->class_name = $tabData['class_name'];
         $tab->module = $this->module->name;
         $tab->active = $tabData['visible'];
-        $tab->id_parent = $tabData['parent_class_name'] === -1
-            ? -1
-            : Tab::getIdFromClassName($tabData['parent_class_name']);
+
+        // Handle parent: -1 = hidden, 0 = root level, string = parent class name
+        if ($tabData['parent_class_name'] === -1) {
+            $tab->id_parent = -1;
+        } elseif ($tabData['parent_class_name'] === 0) {
+            $tab->id_parent = 0;
+        } else {
+            // Try to get parent from our created tabs first, then from database
+            if (isset($createdTabs[$tabData['parent_class_name']])) {
+                $tab->id_parent = $createdTabs[$tabData['parent_class_name']];
+            } else {
+                $tab->id_parent = (int) Tab::getIdFromClassName($tabData['parent_class_name']);
+            }
+        }
+
         $tab->name = $this->getTabNames($tabData['name']);
 
         if (!empty($tabData['route_name'])) {
@@ -243,7 +261,17 @@ class Installer
             $tab->wording_domain = $tabData['wording_domain'] ?? '';
         }
 
-        return $tab->add();
+        if (!empty($tabData['icon'])) {
+            $tab->icon = $tabData['icon'];
+        }
+
+        $result = $tab->add();
+
+        if ($result && $tab->id) {
+            $createdTabs[$tabData['class_name']] = (int) $tab->id;
+        }
+
+        return $result;
     }
 
     /**
@@ -266,7 +294,17 @@ class Installer
      */
     private function uninstallTabs(): bool
     {
+        // First, delete all tabs from this module (cleanup any orphans)
+        $moduleTabs = Tab::getCollectionFromModule($this->module->name);
+        foreach ($moduleTabs as $tab) {
+            $tab->delete();
+        }
+
+        // Then delete by class name (in case some were missed)
         $tabs = $this->getTabs();
+
+        // Delete children first, then parents (reverse order)
+        $tabs = array_reverse($tabs);
 
         foreach ($tabs as $tabData) {
             $tabId = Tab::getIdFromClassName($tabData['class_name']);
@@ -276,10 +314,7 @@ class Installer
             }
 
             $tab = new Tab($tabId);
-
-            if (!$tab->delete()) {
-                return false;
-            }
+            $tab->delete();
         }
 
         return true;
@@ -291,15 +326,67 @@ class Installer
     private function getTabs(): array
     {
         return [
+            // Menu principal (niveau racine)
+            [
+                'class_name' => 'AdminItrblueboostParent',
+                'visible' => true,
+                'parent_class_name' => 'AdminParentModulesSf',
+                'wording' => 'ITR Blue Boost',
+                'wording_domain' => 'Modules.Itrblueboost.Admin',
+                'name' => 'ITR Blue Boost',
+                'icon' => 'auto_awesome',
+            ],
+            // Sous-menu: Settings
             [
                 'class_name' => 'AdminItrblueboostConfiguration',
                 'route_name' => 'itrblueboost_configuration',
+                'visible' => true,
+                'parent_class_name' => 'AdminItrblueboostParent',
+                'wording' => 'Settings',
+                'wording_domain' => 'Modules.Itrblueboost.Admin',
+                'name' => 'Settings',
+            ],
+            // Sous-menu: All images générées
+            [
+                'class_name' => 'AdminItrblueboostGeneratedImages',
+                'route_name' => 'itrblueboost_admin_generated_images',
+                'visible' => true,
+                'parent_class_name' => 'AdminItrblueboostParent',
+                'wording' => 'All generated images',
+                'wording_domain' => 'Modules.Itrblueboost.Admin',
+                'name' => 'All images générées',
+            ],
+            // Sous-menu: All Product FAQs
+            [
+                'class_name' => 'AdminItrblueboostAllProductFaqs',
+                'route_name' => 'itrblueboost_admin_all_product_faqs',
+                'visible' => true,
+                'parent_class_name' => 'AdminItrblueboostParent',
+                'wording' => 'All product FAQs',
+                'wording_domain' => 'Modules.Itrblueboost.Admin',
+                'name' => 'All FAQs produits',
+            ],
+            // Sous-menu: All Category FAQs
+            [
+                'class_name' => 'AdminItrblueboostAllCategoryFaqs',
+                'route_name' => 'itrblueboost_admin_all_category_faqs',
+                'visible' => true,
+                'parent_class_name' => 'AdminItrblueboostParent',
+                'wording' => 'All category FAQs',
+                'wording_domain' => 'Modules.Itrblueboost.Admin',
+                'name' => 'All FAQs catégories',
+            ],
+            // Ancien menu FAQs générées (caché)
+            [
+                'class_name' => 'AdminItrblueboostGeneratedFaqs',
+                'route_name' => 'itrblueboost_admin_generated_faqs',
                 'visible' => false,
                 'parent_class_name' => -1,
-                'wording' => 'ITROOM Configuration',
+                'wording' => 'All generated FAQs',
                 'wording_domain' => 'Modules.Itrblueboost.Admin',
-                'name' => 'ITROOM Configuration',
+                'name' => 'All FAQs générées',
             ],
+            // Tabs cachés (contextuels aux produits/catégories)
             [
                 'class_name' => 'AdminItrblueboostProductFaq',
                 'route_name' => 'itrblueboost_admin_product_faq_index',

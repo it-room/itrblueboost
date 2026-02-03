@@ -1,6 +1,6 @@
 /**
  * ITROOM API - Admin Product Footer Buttons
- * Injects "Generate FAQs" and "AI Images" buttons in the PS8 product page footer
+ * Injects "FAQs" and "AI Images" buttons in the PS8/PS1.7 product page footer
  * Compatible with PrestaShop 8.x and 1.7.8+
  */
 (function() {
@@ -18,10 +18,9 @@
         console.log('[ITRBLUEBOOST] faqUrl:', window.itrblueboostFaqUrl);
         console.log('[ITRBLUEBOOST] imageUrl:', window.itrblueboostImageUrl);
 
-        waitForFooter(function(footer) {
-            console.log('[ITRBLUEBOOST] Footer found:', footer);
-            injectFaqButton(footer);
-            injectImageButton(footer);
+        waitForFooter(function(footer, isPS8) {
+            console.log('[ITRBLUEBOOST] Footer found:', footer, 'isPS8:', isPS8);
+            injectButtons(footer, isPS8);
         });
     });
 
@@ -53,7 +52,26 @@
     }
 
     /**
-     * Wait for the footer to be available in the DOM (PS8, PS1.7.8 Symfony or PS1.7 legacy)
+     * Detect PrestaShop version based on DOM structure
+     */
+    function detectPSVersion() {
+        // PS8 specific: #product_footer_actions exists
+        if (document.getElementById('product_footer_actions')) {
+            return 8;
+        }
+        // PS1.7 specific: .product-footer.justify-content-md-center exists
+        if (document.querySelector('.product-footer.justify-content-md-center')) {
+            return 17;
+        }
+        // Fallback detection
+        if (document.querySelector('.product-header .toolbar')) {
+            return 8;
+        }
+        return 17;
+    }
+
+    /**
+     * Wait for the footer to be available in the DOM
      */
     function waitForFooter(callback) {
         var maxAttempts = 100;
@@ -63,95 +81,46 @@
             attempts++;
 
             var footer = null;
+            var isPS8 = false;
 
-            // PS8 selectors (exact structure from PrestaShop 8 templates)
-            // Structure: .product-footer > .product-footer-container > .form-group > #product-footer-left.product-footer-left
-            footer = document.querySelector('#product-footer-left');
-
-            if (!footer) {
-                footer = document.querySelector('.product-footer-left');
-            }
-
-            if (!footer) {
-                footer = document.querySelector('.product-footer-container .form-group');
-            }
-
-            if (!footer) {
-                footer = document.querySelector('.product-footer-container');
-            }
-
-            if (!footer) {
-                footer = document.querySelector('.product-footer');
-            }
-
-            // PS 1.7.8 Symfony form selectors
-            if (!footer) {
-                footer = document.querySelector('#product-actions .product-footer');
-            }
-
-            if (!footer) {
-                footer = document.querySelector('.product-page-footer');
-            }
-
-            if (!footer) {
-                footer = document.querySelector('#form_step1_type_product');
-                if (footer) {
-                    footer = footer.closest('.form-group') || footer.parentElement;
-                }
-            }
-
-            // PS 1.7.8 - button container at the bottom
-            if (!footer) {
-                footer = document.querySelector('.btn-floating-container');
-            }
-
-            if (!footer) {
-                footer = document.querySelector('.product-header .header-toolbar');
-            }
-
-            // PS 1.7.x legacy selectors
-            if (!footer) {
-                footer = document.querySelector('#product_form_save_go_to_catalog');
-                if (footer) {
-                    footer = footer.parentElement;
-                }
-            }
-
-            if (!footer) {
-                footer = document.querySelector('.product-footer .btn-group');
-            }
-
-            if (!footer) {
-                footer = document.querySelector('#form_switch_product_type');
-                if (footer) {
-                    footer = footer.closest('.form-group') || footer.parentElement;
-                }
-            }
-
-            if (!footer) {
-                footer = document.querySelector('.btn-group-floating');
-            }
-
-            if (!footer) {
-                footer = document.querySelector('#submit[name="submitAddproduct"]');
-                if (footer) {
-                    footer = footer.parentElement;
-                }
-            }
-
-            // Fallback: header toolbar
-            if (!footer) {
-                footer = document.querySelector('.page-head-tabs');
-            }
-
-            if (!footer) {
-                footer = document.querySelector('.header-toolbar .title-row');
-            }
-
+            // PS8: #product_footer_actions
+            footer = document.getElementById('product_footer_actions');
             if (footer) {
+                isPS8 = true;
                 clearInterval(interval);
-                callback(footer);
-            } else if (attempts >= maxAttempts) {
+                callback(footer, isPS8);
+                return;
+            }
+
+            // PS1.7: .product-footer.justify-content-md-center
+            footer = document.querySelector('.product-footer.justify-content-md-center');
+            if (footer) {
+                isPS8 = false;
+                clearInterval(interval);
+                callback(footer, isPS8);
+                return;
+            }
+
+            // Fallback PS1.7 selectors
+            footer = document.querySelector('.product-footer');
+            if (footer) {
+                isPS8 = false;
+                clearInterval(interval);
+                callback(footer, isPS8);
+                return;
+            }
+
+            // Legacy: form footer
+            footer = document.querySelector('#product_form_save_go_to_catalog');
+            if (footer) {
+                footer = footer.parentElement;
+                isPS8 = false;
+                clearInterval(interval);
+                callback(footer, isPS8);
+                return;
+            }
+
+            if (attempts >= maxAttempts) {
                 clearInterval(interval);
                 console.log('[ITRBLUEBOOST] Footer not found after ' + maxAttempts + ' attempts');
             }
@@ -159,115 +128,111 @@
     }
 
     /**
-     * Check if we are on PS8 structure
-     * PS8 structure: .product-footer > .product-footer-container > .form-group > #product-footer-left.product-footer-left
+     * Inject both buttons
      */
-    function isPS8Structure() {
-        return document.querySelector('#product-footer-left') !== null
-            || document.querySelector('.product-footer-container') !== null;
-    }
-
-    /**
-     * Inject the FAQ button in the footer (PS8, PS1.7.8 Symfony or PS1.7 legacy)
-     */
-    function injectFaqButton(footer) {
-        if (document.getElementById('itrblueboost-faq-btn')) {
-            return;
-        }
-
+    function injectButtons(footer, isPS8) {
         var faqUrl = window.itrblueboostFaqUrl;
-
-        if (!faqUrl) {
-            return;
-        }
-
+        var imageUrl = window.itrblueboostImageUrl;
         var faqCount = window.itrblueboostFaqCount || 0;
 
-        var button = document.createElement('a');
-        button.id = 'itrblueboost-faq-btn';
-        button.href = faqUrl;
-        button.title = 'Manage product FAQs';
+        if (!faqUrl && !imageUrl) {
+            return;
+        }
 
-        if (isPS8Structure()) {
-            // PS8 structure: buttons are directly inside #product-footer-left
-            var footerLeft = document.querySelector('#product-footer-left') || document.querySelector('.product-footer-left');
-
-            if (!footerLeft) {
-                console.log('[ITRBLUEBOOST] PS8 footer-left not found, using fallback');
-                // Fallback: append to footer
-                button.className = 'btn btn-outline-secondary';
-                button.style.marginLeft = '10px';
-                button.innerHTML = '<i class="material-icons" style="vertical-align: middle; font-size: 18px;">help_outline</i> FAQs (' + faqCount + ')';
-                footer.appendChild(button);
-                return;
-            }
-
-            button.className = 'btn btn-outline-secondary';
-            button.style.marginLeft = '10px';
-            button.innerHTML = '<i class="material-icons" style="vertical-align: middle; font-size: 18px;">help_outline</i> FAQs (' + faqCount + ')';
-
-            footerLeft.appendChild(button);
-            console.log('[ITRBLUEBOOST] FAQ button injected in PS8 footer');
+        if (isPS8) {
+            injectPS8FooterButtons(footer, faqUrl, imageUrl, faqCount);
         } else {
-            // PS 1.7.8 Symfony or legacy structure - append to found footer
-            button.className = 'btn btn-outline-secondary';
-            button.style.marginLeft = '10px';
-            button.style.marginRight = '5px';
-            button.innerHTML = '<i class="material-icons" style="vertical-align: middle; font-size: 18px;">help_outline</i> FAQs (' + faqCount + ')';
-
-            footer.appendChild(button);
-            console.log('[ITRBLUEBOOST] FAQ button injected in legacy footer');
+            injectPS17FooterButtons(footer, faqUrl, imageUrl, faqCount);
         }
     }
 
     /**
-     * Inject the AI Images button in the footer (PS8, PS1.7.8 Symfony or PS1.7 legacy)
+     * Inject buttons in PS8 footer (#product_footer_actions)
+     * Position: after .group-default
      */
-    function injectImageButton(footer) {
-        if (document.getElementById('itrblueboost-image-btn')) {
-            return;
+    function injectPS8FooterButtons(footer, faqUrl, imageUrl, faqCount) {
+        // Find .group-default to insert after it
+        var groupDefault = footer.querySelector('.group-default');
+
+        // Create container for our buttons
+        var container = document.createElement('div');
+        container.id = 'itrblueboost-buttons-container';
+        container.className = 'itrblueboost-ps8-buttons';
+
+        // Create FAQ button
+        if (faqUrl && !document.getElementById('itrblueboost-faq-btn')) {
+            var faqBtn = document.createElement('a');
+            faqBtn.id = 'itrblueboost-faq-btn';
+            faqBtn.className = 'btn btn-outline-secondary itrblueboost-btn';
+            faqBtn.href = faqUrl;
+            faqBtn.title = 'FAQs (' + faqCount + ')';
+            faqBtn.innerHTML = '<i class="material-icons">help_outline</i><span>FAQ (' + faqCount + ')</span>';
+            container.appendChild(faqBtn);
+            console.log('[ITRBLUEBOOST] FAQ button created for PS8 footer');
         }
 
-        var imageUrl = window.itrblueboostImageUrl || '';
-
-        if (!imageUrl) {
-            return;
+        // Create AI Images button
+        if (imageUrl && !document.getElementById('itrblueboost-image-btn')) {
+            var imageBtn = document.createElement('a');
+            imageBtn.id = 'itrblueboost-image-btn';
+            imageBtn.className = 'btn btn-outline-secondary itrblueboost-btn';
+            imageBtn.href = imageUrl;
+            imageBtn.title = 'AI Images';
+            imageBtn.innerHTML = '<i class="material-icons">auto_awesome</i><span>AI Images</span>';
+            container.appendChild(imageBtn);
+            console.log('[ITRBLUEBOOST] AI Images button created for PS8 footer');
         }
 
-        var button = document.createElement('a');
-        button.id = 'itrblueboost-image-btn';
-        button.href = imageUrl;
-        button.title = 'Manage AI product images';
-
-        if (isPS8Structure()) {
-            // PS8 structure: buttons are directly inside #product-footer-left
-            var footerLeft = document.querySelector('#product-footer-left') || document.querySelector('.product-footer-left');
-
-            if (!footerLeft) {
-                console.log('[ITRBLUEBOOST] PS8 footer-left not found for image btn, using fallback');
-                // Fallback: append to footer
-                button.className = 'btn btn-outline-secondary';
-                button.style.marginLeft = '5px';
-                button.innerHTML = '<i class="material-icons" style="vertical-align: middle; font-size: 18px;">image</i> AI Images';
-                footer.appendChild(button);
-                return;
-            }
-
-            button.className = 'btn btn-outline-secondary';
-            button.style.marginLeft = '5px';
-            button.innerHTML = '<i class="material-icons" style="vertical-align: middle; font-size: 18px;">image</i> AI Images';
-
-            footerLeft.appendChild(button);
-            console.log('[ITRBLUEBOOST] AI Images button injected in PS8 footer');
+        // Insert container after .group-default
+        if (groupDefault && groupDefault.nextSibling) {
+            groupDefault.parentNode.insertBefore(container, groupDefault.nextSibling);
+        } else if (groupDefault) {
+            groupDefault.parentNode.appendChild(container);
         } else {
-            // PS 1.7.8 Symfony or legacy structure - append to found footer
-            button.className = 'btn btn-outline-secondary';
-            button.style.marginLeft = '5px';
-            button.innerHTML = '<i class="material-icons" style="vertical-align: middle; font-size: 18px;">image</i> AI Images';
-
-            footer.appendChild(button);
-            console.log('[ITRBLUEBOOST] AI Images button injected in legacy footer');
+            // Fallback: insert at the beginning of footer
+            footer.insertBefore(container, footer.firstChild);
         }
+
+        console.log('[ITRBLUEBOOST] Buttons injected in PS8 footer (after .group-default)');
+    }
+
+    /**
+     * Inject buttons in PS1.7 footer (.product-footer.justify-content-md-center)
+     */
+    function injectPS17FooterButtons(footer, faqUrl, imageUrl, faqCount) {
+        // Create container for our buttons
+        var container = document.createElement('div');
+        container.id = 'itrblueboost-buttons-container';
+        container.className = 'itrblueboost-ps17-buttons';
+
+        // Create FAQ button
+        if (faqUrl && !document.getElementById('itrblueboost-faq-btn')) {
+            var faqBtn = document.createElement('a');
+            faqBtn.id = 'itrblueboost-faq-btn';
+            faqBtn.href = faqUrl;
+            faqBtn.className = 'btn btn-outline-secondary itrblueboost-btn';
+            faqBtn.title = 'Manage product FAQs';
+            faqBtn.innerHTML = '<i class="material-icons">help_outline</i> FAQs (' + faqCount + ')';
+            container.appendChild(faqBtn);
+            console.log('[ITRBLUEBOOST] FAQ button created for PS1.7 footer');
+        }
+
+        // Create AI Images button
+        if (imageUrl && !document.getElementById('itrblueboost-image-btn')) {
+            var imageBtn = document.createElement('a');
+            imageBtn.id = 'itrblueboost-image-btn';
+            imageBtn.href = imageUrl;
+            imageBtn.className = 'btn btn-outline-secondary itrblueboost-btn';
+            imageBtn.title = 'Manage AI product images';
+            imageBtn.innerHTML = '<i class="material-icons">auto_awesome</i> AI Images';
+            container.appendChild(imageBtn);
+            console.log('[ITRBLUEBOOST] AI Images button created for PS1.7 footer');
+        }
+
+        // Insert at the beginning of footer
+        footer.insertBefore(container, footer.firstChild);
+
+        console.log('[ITRBLUEBOOST] Buttons injected in PS1.7 footer (.product-footer)');
     }
 
 })();

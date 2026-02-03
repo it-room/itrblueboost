@@ -33,7 +33,7 @@ class Itrblueboost extends Module
     {
         $this->name = 'itrblueboost';
         $this->tab = 'administration';
-        $this->version = '1.3.6';
+        $this->version = '1.3.7';
         $this->author = 'ITROOM';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
@@ -217,6 +217,23 @@ class Itrblueboost extends Module
         Media::addJsDef($jsDef);
 
         $this->context->controller->addJS($this->_path . 'views/js/admin-product-toolbar.js?v=' . $this->version);
+
+        // Load version-specific CSS
+        if ($this->isPrestaShop8()) {
+            $this->context->controller->addCSS($this->_path . 'views/css/admin-product-buttons-ps8.css?v=' . $this->version);
+        } else {
+            $this->context->controller->addCSS($this->_path . 'views/css/admin-product-buttons-ps17.css?v=' . $this->version);
+        }
+    }
+
+    /**
+     * Check if current PrestaShop version is 8.x or higher.
+     *
+     * @return bool
+     */
+    private function isPrestaShop8(): bool
+    {
+        return version_compare(_PS_VERSION_, '8.0.0', '>=');
     }
 
     /**

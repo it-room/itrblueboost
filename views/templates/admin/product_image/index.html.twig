@@ -101,6 +101,49 @@
         .no-image-placeholder span {
             font-size: 11px;
         }
+        .image-card img {
+            cursor: zoom-in;
+        }
+        .image-lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .image-lightbox.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .image-lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 4px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        .image-lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #fff;
+            font-size: 40px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .image-lightbox-close:hover {
+            opacity: 1;
+        }
     </style>
 
     <div class="card mb-4">
@@ -209,6 +252,12 @@
         </div>
     </div>
 
+    {# Lightbox pour zoom sur les images #}
+    <div class="image-lightbox" id="imageLightbox">
+        <span class="image-lightbox-close">&times;</span>
+        <img src="" alt="Zoom" id="lightboxImage">
+    </div>
+
     <div class="modal fade" id="generateImageModal" tabindex="-1" role="dialog" aria-labelledby="generateImageModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -265,10 +314,12 @@
                         </div>
                         {% endif %}
 
+                        {# Désactivé pour les premières MEP
                         <div class="form-group mt-3">
                             <label>{{ 'Additional context (optional):'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
                             <textarea class="form-control" id="context-input" rows="2" placeholder="{{ 'E.g.: White background, minimalist style...'|trans({}, 'Modules.Itrblueboost.Admin') }}"></textarea>
                         </div>
+                        #}
                     </div>
                     <div id="generate-progress" class="d-none text-center py-4">
                         <div class="spinner-border text-success" role="status">
@@ -297,6 +348,34 @@
     <script>
         (function() {
             'use strict';
+
+            // Lightbox zoom functionality
+            var lightbox = document.getElementById('imageLightbox');
+            var lightboxImg = document.getElementById('lightboxImage');
+            var lightboxClose = document.querySelector('.image-lightbox-close');
+
+            document.querySelectorAll('.image-card img').forEach(function(img) {
+                img.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    lightboxImg.src = this.src;
+                    lightbox.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                });
+            });
+
+            function closeLightbox() {
+                lightbox.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            lightbox.addEventListener('click', closeLightbox);
+            lightboxClose.addEventListener('click', closeLightbox);
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+                    closeLightbox();
+                }
+            });
 
             var btnGenerate = document.getElementById('btn-generate-image');
             var btnConfirm = document.getElementById('btn-confirm-generate');
@@ -396,10 +475,11 @@
                         formData.append('base_image_id', selectedBaseImageId);
                     }
 
-                    var contextInput = document.getElementById('context-input');
-                    if (contextInput && contextInput.value.trim()) {
-                        formData.append('context', contextInput.value.trim());
-                    }
+                    // Désactivé pour les premières MEP
+                    // var contextInput = document.getElementById('context-input');
+                    // if (contextInput && contextInput.value.trim()) {
+                    //     formData.append('context', contextInput.value.trim());
+                    // }
 
                     fetch(btnGenerate.dataset.generateUrl, {
                         method: 'POST',

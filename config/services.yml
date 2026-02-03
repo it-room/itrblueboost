@@ -215,3 +215,43 @@ services:
         calls:
             - [setContainer, ['@service_container']]
         public: true
+
+    # ==========================================
+    # Generated Images & FAQs Controllers
+    # ==========================================
+
+    # Controller Generated Images
+    Itrblueboost\Controller\Admin\GeneratedImagesController:
+        class: Itrblueboost\Controller\Admin\GeneratedImagesController
+        tags:
+            - { name: controller.service_arguments }
+        calls:
+            - [setContainer, ['@service_container']]
+        public: true
+
+    # Controller Generated FAQs (deprecated - use AllProductFaqsController/AllCategoryFaqsController)
+    Itrblueboost\Controller\Admin\GeneratedFaqsController:
+        class: Itrblueboost\Controller\Admin\GeneratedFaqsController
+        tags:
+            - { name: controller.service_arguments }
+        calls:
+            - [setContainer, ['@service_container']]
+        public: true
+
+    # Controller All Product FAQs
+    Itrblueboost\Controller\Admin\AllProductFaqsController:
+        class: Itrblueboost\Controller\Admin\AllProductFaqsController
+        tags:
+            - { name: controller.service_arguments }
+        calls:
+            - [setContainer, ['@service_container']]
+        public: true
+
+    # Controller All Category FAQs
+    Itrblueboost\Controller\Admin\AllCategoryFaqsController:
+        class: Itrblueboost\Controller\Admin\AllCategoryFaqsController
+        tags:
+            - { name: controller.service_arguments }
+        calls:
+            - [setContainer, ['@service_container']]
+        public: true
