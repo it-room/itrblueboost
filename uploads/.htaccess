@@ -1,0 +1,9 @@
+# Securite - Interdire l'execution de scripts PHP
+<FilesMatch "\.(php|php3|php4|php5|php7|phtml|pl|py|cgi|asp|jsp)$">
+    Require all denied
+</FilesMatch>
+
+# Autoriser uniquement les images
+<FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+    Require all granted
+</FilesMatch>

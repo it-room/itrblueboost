@@ -1,0 +1,483 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% set layoutHeaderToolbarBtn = {
+    'add': {
+        'href': path('admin_categories_edit', {categoryId: id_category}),
+        'desc': 'Back to category'|trans({}, 'Modules.Itrblueboost.Admin'),
+        'icon': 'arrow_back'
+    }
+} %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-header-title mb-0">{{ 'Category FAQ'|trans({}, 'Modules.Itrblueboost.Admin') }} ({{ grid.data.records_total }})</h3>
+            <div class="toolbar-icons">
+                <button type="button" class="btn btn-success" id="btn-generate-faq"
+                        data-prompts-url="{{ path('itrblueboost_admin_category_faq_prompts') }}"
+                        data-generate-url="{{ path('itrblueboost_admin_category_faq_generate', { id_category: id_category }) }}">
+                    <i class="material-icons">auto_awesome</i>
+                    {{ 'Generate FAQ (AI)'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                </button>
+                <a href="{{ path('itrblueboost_admin_category_faq_create', { id_category: id_category }) }}" class="btn btn-primary">
+                    <i class="material-icons">add_circle</i>
+                    {{ 'Add FAQ'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if grid.data.records_total > 0 %}
+                <form id="bulk-form" method="POST" action="{{ path('itrblueboost_admin_category_faq_bulk_delete') }}">
+                    <input type="hidden" name="id_category" value="{{ id_category }}">
+
+                    <div class="row mb-3">
+                        <div class="col-auto">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown" id="bulk-actions-btn" disabled>
+                                    {{ 'Bulk actions'|trans({}, 'Admin.Global') }}
+                                </button>
+                                <div class="dropdown-menu">
+                                    <button type="submit" class="dropdown-item" formaction="{{ path('itrblueboost_admin_category_faq_bulk_accept') }}">
+                                        <i class="material-icons">check_circle</i> {{ 'Accept selection'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                                    </button>
+                                    <button type="button" class="dropdown-item" id="bulk-reject-btn">
+                                        <i class="material-icons">cancel</i> {{ 'Reject selection'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                                    </button>
+                                    <div class="dropdown-divider"></div>
+                                    <button type="submit" class="dropdown-item text-danger" formaction="{{ path('itrblueboost_admin_category_faq_bulk_delete') }}" onclick="return confirm('{{ 'Delete selected FAQs?'|trans({}, 'Modules.Itrblueboost.Admin') }}');">
+                                        <i class="material-icons">delete</i> {{ 'Delete selection'|trans({}, 'Admin.Actions') }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" width="50">
+                                        <input type="checkbox" id="bulk-select-all">
+                                    </th>
+                                    <th>{{ 'ID'|trans({}, 'Admin.Global') }}</th>
+                                    <th>{{ 'Position'|trans({}, 'Admin.Global') }}</th>
+                                    <th>{{ 'Question'|trans({}, 'Modules.Itrblueboost.Admin') }}</th>
+                                    <th>{{ 'Answer'|trans({}, 'Modules.Itrblueboost.Admin') }}</th>
+                                    <th class="text-center">{{ 'Status'|trans({}, 'Admin.Global') }}</th>
+                                    <th class="text-right">{{ 'Actions'|trans({}, 'Admin.Global') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in grid.data.records %}
+                                    <tr data-faq-id="{{ record.id_itrblueboost_category_faq }}">
+                                        <td class="text-center">
+                                            <input type="checkbox" name="itrblueboost_category_faq_bulk[]" value="{{ record.id_itrblueboost_category_faq }}" class="bulk-checkbox">
+                                        </td>
+                                        <td>{{ record.id_itrblueboost_category_faq }}</td>
+                                        <td>{{ record.position }}</td>
+                                        <td>{{ record.question|striptags|slice(0, 100) }}{% if record.question|length > 100 %}...{% endif %}</td>
+                                        <td>
+                                            {% if record.answer %}
+                                                {{ record.answer|striptags|slice(0, 150) }}{% if record.answer|striptags|length > 150 %}...{% endif %}
+                                            {% else %}
+                                                <span class="text-muted font-italic">{{ 'No answer'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if record.status == 'pending' %}
+                                                <span class="badge badge-warning">{{ 'Pending'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                                            {% elseif record.status == 'accepted' %}
+                                                <span class="badge badge-success">{{ 'Accepted'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                                            {% elseif record.status == 'rejected' %}
+                                                <span class="badge badge-danger">{{ 'Rejected'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                                            {% else %}
+                                                <span class="badge badge-secondary">{{ 'Manual'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-right">
+                                            {% if record.status == 'pending' %}
+                                                <button type="button"
+                                                        class="btn btn-sm btn-success btn-accept-faq"
+                                                        title="{{ 'Accept'|trans({}, 'Modules.Itrblueboost.Admin') }}"
+                                                        data-accept-url="{{ path('itrblueboost_admin_category_faq_accept', { id_category: id_category, faqId: record.id_itrblueboost_category_faq }) }}">
+                                                    <i class="material-icons">check</i>
+                                                </button>
+                                                <button type="button"
+                                                        class="btn btn-sm btn-danger btn-reject-faq"
+                                                        title="{{ 'Reject'|trans({}, 'Modules.Itrblueboost.Admin') }}"
+                                                        data-reject-url="{{ path('itrblueboost_admin_category_faq_reject', { id_category: id_category, faqId: record.id_itrblueboost_category_faq }) }}"
+                                                        data-faq-id="{{ record.id_itrblueboost_category_faq }}">
+                                                    <i class="material-icons">close</i>
+                                                </button>
+                                            {% endif %}
+                                            <a href="{{ path('itrblueboost_admin_category_faq_edit', { id_category: id_category, faqId: record.id_itrblueboost_category_faq }) }}"
+                                               class="btn btn-sm btn-outline-secondary"
+                                               title="{{ 'Edit'|trans({}, 'Admin.Actions') }}">
+                                                <i class="material-icons">edit</i>
+                                            </a>
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-secondary"
+                                                    formaction="{{ path('itrblueboost_admin_category_faq_delete', { id_category: id_category, faqId: record.id_itrblueboost_category_faq }) }}"
+                                                    title="{{ 'Delete'|trans({}, 'Admin.Actions') }}"
+                                                    onclick="return confirm('{{ 'Delete this FAQ?'|trans({}, 'Modules.Itrblueboost.Admin') }}');">
+                                                <i class="material-icons">delete</i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    {{ 'No FAQ for this category.'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Generate FAQ Modal #}
+    <div class="modal fade" id="generateFaqModal" tabindex="-1" role="dialog" aria-labelledby="generateFaqModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="generateFaqModalLabel">
+                        <i class="material-icons">auto_awesome</i>
+                        {{ 'Generate FAQ with AI'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="prompts-loading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">{{ 'Loading...'|trans({}, 'Admin.Global') }}</span>
+                        </div>
+                        <p class="mt-2">{{ 'Loading available prompts...'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
+                    </div>
+                    <div id="prompts-error" class="alert alert-danger d-none"></div>
+                    <div id="prompts-list" class="d-none">
+                        <p class="mb-3">{{ 'Select a prompt to generate FAQs:'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
+                        <select class="form-control" id="prompt-select">
+                            <option value="">-- {{ 'Choose a prompt'|trans({}, 'Modules.Itrblueboost.Admin') }} --</option>
+                        </select>
+                        <small class="form-text text-muted mt-2" id="prompt-description"></small>
+                    </div>
+                    <div id="generate-progress" class="d-none text-center py-4">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="sr-only">{{ 'Generating...'|trans({}, 'Admin.Global') }}</span>
+                        </div>
+                        <p class="mt-2">{{ 'Generating FAQs... This may take a few seconds.'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
+                    </div>
+                    <div id="generate-result" class="d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        {{ 'Close'|trans({}, 'Admin.Actions') }}
+                    </button>
+                    <button type="button" class="btn btn-success" id="btn-confirm-generate" disabled>
+                        <i class="material-icons">auto_awesome</i>
+                        {{ 'Generate'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Reject FAQ Modal #}
+    <div class="modal fade" id="rejectFaqModal" tabindex="-1" role="dialog" aria-labelledby="rejectFaqModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectFaqModalLabel">
+                        <i class="material-icons">cancel</i>
+                        {{ 'Reject FAQ'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="rejection-reason">{{ 'Rejection reason'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                        <textarea class="form-control" id="rejection-reason" rows="3" placeholder="{{ 'Explain why this FAQ is being rejected (optional)'|trans({}, 'Modules.Itrblueboost.Admin') }}"></textarea>
+                        <small class="form-text text-muted">{{ 'This information will be sent to the API for traceability.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
+                    </div>
+                    <input type="hidden" id="reject-faq-url" value="">
+                    <input type="hidden" id="reject-faq-ids" value="">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        {{ 'Cancel'|trans({}, 'Admin.Actions') }}
+                    </button>
+                    <button type="button" class="btn btn-danger" id="btn-confirm-reject">
+                        <i class="material-icons">cancel</i>
+                        {{ 'Reject'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function() {
+            var selectAll = document.getElementById('bulk-select-all');
+            var checkboxes = document.querySelectorAll('.bulk-checkbox');
+            var bulkBtn = document.getElementById('bulk-actions-btn');
+
+            function updateBulkBtn() {
+                var checked = document.querySelectorAll('.bulk-checkbox:checked').length;
+                if (bulkBtn) bulkBtn.disabled = checked === 0;
+            }
+
+            if (selectAll) {
+                selectAll.addEventListener('change', function() {
+                    checkboxes.forEach(function(cb) {
+                        cb.checked = selectAll.checked;
+                    });
+                    updateBulkBtn();
+                });
+            }
+
+            checkboxes.forEach(function(cb) {
+                cb.addEventListener('change', function() {
+                    updateBulkBtn();
+                    if (!this.checked && selectAll) {
+                        selectAll.checked = false;
+                    } else if (selectAll && document.querySelectorAll('.bulk-checkbox:checked').length === checkboxes.length) {
+                        selectAll.checked = true;
+                    }
+                });
+            });
+
+            // Accept FAQ buttons
+            document.querySelectorAll('.btn-accept-faq').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var url = this.dataset.acceptUrl;
+                    var row = this.closest('tr');
+                    var button = this;
+                    button.disabled = true;
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            // Update status badge (6th column: checkbox, id, position, question, answer, status)
+                            var statusCell = row.querySelector('td:nth-child(6)');
+                            statusCell.innerHTML = '<span class="badge badge-success">{{ 'Accepted'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>';
+                            // Remove accept/reject buttons
+                            row.querySelector('.btn-accept-faq').remove();
+                            row.querySelector('.btn-reject-faq').remove();
+                        } else {
+                            alert(data.message || 'Error');
+                            button.disabled = false;
+                        }
+                    })
+                    .catch(function() {
+                        alert('Connection error');
+                        button.disabled = false;
+                    });
+                });
+            });
+
+            // Reject FAQ modal
+            var rejectModal = $('#rejectFaqModal');
+            var rejectReasonInput = document.getElementById('rejection-reason');
+            var rejectFaqUrl = document.getElementById('reject-faq-url');
+            var rejectFaqIds = document.getElementById('reject-faq-ids');
+            var btnConfirmReject = document.getElementById('btn-confirm-reject');
+
+            // Single FAQ reject buttons
+            document.querySelectorAll('.btn-reject-faq').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    rejectFaqUrl.value = this.dataset.rejectUrl;
+                    rejectFaqIds.value = '';
+                    rejectReasonInput.value = '';
+                    rejectModal.modal('show');
+                });
+            });
+
+            // Bulk reject button
+            var bulkRejectBtn = document.getElementById('bulk-reject-btn');
+            if (bulkRejectBtn) {
+                bulkRejectBtn.addEventListener('click', function() {
+                    var checkedIds = [];
+                    document.querySelectorAll('.bulk-checkbox:checked').forEach(function(cb) {
+                        checkedIds.push(cb.value);
+                    });
+                    if (checkedIds.length === 0) return;
+
+                    rejectFaqUrl.value = '{{ path('itrblueboost_admin_category_faq_bulk_reject') }}';
+                    rejectFaqIds.value = checkedIds.join(',');
+                    rejectReasonInput.value = '';
+                    rejectModal.modal('show');
+                });
+            }
+
+            // Confirm reject
+            if (btnConfirmReject) {
+                btnConfirmReject.addEventListener('click', function() {
+                    var url = rejectFaqUrl.value;
+                    var reason = rejectReasonInput.value;
+                    var faqIds = rejectFaqIds.value;
+
+                    btnConfirmReject.disabled = true;
+
+                    var formData = new FormData();
+                    formData.append('rejection_reason', reason);
+                    if (faqIds) {
+                        formData.append('faq_ids', faqIds);
+                        formData.append('id_category', '{{ id_category }}');
+                    }
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            rejectModal.modal('hide');
+                            window.location.reload();
+                        } else {
+                            alert(data.message || 'Error');
+                            btnConfirmReject.disabled = false;
+                        }
+                    })
+                    .catch(function() {
+                        alert('Connection error');
+                        btnConfirmReject.disabled = false;
+                    });
+                });
+            }
+
+            // Generate FAQ modal
+            var btnGenerate = document.getElementById('btn-generate-faq');
+            var btnConfirm = document.getElementById('btn-confirm-generate');
+            var promptSelect = document.getElementById('prompt-select');
+            var promptDescription = document.getElementById('prompt-description');
+            var promptsLoading = document.getElementById('prompts-loading');
+            var promptsError = document.getElementById('prompts-error');
+            var promptsList = document.getElementById('prompts-list');
+            var generateProgress = document.getElementById('generate-progress');
+            var generateResult = document.getElementById('generate-result');
+            var modal = $('#generateFaqModal');
+
+            if (btnGenerate) {
+                btnGenerate.addEventListener('click', function() {
+                    promptsLoading.classList.remove('d-none');
+                    promptsError.classList.add('d-none');
+                    promptsList.classList.add('d-none');
+                    generateProgress.classList.add('d-none');
+                    generateResult.classList.add('d-none');
+                    btnConfirm.disabled = true;
+                    btnConfirm.classList.remove('d-none');
+                    promptSelect.innerHTML = '<option value="">-- Choose a prompt --</option>';
+
+                    modal.modal('show');
+
+                    fetch(this.dataset.promptsUrl, {
+                        method: 'GET',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        promptsLoading.classList.add('d-none');
+
+                        if (!data.success) {
+                            promptsError.textContent = data.message || 'Error loading prompts.';
+                            promptsError.classList.remove('d-none');
+                            return;
+                        }
+
+                        var prompts = data.prompts || [];
+                        if (prompts.length === 0) {
+                            promptsError.textContent = 'No prompts available.';
+                            promptsError.classList.remove('d-none');
+                            return;
+                        }
+
+                        prompts.forEach(function(prompt) {
+                            var option = document.createElement('option');
+                            option.value = prompt.id;
+                            option.textContent = prompt.title;
+                            option.dataset.description = prompt.short_description || '';
+                            promptSelect.appendChild(option);
+                        });
+
+                        promptsList.classList.remove('d-none');
+                    })
+                    .catch(function() {
+                        promptsLoading.classList.add('d-none');
+                        promptsError.textContent = 'Connection error.';
+                        promptsError.classList.remove('d-none');
+                    });
+                });
+            }
+
+            if (promptSelect) {
+                promptSelect.addEventListener('change', function() {
+                    var selectedOption = this.options[this.selectedIndex];
+                    promptDescription.textContent = selectedOption.dataset.description || '';
+                    btnConfirm.disabled = !this.value;
+                });
+            }
+
+            if (btnConfirm) {
+                btnConfirm.addEventListener('click', function() {
+                    var promptId = promptSelect.value;
+                    if (!promptId) return;
+
+                    promptsList.classList.add('d-none');
+                    btnConfirm.classList.add('d-none');
+                    generateProgress.classList.remove('d-none');
+
+                    var formData = new FormData();
+                    formData.append('prompt_id', promptId);
+
+                    fetch(btnGenerate.dataset.generateUrl, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        generateProgress.classList.add('d-none');
+
+                        if (data.success) {
+                            generateResult.innerHTML = '<div class="alert alert-success">' +
+                                '<i class="material-icons">check_circle</i> ' + data.message +
+                                '<br><small>Credits used: ' + data.credits_used + ' | Credits remaining: ' + data.credits_remaining + '</small>' +
+                                '</div>';
+                            generateResult.classList.remove('d-none');
+                            setTimeout(function() { window.location.reload(); }, 2000);
+                        } else {
+                            generateResult.innerHTML = '<div class="alert alert-danger">' +
+                                '<i class="material-icons">error</i> ' + (data.message || 'Error') +
+                                '</div>';
+                            generateResult.classList.remove('d-none');
+                            btnConfirm.classList.remove('d-none');
+                            promptsList.classList.remove('d-none');
+                        }
+                    })
+                    .catch(function() {
+                        generateProgress.classList.add('d-none');
+                        generateResult.innerHTML = '<div class="alert alert-danger">Connection error.</div>';
+                        generateResult.classList.remove('d-none');
+                        btnConfirm.classList.remove('d-none');
+                        promptsList.classList.remove('d-none');
+                    });
+                });
+            }
+        })();
+    </script>
+{% endblock %}

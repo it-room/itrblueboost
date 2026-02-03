@@ -1,0 +1,252 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% set layoutHeaderToolbarBtn = {
+    'back': {
+        'href': path('itrblueboost_admin_api_log_index'),
+        'desc': 'Back to logs'|trans({}, 'Modules.Itrblueboost.Admin'),
+        'icon': 'arrow_back'
+    }
+} %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .log-detail-card {
+            margin-bottom: 1rem;
+        }
+        .log-detail-card .card-header {
+            font-weight: 600;
+            background: #f8f9fa;
+        }
+        .log-method {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .log-method.get { background: #17a2b8; color: #fff; }
+        .log-method.post { background: #28a745; color: #fff; }
+        .log-method.put { background: #ffc107; color: #212529; }
+        .log-method.delete { background: #dc3545; color: #fff; }
+
+        .log-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .log-status.success { background: #d4edda; color: #155724; }
+        .log-status.error { background: #f8d7da; color: #721c24; }
+
+        .json-content {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            max-height: 500px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .json-content .json-key { color: #9cdcfe; }
+        .json-content .json-string { color: #ce9178; }
+        .json-content .json-number { color: #b5cea8; }
+        .json-content .json-boolean { color: #569cd6; }
+        .json-content .json-null { color: #569cd6; }
+
+        .info-row {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            padding: 0.75rem 0;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            width: 150px;
+            font-weight: 600;
+            color: #6c757d;
+        }
+        .info-value {
+            flex: 1;
+        }
+
+        .copy-btn {
+            cursor: pointer;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card log-detail-card">
+                <div class="card-header">
+                    <i class="material-icons">info</i>
+                    {{ 'Request Info'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                </div>
+                <div class="card-body">
+                    <div class="info-row">
+                        <div class="info-label">{{ 'ID'|trans({}, 'Admin.Global') }}</div>
+                        <div class="info-value">#{{ log.id }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">{{ 'Date'|trans({}, 'Admin.Global') }}</div>
+                        <div class="info-value">{{ log.date_add }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">{{ 'Method'|trans({}, 'Modules.Itrblueboost.Admin') }}</div>
+                        <div class="info-value">
+                            <span class="log-method {{ log.method|lower }}">{{ log.method }}</span>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">{{ 'Status'|trans({}, 'Admin.Global') }}</div>
+                        <div class="info-value">
+                            {% if log.response_code >= 200 and log.response_code < 300 %}
+                                <span class="log-status success">{{ log.response_code }} OK</span>
+                            {% else %}
+                                <span class="log-status error">{{ log.response_code }} Error</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">{{ 'Duration'|trans({}, 'Modules.Itrblueboost.Admin') }}</div>
+                        <div class="info-value">{{ log.duration|number_format(4) }} seconds</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">{{ 'Context'|trans({}, 'Modules.Itrblueboost.Admin') }}</div>
+                        <div class="info-value">{{ log.context ?: '-' }}</div>
+                    </div>
+                    {% if log.error_message %}
+                        <div class="info-row">
+                            <div class="info-label">{{ 'Error'|trans({}, 'Admin.Global') }}</div>
+                            <div class="info-value text-danger">{{ log.error_message }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card log-detail-card">
+                <div class="card-header">
+                    <i class="material-icons">link</i>
+                    {{ 'Endpoint'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                </div>
+                <div class="card-body">
+                    <code style="word-break: break-all;">{{ log.endpoint }}</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card log-detail-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="material-icons">upload</i>
+                        {{ 'Request Headers'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </span>
+                    <button class="btn btn-outline-secondary btn-sm copy-btn" data-target="request-headers">
+                        <i class="material-icons" style="font-size: 14px;">content_copy</i>
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <pre class="json-content mb-0" id="request-headers">{{ log.request_headers }}</pre>
+                </div>
+            </div>
+
+            {% if log.request_body %}
+                <div class="card log-detail-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="material-icons">send</i>
+                            {{ 'Request Body'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                        </span>
+                        <button class="btn btn-outline-secondary btn-sm copy-btn" data-target="request-body">
+                            <i class="material-icons" style="font-size: 14px;">content_copy</i>
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <pre class="json-content mb-0" id="request-body">{{ log.request_body }}</pre>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if log.response_body %}
+                <div class="card log-detail-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="material-icons">download</i>
+                            {{ 'Response Body'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                        </span>
+                        <button class="btn btn-outline-secondary btn-sm copy-btn" data-target="response-body">
+                            <i class="material-icons" style="font-size: 14px;">content_copy</i>
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <pre class="json-content mb-0" id="response-body">{{ log.response_body }}</pre>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card log-detail-card">
+                    <div class="card-header">
+                        <i class="material-icons">download</i>
+                        {{ 'Response Body'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </div>
+                    <div class="card-body">
+                        <span class="text-muted font-italic">{{ 'No response body'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function() {
+            // Syntax highlighting for JSON
+            function highlightJson(element) {
+                var text = element.textContent;
+                try {
+                    var obj = JSON.parse(text);
+                    var formatted = JSON.stringify(obj, null, 2);
+                    element.innerHTML = formatted
+                        .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+                        .replace(/: "([^"]*)"/g, ': <span class="json-string">"$1"</span>')
+                        .replace(/: (\d+)/g, ': <span class="json-number">$1</span>')
+                        .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>')
+                        .replace(/: null/g, ': <span class="json-null">null</span>');
+                } catch (e) {
+                    // Not valid JSON, leave as is
+                }
+            }
+
+            document.querySelectorAll('.json-content').forEach(highlightJson);
+
+            // Copy buttons
+            document.querySelectorAll('.copy-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var targetId = this.dataset.target;
+                    var element = document.getElementById(targetId);
+                    if (element) {
+                        navigator.clipboard.writeText(element.textContent).then(function() {
+                            btn.innerHTML = '<i class="material-icons" style="font-size: 14px;">check</i>';
+                            setTimeout(function() {
+                                btn.innerHTML = '<i class="material-icons" style="font-size: 14px;">content_copy</i>';
+                            }, 2000);
+                        });
+                    }
+                });
+            });
+        })();
+    </script>
+{% endblock %}

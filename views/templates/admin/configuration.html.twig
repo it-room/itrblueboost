@@ -1,0 +1,708 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% set layoutHeaderToolbarBtn = {
+    'api_logs': {
+        'href': path('itrblueboost_admin_api_log_index'),
+        'desc': 'API Logs'|trans({}, 'Modules.Itrblueboost.Admin'),
+        'icon': 'history'
+    }
+} %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --itr-primary: #25b9d7;
+            --itr-primary-dark: #1e9bb5;
+            --itr-success: #70d99f;
+            --itr-success-dark: #4caf50;
+            --itr-warning: #f0ad4e;
+            --itr-danger: #e74c3c;
+            --itr-purple: #9b59b6;
+            --itr-orange: #e67e22;
+            --itr-dark: #363a41;
+            --itr-gray: #6c757d;
+            --itr-light: #f8f9fa;
+        }
+
+        .itr-dashboard {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .itr-col-4 { grid-column: span 4; }
+        .itr-col-6 { grid-column: span 6; }
+        .itr-col-8 { grid-column: span 8; }
+        .itr-col-12 { grid-column: span 12; }
+
+        @media (max-width: 1200px) {
+            .itr-col-4, .itr-col-6, .itr-col-8 { grid-column: span 12; }
+        }
+
+        .itr-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .itr-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
+
+        .itr-card-header {
+            padding: 1.25rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .itr-card-header .material-icons {
+            margin-right: 12px;
+            font-size: 1.5rem;
+            opacity: 0.9;
+        }
+
+        .itr-card-header .itr-badge {
+            margin-left: auto;
+            background: rgba(255,255,255,0.25);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .itr-card-header.primary { background: linear-gradient(135deg, var(--itr-primary) 0%, var(--itr-primary-dark) 100%); }
+        .itr-card-header.success { background: linear-gradient(135deg, var(--itr-success) 0%, var(--itr-success-dark) 100%); }
+        .itr-card-header.warning { background: linear-gradient(135deg, var(--itr-warning) 0%, #d9a441 100%); }
+        .itr-card-header.danger { background: linear-gradient(135deg, var(--itr-danger) 0%, #c0392b 100%); }
+        .itr-card-header.purple { background: linear-gradient(135deg, var(--itr-purple) 0%, #8e44ad 100%); }
+        .itr-card-header.orange { background: linear-gradient(135deg, var(--itr-orange) 0%, #d35400 100%); }
+        .itr-card-header.dark { background: linear-gradient(135deg, var(--itr-gray) 0%, #5a6268 100%); }
+
+        .itr-card-body {
+            padding: 1.5rem;
+        }
+
+        .itr-card-body.no-padding {
+            padding: 0;
+        }
+
+        /* Stats Grid */
+        .itr-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        .itr-stat-box {
+            text-align: center;
+            padding: 1.25rem 1rem;
+            background: var(--itr-light);
+            border-radius: 10px;
+            transition: background 0.2s;
+        }
+
+        .itr-stat-box:hover {
+            background: #eef1f3;
+        }
+
+        .itr-stat-label {
+            color: var(--itr-gray);
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .itr-stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--itr-dark);
+        }
+
+        .itr-stat-value.credits {
+            background: linear-gradient(135deg, var(--itr-success) 0%, var(--itr-success-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .itr-stat-value.used {
+            color: var(--itr-primary);
+        }
+
+        /* Credits Badge */
+        .itr-credits-badge {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, var(--itr-success) 0%, var(--itr-success-dark) 100%);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .itr-credits-badge .material-icons {
+            margin-right: 8px;
+            font-size: 1.2rem;
+        }
+
+        /* Service List */
+        .itr-service-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .itr-service-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+
+        .itr-service-item:last-child {
+            border-bottom: none;
+        }
+
+        .itr-service-item:hover {
+            background: var(--itr-light);
+        }
+
+        .itr-service-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .itr-service-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: #fff;
+        }
+
+        .itr-service-icon.faq { background: linear-gradient(135deg, var(--itr-primary) 0%, var(--itr-primary-dark) 100%); }
+        .itr-service-icon.image { background: linear-gradient(135deg, var(--itr-purple) 0%, #8e44ad 100%); }
+        .itr-service-icon.category { background: linear-gradient(135deg, var(--itr-orange) 0%, #d35400 100%); }
+
+        .itr-service-name {
+            font-weight: 600;
+            color: var(--itr-dark);
+        }
+
+        .itr-service-code {
+            font-size: 0.75rem;
+            color: var(--itr-gray);
+            margin-top: 2px;
+        }
+
+        .itr-service-credits {
+            background: var(--itr-primary);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .itr-service-item.inactive {
+            opacity: 0.7;
+        }
+
+        .itr-service-item.inactive .itr-service-credits {
+            background: var(--itr-gray);
+        }
+
+        /* Status Badge */
+        .itr-status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .itr-status-badge.active {
+            background: var(--itr-success);
+            color: #fff;
+        }
+
+        .itr-status-badge.inactive {
+            background: #e9ecef;
+            color: var(--itr-gray);
+        }
+
+        /* History Table */
+        .itr-history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .itr-history-table th {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            background: var(--itr-light);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--itr-gray);
+            letter-spacing: 0.5px;
+        }
+
+        .itr-history-table td {
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+
+        .itr-history-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .itr-history-table tr:hover td {
+            background: var(--itr-light);
+        }
+
+        .itr-service-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .itr-service-tag.product_faq { background: #e3f2fd; color: #1565c0; }
+        .itr-service-tag.category_faq { background: #fff3e0; color: #e65100; }
+        .itr-service-tag.image { background: #f3e5f5; color: #7b1fa2; }
+
+        .itr-credits-cell {
+            font-weight: 600;
+            color: var(--itr-danger);
+        }
+
+        .itr-remaining-cell {
+            color: var(--itr-success-dark);
+            font-weight: 500;
+        }
+
+        /* Chart Container */
+        .itr-chart-container {
+            height: 200px;
+            padding: 1rem;
+        }
+
+        /* Alert */
+        .itr-alert {
+            padding: 1rem 1.25rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .itr-alert.danger {
+            background: #fce4e4;
+            color: #c0392b;
+        }
+
+        .itr-alert .material-icons {
+            margin-right: 12px;
+        }
+
+        /* Empty State */
+        .itr-empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--itr-gray);
+        }
+
+        .itr-empty-state .material-icons {
+            font-size: 3rem;
+            opacity: 0.3;
+            margin-bottom: 1rem;
+        }
+
+        /* Form Styling */
+        .itr-form-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .itr-api-key-input {
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Stats Summary */
+        .itr-summary-row {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 1rem;
+            padding: 1rem 0;
+        }
+
+        .itr-summary-item {
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        /* Service Stats */
+        .itr-service-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .itr-service-stat-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: var(--itr-light);
+            border-radius: 8px;
+        }
+
+        .itr-service-stat-name {
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        .itr-service-stat-name .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .itr-service-stat-name .dot.faq { background: var(--itr-primary); }
+        .itr-service-stat-name .dot.category { background: var(--itr-orange); }
+        .itr-service-stat-name .dot.image { background: var(--itr-purple); }
+
+        .itr-service-stat-values {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .itr-service-stat-value {
+            text-align: right;
+        }
+
+        .itr-service-stat-value .number {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--itr-dark);
+        }
+
+        .itr-service-stat-value .label {
+            font-size: 0.7rem;
+            color: var(--itr-gray);
+            text-transform: uppercase;
+        }
+
+        /* Quick Actions */
+        .itr-quick-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .itr-quick-action {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.25rem;
+            background: var(--itr-light);
+            border-radius: 8px;
+            color: var(--itr-dark);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .itr-quick-action:hover {
+            background: var(--itr-primary);
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .itr-quick-action .material-icons {
+            margin-right: 8px;
+            font-size: 1.2rem;
+        }
+
+        /* Client Banner */
+        .itr-client-banner {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, var(--itr-primary) 0%, var(--itr-primary-dark) 100%);
+            color: #fff;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-top: 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(37, 185, 215, 0.3);
+        }
+
+        .itr-client-banner .material-icons {
+            margin-right: 12px;
+            font-size: 1.5rem;
+            opacity: 0.9;
+        }
+
+        /* Highlight stat box */
+        .itr-stat-box.highlight {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border: 2px solid var(--itr-success);
+        }
+
+        .itr-stat-box.highlight .itr-stat-value {
+            font-size: 2rem;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    {# Configuration Form Card #}
+    <div class="card itr-form-card">
+        <div class="card-header">
+            <h3 class="card-header-title">
+                <i class="material-icons" style="vertical-align: middle; margin-right: 8px;">vpn_key</i>
+                {{ 'Configuration API ITROOM'|trans({}, 'Modules.Itrblueboost.Admin') }}
+            </h3>
+        </div>
+        <div class="card-body">
+            {{ form_start(form, {'action': path('itrblueboost_configuration')}) }}
+                <div class="form-group row">
+                    <label class="form-control-label col-lg-3" for="{{ form.api_key.vars.id }}">
+                        {{ form_label(form.api_key) }}
+                    </label>
+                    <div class="col-lg-9">
+                        {{ form_widget(form.api_key, {'attr': {'class': 'form-control itr-api-key-input', 'placeholder': 'Entrez votre clé API ITROOM...'}}) }}
+                        {% if form.api_key.vars.help is defined and form.api_key.vars.help %}
+                            <small class="form-text text-muted">{{ form.api_key.vars.help }}</small>
+                        {% endif %}
+                        {{ form_errors(form.api_key) }}
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="material-icons">save</i>
+                            {{ 'Enregistrer'|trans({}, 'Admin.Actions') }}
+                        </button>
+                    </div>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+
+    {% if accountInfo is not null %}
+        {% if accountInfo.success %}
+            {# Client name display #}
+            {% if accountInfo.client is defined %}
+                <div class="itr-client-banner">
+                    <i class="material-icons">business</i>
+                    <span>{{ accountInfo.client.name }}</span>
+                </div>
+            {% endif %}
+
+            <div class="itr-dashboard">
+                {# Credit Consumption Stats with remaining credits #}
+                <div class="itr-col-6">
+                    <div class="itr-card">
+                        <div class="itr-card-header orange">
+                            <i class="material-icons">toll</i>
+                            {{ 'Crédits'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                        </div>
+                        <div class="itr-card-body">
+                            <div class="itr-stats-grid">
+                                {% if accountInfo.client is defined %}
+                                    <div class="itr-stat-box highlight">
+                                        <div class="itr-stat-label">{{ 'Disponibles'|trans({}, 'Modules.Itrblueboost.Admin') }}</div>
+                                        <div class="itr-stat-value credits">{{ accountInfo.client.credits }}</div>
+                                    </div>
+                                {% endif %}
+                                <div class="itr-stat-box">
+                                    <div class="itr-stat-label">{{ '30 derniers jours'|trans({}, 'Modules.Itrblueboost.Admin') }}</div>
+                                    <div class="itr-stat-value used">-{{ totalCreditsUsed30Days }}</div>
+                                </div>
+                                <div class="itr-stat-box">
+                                    <div class="itr-stat-label">{{ 'Total consommé'|trans({}, 'Modules.Itrblueboost.Admin') }}</div>
+                                    <div class="itr-stat-value">{{ totalCreditsUsedAllTime }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# All Services #}
+                {% if accountInfo.services is defined and (accountInfo.services.active|length > 0 or accountInfo.services.inactive|length > 0) %}
+                    {% set allServices = [] %}
+                    {% if accountInfo.services.active is defined %}
+                        {% for service in accountInfo.services.active %}
+                            {% set allServices = allServices|merge([service|merge({is_active: true})]) %}
+                        {% endfor %}
+                    {% endif %}
+                    {% if accountInfo.services.inactive is defined %}
+                        {% for service in accountInfo.services.inactive %}
+                            {% set allServices = allServices|merge([service|merge({is_active: false})]) %}
+                        {% endfor %}
+                    {% endif %}
+                    <div class="itr-col-6">
+                        <div class="itr-card">
+                            <div class="itr-card-header primary">
+                                <i class="material-icons">apps</i>
+                                {{ 'Services'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                                <span class="itr-badge">{{ allServices|length }}</span>
+                            </div>
+                            <div class="itr-card-body no-padding">
+                                <ul class="itr-service-list">
+                                    {% for service in allServices %}
+                                        <li class="itr-service-item {% if not service.is_active %}inactive{% endif %}">
+                                            <div class="itr-service-info">
+                                                <div class="itr-service-icon {% if 'faq' in service.code %}faq{% elseif 'image' in service.code %}image{% else %}category{% endif %}" {% if not service.is_active %}style="opacity: 0.5;"{% endif %}>
+                                                    <i class="material-icons">{% if 'faq' in service.code %}quiz{% elseif 'image' in service.code %}image{% else %}category{% endif %}</i>
+                                                </div>
+                                                <div>
+                                                    <div class="itr-service-name">
+                                                        {{ service.name }}
+                                                        {% if service.is_active %}
+                                                            <span class="itr-status-badge active">Actif</span>
+                                                        {% else %}
+                                                            <span class="itr-status-badge inactive">Inactif</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="itr-service-code">{{ service.code }}</div>
+                                                </div>
+                                            </div>
+                                            <span class="itr-service-credits" {% if not service.is_active %}style="background: #adb5bd;"{% endif %}>{{ service.credits_per_use }} crédit(s)</span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {# Credit History #}
+                <div class="itr-col-12">
+                    <div class="itr-card">
+                        <div class="itr-card-header warning">
+                            <i class="material-icons">receipt_long</i>
+                            {{ 'Historique des consommations'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                        </div>
+                        <div class="itr-card-body no-padding">
+                            {% if creditHistory|length > 0 %}
+                                <table class="itr-history-table">
+                                    <thead>
+                                        <tr>
+                                            <th>{{ 'Date'|trans({}, 'Admin.Global') }}</th>
+                                            <th>{{ 'Service'|trans({}, 'Modules.Itrblueboost.Admin') }}</th>
+                                            <th>{{ 'Détails'|trans({}, 'Modules.Itrblueboost.Admin') }}</th>
+                                            <th style="text-align: right;">{{ 'Crédits utilisés'|trans({}, 'Modules.Itrblueboost.Admin') }}</th>
+                                            <th style="text-align: right;">{{ 'Solde restant'|trans({}, 'Modules.Itrblueboost.Admin') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for entry in creditHistory %}
+                                            <tr>
+                                                <td>{{ entry.date_add|date('d/m/Y H:i') }}</td>
+                                                <td>
+                                                    <span class="itr-service-tag {{ entry.service_code }}">
+                                                        {% if entry.service_code == 'product_faq' %}
+                                                            FAQ Produit
+                                                        {% elseif entry.service_code == 'category_faq' %}
+                                                            FAQ Catégorie
+                                                        {% elseif entry.service_code == 'image' %}
+                                                            Image IA
+                                                        {% else %}
+                                                            {{ entry.service_code }}
+                                                        {% endif %}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {% if entry.details %}
+                                                        {{ entry.details|slice(0, 50) }}{% if entry.details|length > 50 %}...{% endif %}
+                                                    {% else %}
+                                                        <span style="color: #adb5bd;">-</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="itr-credits-cell" style="text-align: right;">-{{ entry.credits_used }}</td>
+                                                <td class="itr-remaining-cell" style="text-align: right;">{{ entry.credits_remaining }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% else %}
+                                <div class="itr-empty-state">
+                                    <i class="material-icons">hourglass_empty</i>
+                                    <p>{{ 'Aucune consommation enregistrée pour le moment.'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        {% else %}
+            {# API Error #}
+            <div class="itr-dashboard">
+                <div class="itr-col-12">
+                    <div class="itr-card">
+                        <div class="itr-card-header danger">
+                            <i class="material-icons">error_outline</i>
+                            {{ 'Erreur de connexion API'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                        </div>
+                        <div class="itr-card-body">
+                            <div class="itr-alert danger">
+                                <i class="material-icons">warning</i>
+                                <div>{{ accountInfo.error|default('Erreur inconnue. Veuillez vérifier votre clé API.') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        {# No API Key #}
+        <div class="itr-dashboard">
+            <div class="itr-col-12">
+                <div class="itr-card">
+                    <div class="itr-card-header primary">
+                        <i class="material-icons">info</i>
+                        {{ 'Configuration requise'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </div>
+                    <div class="itr-card-body">
+                        <div class="itr-empty-state">
+                            <i class="material-icons">vpn_key</i>
+                            <p>{{ 'Entrez votre clé API ITROOM pour commencer à utiliser les services.'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

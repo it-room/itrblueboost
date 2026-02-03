@@ -1,0 +1,582 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .faq-form-card {
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        .faq-form-card .card-header {
+            background: linear-gradient(135deg, #25b9d7 0%, #1e9bb5 100%);
+            color: #fff;
+            padding: 1.25rem;
+        }
+        .faq-form-card .card-header-title {
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+        .faq-form-card .card-header-title .material-icons {
+            font-size: 1.5rem;
+        }
+        .faq-form-card .card-body {
+            padding: 0;
+        }
+        .faq-field-section {
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        .faq-field-section:last-child {
+            border-bottom: none;
+        }
+        .faq-field-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0.75rem;
+        }
+        .faq-field-header .material-icons {
+            color: #25b9d7;
+            font-size: 1.25rem;
+        }
+        .faq-field-header label {
+            font-weight: 600;
+            color: #363a41;
+            margin: 0;
+            font-size: 0.95rem;
+        }
+        .faq-field-header .required-indicator {
+            color: #dc3545;
+            margin-left: 2px;
+        }
+        .faq-field-help {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+        }
+        .faq-field-section .faq-question-input textarea,
+        .faq-field-section .faq-question-input .form-control {
+            resize: none;
+            overflow: hidden;
+            min-height: auto;
+            height: 38px;
+            line-height: 1.5;
+        }
+        .faq-switch-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8f9fa;
+            padding: 1rem 1.25rem;
+            border-radius: 6px;
+        }
+        .faq-switch-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .faq-switch-label .material-icons {
+            color: #25b9d7;
+        }
+        .faq-switch-text strong {
+            display: block;
+            color: #363a41;
+            font-size: 0.95rem;
+        }
+        .faq-switch-text span {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .faq-preview {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+        .faq-preview-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .faq-preview-item {
+            background: #fff;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            overflow: hidden;
+        }
+        .faq-preview-question {
+            padding: 1rem;
+            font-weight: 600;
+            color: #363a41;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .faq-preview-question .material-icons {
+            color: #25b9d7;
+            font-size: 1.2rem;
+        }
+        .faq-preview-answer {
+            padding: 1rem;
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .faq-status-badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-left: auto;
+        }
+        .faq-status-badge.active {
+            background: #d4edda;
+            color: #155724;
+        }
+        .faq-status-badge.inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-lg-8">
+            {{ form_start(form) }}
+                <div class="card faq-form-card">
+                    <div class="card-header">
+                        <h3 class="card-header-title">
+                            <i class="material-icons">help_outline</i>
+                            {{ layoutTitle }}
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        {{ form_widget(form.id_product) }}
+
+                        <div class="faq-field-section">
+                            <div class="faq-field-header">
+                                <i class="material-icons">help_outline</i>
+                                <label>{{ 'Question'|trans({}, 'Modules.Itrblueboost.Admin') }}<span class="required-indicator">*</span></label>
+                            </div>
+                            <div class="faq-question-input">
+                                {{ form_widget(form.question, {'attr': {'id': 'faq-question-input', 'placeholder': 'Ex: Quelle est la durée de garantie de ce produit ?', 'rows': '1'}}) }}
+                            </div>
+                            {{ form_errors(form.question) }}
+                            <div class="faq-field-help">
+                                {{ 'Formulez une question claire et concise que vos clients pourraient se poser.'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                            </div>
+                        </div>
+
+                        <div class="faq-field-section">
+                            <div class="faq-field-header">
+                                <i class="material-icons">question_answer</i>
+                                <label>{{ 'Réponse'|trans({}, 'Modules.Itrblueboost.Admin') }}<span class="required-indicator">*</span></label>
+                            </div>
+                            {{ form_widget(form.answer, {'attr': {'id': 'faq-answer-input'}}) }}
+                            {{ form_errors(form.answer) }}
+                            <div class="faq-field-help">
+                                {{ 'Rédigez une réponse détaillée et utile. Vous pouvez utiliser la mise en forme HTML.'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                            </div>
+                        </div>
+
+                        <div class="faq-field-section">
+                            {% if faq is defined and faq.id and faq.status == 'pending' %}
+                                <div class="alert alert-warning d-flex align-items-center mb-3">
+                                    <i class="material-icons mr-2">hourglass_empty</i>
+                                    <div>
+                                        <strong>{{ 'FAQ en attente d\'approbation'|trans({}, 'Modules.Itrblueboost.Admin') }}</strong><br>
+                                        <small>{{ 'Cette FAQ doit être acceptée pour être affichée sur la fiche produit, même si elle est activée.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="faq-switch-row">
+                                <div class="faq-switch-label">
+                                    <i class="material-icons">visibility</i>
+                                    <div class="faq-switch-text">
+                                        <strong>{{ 'Actif'|trans({}, 'Modules.Itrblueboost.Admin') }}</strong>
+                                        <span>{{ 'Afficher cette FAQ sur la fiche produit'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                                    </div>
+                                </div>
+                                {{ form_widget(form.active, {'attr': {'id': 'faq-active-input'}}) }}
+                            </div>
+                            {{ form_errors(form.active) }}
+                        </div>
+                    </div>
+                        {% if faq is defined and faq.id and faq.hasApiFaqId() %}
+                        <div class="faq-field-section">
+                            <div class="faq-field-header">
+                                <i class="material-icons">edit_note</i>
+                                <label>{{ 'Raison de la modification'|trans({}, 'Modules.Itrblueboost.Admin') }}<span class="required-indicator modification-required-star d-none">*</span></label>
+                            </div>
+                            {{ form_widget(form.modification_reason, {'attr': {'id': 'faq-modification-reason', 'placeholder': 'Expliquez pourquoi vous modifiez cette FAQ...'|trans({}, 'Modules.Itrblueboost.Admin'), 'rows': '2'}}) }}
+                            {{ form_errors(form.modification_reason) }}
+                            <div class="faq-field-help">
+                                <span class="modification-help-optional">{{ 'Cette information sera envoyée à l\'API pour traçabilité (optionnel).'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                                <span class="modification-help-required d-none text-danger">{{ 'Obligatoire car vous avez modifié la question ou la réponse.'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{{ path('itrblueboost_admin_product_faq_index', { id_product: id_product }) }}" class="btn btn-outline-secondary">
+                                    <i class="material-icons">arrow_back</i>
+                                    {{ 'Retour'|trans({}, 'Admin.Actions') }}
+                                </a>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                {% if faq is defined and faq.id %}
+                                    {# Reject button - always visible for existing FAQs #}
+                                    <button type="button" class="btn btn-danger mr-2" id="btn-reject-faq"
+                                            data-faq-id="{{ faq.id }}"
+                                            data-reject-url="{{ path('itrblueboost_admin_product_faq_reject', { id_product: id_product, faqId: faq.id }) }}">
+                                        <i class="material-icons">cancel</i>
+                                        {{ 'Rejeter'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                                    </button>
+
+                                    {% if faq.status == 'pending' %}
+                                        {# Accept button for pending FAQs #}
+                                        <button type="button" class="btn btn-success mr-2" id="btn-accept-faq"
+                                                data-accept-url="{{ path('itrblueboost_admin_product_faq_accept', { id_product: id_product, faqId: faq.id }) }}">
+                                            <i class="material-icons">check_circle</i>
+                                            {{ 'Accepter'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                                        </button>
+                                    {% endif %}
+                                {% endif %}
+
+                                <button type="submit" class="btn btn-primary" id="btn-save-faq">
+                                    <i class="material-icons">save</i>
+                                    {{ 'Enregistrer'|trans({}, 'Admin.Actions') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {{ form_end(form) }}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="faq-preview">
+                <div class="faq-preview-title">
+                    <i class="material-icons">visibility</i>
+                    {{ 'Aperçu'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                </div>
+                <div class="faq-preview-item">
+                    <div class="faq-preview-question">
+                        <i class="material-icons">help</i>
+                        <span id="preview-question">{{ 'Votre question apparaîtra ici...'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                        <span class="faq-status-badge active" id="preview-status-active">{{ 'Actif'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                        <span class="faq-status-badge inactive d-none" id="preview-status-inactive">{{ 'Inactif'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                    </div>
+                    <div class="faq-preview-answer" id="preview-answer">
+                        {{ 'Votre réponse apparaîtra ici...'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-preview mt-3">
+                <div class="faq-preview-title">
+                    <i class="material-icons">lightbulb</i>
+                    {{ 'Conseils'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                </div>
+                <ul class="mb-0 pl-3" style="font-size: 0.9rem; color: #666;">
+                    <li class="mb-2">{{ 'Utilisez des questions que vos clients posent fréquemment.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
+                    <li class="mb-2">{{ 'Soyez précis et évitez le jargon technique.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
+                    <li>{{ 'Les FAQ améliorent le référencement SEO de vos produits.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {# Reject FAQ Modal #}
+    {% if faq is defined and faq.id %}
+    <div class="modal fade" id="rejectFaqModal" tabindex="-1" role="dialog" aria-labelledby="rejectFaqModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectFaqModalLabel">
+                        <i class="material-icons">cancel</i>
+                        {{ 'Rejeter la FAQ'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="material-icons mr-1">warning</i>
+                        {{ 'Cette action supprimera définitivement cette FAQ.'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </div>
+                    <div class="form-group">
+                        <label for="rejection-reason">{{ 'Raison du rejet'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                        <textarea class="form-control" id="rejection-reason" rows="3" placeholder="{{ 'Expliquez pourquoi cette FAQ est rejetée (optionnel)'|trans({}, 'Modules.Itrblueboost.Admin') }}"></textarea>
+                        <small class="form-text text-muted">{{ 'Cette information sera envoyée à l\'API pour traçabilité.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
+                    </div>
+                    <input type="hidden" id="reject-faq-url" value="">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        {{ 'Annuler'|trans({}, 'Admin.Actions') }}
+                    </button>
+                    <button type="button" class="btn btn-danger" id="btn-confirm-reject">
+                        <i class="material-icons">cancel</i>
+                        {{ 'Rejeter'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+    (function() {
+        'use strict';
+
+        var questionInput = document.getElementById('faq-question-input');
+        var previewQuestion = document.getElementById('preview-question');
+        var previewAnswer = document.getElementById('preview-answer');
+        var statusActive = document.getElementById('preview-status-active');
+        var statusInactive = document.getElementById('preview-status-inactive');
+
+        // Mise à jour de l'aperçu de la question
+        if (questionInput) {
+            // Si c'est un champ translatable, chercher le premier input
+            var actualInput = questionInput.querySelector('input[type="text"]') || questionInput;
+
+            function updateQuestionPreview() {
+                var value = actualInput.value || actualInput.textContent;
+                previewQuestion.textContent = value || '{{ 'Votre question apparaîtra ici...'|trans({}, 'Modules.Itrblueboost.Admin') }}';
+            }
+
+            actualInput.addEventListener('input', updateQuestionPreview);
+            actualInput.addEventListener('change', updateQuestionPreview);
+            updateQuestionPreview();
+        }
+
+        // Mise à jour du statut
+        var activeInputs = document.querySelectorAll('[id^="faq-active-input"] input[type="radio"], [name*="active"]');
+        activeInputs.forEach(function(input) {
+            input.addEventListener('change', function() {
+                var isActive = this.value === '1' && this.checked;
+                if (this.value === '1' && this.checked) {
+                    statusActive.classList.remove('d-none');
+                    statusInactive.classList.add('d-none');
+                } else if (this.value === '0' && this.checked) {
+                    statusActive.classList.add('d-none');
+                    statusInactive.classList.remove('d-none');
+                }
+            });
+        });
+
+        // Initialiser le statut
+        var checkedActive = document.querySelector('[name*="active"][value="1"]:checked');
+        if (!checkedActive) {
+            statusActive.classList.add('d-none');
+            statusInactive.classList.remove('d-none');
+        }
+
+        {% if faq is defined and faq.id and faq.hasApiFaqId() %}
+        // Track original values for change detection
+        var originalQuestion = {};
+        var originalAnswer = {};
+        var modificationReasonField = document.getElementById('faq-modification-reason');
+        var requiredStar = document.querySelector('.modification-required-star');
+        var helpOptional = document.querySelector('.modification-help-optional');
+        var helpRequired = document.querySelector('.modification-help-required');
+        var saveBtn = document.getElementById('btn-save-faq');
+        var form = saveBtn ? saveBtn.closest('form') : null;
+
+        // Store original values for all languages
+        document.querySelectorAll('[name*="[question]"]').forEach(function(input) {
+            var match = input.name.match(/\[(\d+)\]$/);
+            if (match) {
+                originalQuestion[match[1]] = input.value;
+            }
+        });
+
+        // For TinyMCE/formatted textarea, we need to handle it differently
+        document.querySelectorAll('[name*="[answer]"]').forEach(function(input) {
+            var match = input.name.match(/\[(\d+)\]$/);
+            if (match) {
+                originalAnswer[match[1]] = input.value;
+            }
+        });
+
+        function checkForChanges() {
+            var hasChanges = false;
+
+            // Check question changes
+            document.querySelectorAll('[name*="[question]"]').forEach(function(input) {
+                var match = input.name.match(/\[(\d+)\]$/);
+                if (match && originalQuestion[match[1]] !== undefined) {
+                    if (input.value !== originalQuestion[match[1]]) {
+                        hasChanges = true;
+                    }
+                }
+            });
+
+            // Check answer changes (including TinyMCE)
+            document.querySelectorAll('[name*="[answer]"]').forEach(function(input) {
+                var match = input.name.match(/\[(\d+)\]$/);
+                if (match && originalAnswer[match[1]] !== undefined) {
+                    var currentValue = input.value;
+                    // Try to get TinyMCE content if available
+                    if (typeof tinymce !== 'undefined') {
+                        var editor = tinymce.get(input.id);
+                        if (editor) {
+                            currentValue = editor.getContent();
+                        }
+                    }
+                    if (currentValue !== originalAnswer[match[1]]) {
+                        hasChanges = true;
+                    }
+                }
+            });
+
+            return hasChanges;
+        }
+
+        function updateModificationReasonRequirement() {
+            var hasChanges = checkForChanges();
+
+            if (hasChanges) {
+                requiredStar.classList.remove('d-none');
+                helpOptional.classList.add('d-none');
+                helpRequired.classList.remove('d-none');
+                if (modificationReasonField) {
+                    modificationReasonField.setAttribute('required', 'required');
+                }
+            } else {
+                requiredStar.classList.add('d-none');
+                helpOptional.classList.remove('d-none');
+                helpRequired.classList.add('d-none');
+                if (modificationReasonField) {
+                    modificationReasonField.removeAttribute('required');
+                }
+            }
+        }
+
+        // Listen for changes on question fields
+        document.querySelectorAll('[name*="[question]"]').forEach(function(input) {
+            input.addEventListener('input', updateModificationReasonRequirement);
+            input.addEventListener('change', updateModificationReasonRequirement);
+        });
+
+        // Listen for changes on answer fields
+        document.querySelectorAll('[name*="[answer]"]').forEach(function(input) {
+            input.addEventListener('input', updateModificationReasonRequirement);
+            input.addEventListener('change', updateModificationReasonRequirement);
+        });
+
+        // For TinyMCE editors, listen after init
+        if (typeof tinymce !== 'undefined') {
+            tinymce.on('AddEditor', function(e) {
+                e.editor.on('change', updateModificationReasonRequirement);
+                e.editor.on('keyup', updateModificationReasonRequirement);
+            });
+        }
+
+        // Form submission validation
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                var hasChanges = checkForChanges();
+                if (hasChanges && modificationReasonField && !modificationReasonField.value.trim()) {
+                    e.preventDefault();
+                    alert('{{ 'Veuillez indiquer la raison de la modification.'|trans({}, 'Modules.Itrblueboost.Admin') }}');
+                    modificationReasonField.focus();
+                    return false;
+                }
+            });
+        }
+        {% endif %}
+
+        // Reject button handler
+        var btnReject = document.getElementById('btn-reject-faq');
+        var rejectModal = document.getElementById('rejectFaqModal');
+
+        if (btnReject && rejectModal) {
+            var rejectReasonInput = document.getElementById('rejection-reason');
+            var rejectFaqUrl = document.getElementById('reject-faq-url');
+            var btnConfirmReject = document.getElementById('btn-confirm-reject');
+
+            btnReject.addEventListener('click', function() {
+                rejectFaqUrl.value = this.dataset.rejectUrl;
+                rejectReasonInput.value = '';
+                $(rejectModal).modal('show');
+            });
+
+            if (btnConfirmReject) {
+                btnConfirmReject.addEventListener('click', function() {
+                    var url = rejectFaqUrl.value;
+                    var reason = rejectReasonInput.value;
+
+                    btnConfirmReject.disabled = true;
+
+                    var formData = new FormData();
+                    formData.append('rejection_reason', reason);
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            $(rejectModal).modal('hide');
+                            window.location.href = '{{ path('itrblueboost_admin_product_faq_index', { id_product: id_product }) }}';
+                        } else {
+                            alert(data.message || 'Error');
+                            btnConfirmReject.disabled = false;
+                        }
+                    })
+                    .catch(function() {
+                        alert('Connection error');
+                        btnConfirmReject.disabled = false;
+                    });
+                });
+            }
+        }
+
+        // Accept button handler
+        var btnAccept = document.getElementById('btn-accept-faq');
+        if (btnAccept) {
+            btnAccept.addEventListener('click', function() {
+                var url = this.dataset.acceptUrl;
+                var btn = this;
+                btn.disabled = true;
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Error');
+                        btn.disabled = false;
+                    }
+                })
+                .catch(function() {
+                    alert('Connection error');
+                    btn.disabled = false;
+                });
+            });
+        }
+    })();
+    </script>
+{% endblock %}

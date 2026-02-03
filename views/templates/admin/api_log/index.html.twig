@@ -1,0 +1,239 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .log-method {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .log-method.get { background: #17a2b8; color: #fff; }
+        .log-method.post { background: #28a745; color: #fff; }
+        .log-method.put { background: #ffc107; color: #212529; }
+        .log-method.delete { background: #dc3545; color: #fff; }
+
+        .log-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .log-status.success { background: #d4edda; color: #155724; }
+        .log-status.error { background: #f8d7da; color: #721c24; }
+        .log-status.warning { background: #fff3cd; color: #856404; }
+
+        .log-endpoint {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .log-context {
+            display: inline-block;
+            padding: 2px 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        .log-duration {
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .json-preview {
+            max-height: 100px;
+            overflow: hidden;
+            font-family: monospace;
+            font-size: 0.75rem;
+            background: #f8f9fa;
+            padding: 5px;
+            border-radius: 4px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-header-title mb-0">
+                <i class="material-icons">history</i>
+                {{ 'API Logs'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                <span class="badge badge-secondary ml-2">{{ total_logs }}</span>
+            </h3>
+            <div class="toolbar-icons d-flex align-items-center">
+                <form method="GET" class="mr-3">
+                    <select name="context" class="form-control form-control-sm" onchange="this.form.submit()">
+                        <option value="">{{ 'All contexts'|trans({}, 'Modules.Itrblueboost.Admin') }}</option>
+                        {% for ctx in contexts %}
+                            <option value="{{ ctx }}" {% if context_filter == ctx %}selected{% endif %}>{{ ctx }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+                <button type="button" class="btn btn-warning btn-sm mr-2" id="btn-delete-old">
+                    <i class="material-icons">delete_sweep</i>
+                    {{ 'Delete old logs'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" id="btn-clear-all">
+                    <i class="material-icons">delete_forever</i>
+                    {{ 'Clear all'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if logs|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{{ 'ID'|trans({}, 'Admin.Global') }}</th>
+                                <th>{{ 'Date'|trans({}, 'Admin.Global') }}</th>
+                                <th>{{ 'Method'|trans({}, 'Modules.Itrblueboost.Admin') }}</th>
+                                <th>{{ 'Endpoint'|trans({}, 'Modules.Itrblueboost.Admin') }}</th>
+                                <th>{{ 'Status'|trans({}, 'Admin.Global') }}</th>
+                                <th>{{ 'Duration'|trans({}, 'Modules.Itrblueboost.Admin') }}</th>
+                                <th>{{ 'Context'|trans({}, 'Modules.Itrblueboost.Admin') }}</th>
+                                <th>{{ 'Actions'|trans({}, 'Admin.Global') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                                <tr>
+                                    <td>{{ log.id_itrblueboost_api_log }}</td>
+                                    <td>{{ log.date_add }}</td>
+                                    <td>
+                                        <span class="log-method {{ log.method|lower }}">{{ log.method }}</span>
+                                    </td>
+                                    <td class="log-endpoint" title="{{ log.endpoint }}">
+                                        {{ log.endpoint|replace({'https://apitr-sf.itroom.fr': ''}) }}
+                                    </td>
+                                    <td>
+                                        {% if log.response_code >= 200 and log.response_code < 300 %}
+                                            <span class="log-status success">{{ log.response_code }}</span>
+                                        {% elseif log.response_code >= 400 %}
+                                            <span class="log-status error">{{ log.response_code }}</span>
+                                        {% else %}
+                                            <span class="log-status warning">{{ log.response_code }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="log-duration">{{ log.duration|number_format(3) }}s</td>
+                                    <td>
+                                        {% if log.context %}
+                                            <span class="log-context">{{ log.context }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ path('itrblueboost_admin_api_log_view', {logId: log.id_itrblueboost_api_log}) }}"
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="{{ 'View details'|trans({}, 'Modules.Itrblueboost.Admin') }}">
+                                            <i class="material-icons">visibility</i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if total_pages > 1 %}
+                    <div class="pagination-container">
+                        <div>
+                            {{ 'Page %current% of %total%'|trans({'%current%': current_page, '%total%': total_pages}, 'Modules.Itrblueboost.Admin') }}
+                        </div>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0">
+                                {% if current_page > 1 %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ path('itrblueboost_admin_api_log_index', {page: current_page - 1, context: context_filter}) }}">
+                                            <i class="material-icons">chevron_left</i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% for p in max(1, current_page - 2)..min(total_pages, current_page + 2) %}
+                                    <li class="page-item {% if p == current_page %}active{% endif %}">
+                                        <a class="page-link" href="{{ path('itrblueboost_admin_api_log_index', {page: p, context: context_filter}) }}">{{ p }}</a>
+                                    </li>
+                                {% endfor %}
+
+                                {% if current_page < total_pages %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ path('itrblueboost_admin_api_log_index', {page: current_page + 1, context: context_filter}) }}">
+                                            <i class="material-icons">chevron_right</i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <i class="material-icons">info</i>
+                    {{ 'No API logs found.'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function() {
+            document.getElementById('btn-clear-all').addEventListener('click', function() {
+                if (!confirm('{{ 'Are you sure you want to delete ALL logs?'|trans({}, 'Modules.Itrblueboost.Admin') }}')) {
+                    return;
+                }
+
+                fetch('{{ path('itrblueboost_admin_api_log_clear') }}', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Error');
+                    }
+                });
+            });
+
+            document.getElementById('btn-delete-old').addEventListener('click', function() {
+                var days = prompt('{{ 'Delete logs older than how many days?'|trans({}, 'Modules.Itrblueboost.Admin') }}', '30');
+                if (!days) return;
+
+                var formData = new FormData();
+                formData.append('days', days);
+
+                fetch('{{ path('itrblueboost_admin_api_log_delete_old') }}', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    alert(data.message);
+                    if (data.success) {
+                        window.location.reload();
+                    }
+                });
+            });
+        })();
+    </script>
+{% endblock %}

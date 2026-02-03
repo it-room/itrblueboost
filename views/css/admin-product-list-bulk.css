@@ -1,0 +1,48 @@
+/**
+ * ITRBlueBoost - Bulk FAQ Generation Styles
+ */
+
+.itrblueboost-bulk-faq {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.itrblueboost-bulk-faq .material-icons {
+    font-size: 18px;
+    color: #25b9d7;
+}
+
+.itrblueboost-bulk-faq:hover .material-icons {
+    color: #1e9bb5;
+}
+
+#itrblueboostBulkFaqModal .modal-header {
+    border-bottom: none;
+}
+
+#itrblueboostBulkFaqModal .modal-header .close {
+    opacity: 0.8;
+}
+
+#itrblueboostBulkFaqModal .modal-header .close:hover {
+    opacity: 1;
+}
+
+#itrblueboostBulkFaqModal .modal-title .material-icons {
+    margin-right: 8px;
+}
+
+#itrblueboostBulkFaqModal .alert .material-icons {
+    margin-right: 5px;
+}
+
+#itrblueboostBulkFaqModal .progress {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+#itrblueboostBulkFaqModal .progress-bar {
+    font-weight: 600;
+    transition: width 0.3s ease;
+}

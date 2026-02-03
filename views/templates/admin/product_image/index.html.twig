@@ -1,0 +1,500 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% set layoutHeaderToolbarBtn = {
+    'add': {
+        'href': path('admin_product_form', {id: id_product}),
+        'desc': 'Back to product'|trans({}, 'Modules.Itrblueboost.Admin'),
+        'icon': 'arrow_back'
+    }
+} %}
+
+{% block content %}
+    <style>
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 15px;
+        }
+        .image-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+            transition: box-shadow 0.2s;
+        }
+        .image-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .image-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+        }
+        .image-card-body {
+            padding: 12px;
+        }
+        .image-card-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .image-card-actions .btn {
+            flex: 1;
+        }
+        .image-card-info {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        .base-image-option {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.2s;
+            position: relative;
+            height: 80px;
+        }
+        .base-image-option:hover {
+            border-color: #007bff;
+        }
+        .base-image-option.selected {
+            border-color: #28a745;
+            box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3);
+        }
+        .base-image-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .base-image-option .cover-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            font-size: 10px;
+        }
+        .no-image-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            background: #f8f9fa;
+        }
+        .no-image-placeholder i {
+            font-size: 24px;
+        }
+        .no-image-placeholder span {
+            font-size: 11px;
+        }
+    </style>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-header-title mb-0">
+                <i class="material-icons">image</i>
+                {{ 'AI Images - '|trans({}, 'Modules.Itrblueboost.Admin') }}{{ product_name }}
+            </h3>
+            <div class="toolbar-icons">
+                <button type="button" class="btn btn-success" id="btn-generate-image"
+                        data-prompts-url="{{ path('itrblueboost_admin_product_image_prompts') }}"
+                        data-generate-url="{{ path('itrblueboost_admin_product_image_generate', { id_product: id_product }) }}">
+                    <i class="material-icons">auto_awesome</i>
+                    {{ 'Generate Image (AI)'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="card-header-title mb-0">
+                <i class="material-icons">hourglass_empty</i>
+                {{ 'Pending images'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                <span class="badge badge-warning ml-2">{{ pending_images|length }}</span>
+            </h3>
+        </div>
+        <div class="card-body">
+            {% if pending_images|length > 0 %}
+                <div class="image-grid">
+                    {% for image in pending_images %}
+                        <div class="image-card" id="image-card-{{ image.id_itrblueboost_product_image }}">
+                            <img src="{{ image.url }}" alt="Image {{ image.id_itrblueboost_product_image }}" loading="lazy">
+                            <div class="image-card-body">
+                                <div class="image-card-info">
+                                    #{{ image.id_itrblueboost_product_image }} - {{ image.date_add|date('d/m/Y H:i') }}
+                                </div>
+                                <div class="image-card-actions">
+                                    <button type="button" class="btn btn-sm btn-success btn-accept"
+                                            data-url="{{ path('itrblueboost_admin_product_image_accept', { id_product: id_product, imageId: image.id_itrblueboost_product_image }) }}"
+                                            data-id="{{ image.id_itrblueboost_product_image }}"
+                                            title="{{ 'Accept'|trans({}, 'Admin.Actions') }}">
+                                        <i class="material-icons">check</i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger btn-reject"
+                                            data-url="{{ path('itrblueboost_admin_product_image_reject', { id_product: id_product, imageId: image.id_itrblueboost_product_image }) }}"
+                                            data-id="{{ image.id_itrblueboost_product_image }}"
+                                            title="{{ 'Reject'|trans({}, 'Admin.Actions') }}">
+                                        <i class="material-icons">close</i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="material-icons">photo_library</i>
+                    <p>{{ 'No pending images.'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
+                    <p class="text-muted">{{ 'Click "Generate Image (AI)" to create a new image.'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-header-title mb-0">
+                <i class="material-icons">check_circle</i>
+                {{ 'Accepted images'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                <span class="badge badge-success ml-2">{{ accepted_images|length }}</span>
+            </h3>
+        </div>
+        <div class="card-body">
+            {% if accepted_images|length > 0 %}
+                <div class="image-grid">
+                    {% for image in accepted_images %}
+                        <div class="image-card" id="image-card-{{ image.id_itrblueboost_product_image }}">
+                            <img src="{{ '/img/p/' ~ (image.id_image|slice(0,1)) ~ '/' ~ (image.id_image|length > 1 ? (image.id_image|slice(1,1)) ~ '/' : '') ~ (image.id_image|length > 2 ? (image.id_image|slice(2,1)) ~ '/' : '') ~ (image.id_image|length > 3 ? (image.id_image|slice(3,1)) ~ '/' : '') ~ image.id_image ~ '.jpg' }}"
+                                 alt="Image {{ image.id_image }}" loading="lazy"
+                                 onerror="this.src='{{ '/img/p/' ~ image.id_image ~ '.jpg' }}'">
+                            <div class="image-card-body">
+                                <div class="image-card-info">
+                                    PS #{{ image.id_image }} - {{ image.date_upd|date('d/m/Y H:i') }}
+                                </div>
+                                <div class="image-card-actions">
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete"
+                                            data-url="{{ path('itrblueboost_admin_product_image_delete', { id_product: id_product, imageId: image.id_itrblueboost_product_image }) }}"
+                                            data-id="{{ image.id_itrblueboost_product_image }}"
+                                            title="{{ 'Delete'|trans({}, 'Admin.Actions') }}">
+                                        <i class="material-icons">delete</i>
+                                        {{ 'Delete'|trans({}, 'Admin.Actions') }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="material-icons">collections</i>
+                    <p>{{ 'No accepted images.'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
+                    <p class="text-muted">{{ 'Accepted images will appear here and in the product gallery.'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="modal fade" id="generateImageModal" tabindex="-1" role="dialog" aria-labelledby="generateImageModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="generateImageModalLabel">
+                        <i class="material-icons">auto_awesome</i>
+                        {{ 'Generate an image with AI'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="prompts-loading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">{{ 'Loading...'|trans({}, 'Admin.Global') }}</span>
+                        </div>
+                        <p class="mt-2">{{ 'Loading available prompts...'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
+                    </div>
+                    <div id="prompts-error" class="alert alert-danger d-none"></div>
+                    <div id="prompts-list" class="d-none">
+                        <div class="form-group">
+                            <label>{{ 'Generation style:'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                            <select class="form-control" id="prompt-select">
+                                <option value="">-- {{ 'Choose a style'|trans({}, 'Modules.Itrblueboost.Admin') }} --</option>
+                            </select>
+                            <small class="form-text text-muted" id="prompt-description"></small>
+                        </div>
+
+                        {% if existing_images|length > 0 %}
+                        <div class="form-group mt-3">
+                            <label>{{ 'Base image (optional):'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                            <div class="image-selector">
+                                <div class="row">
+                                    <div class="col-3 mb-2">
+                                        <div class="base-image-option selected" data-image-id="">
+                                            <div class="no-image-placeholder">
+                                                <i class="material-icons">add_photo_alternate</i>
+                                                <span>{{ 'None'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% for img in existing_images %}
+                                    <div class="col-3 mb-2">
+                                        <div class="base-image-option" data-image-id="{{ img.id_image }}">
+                                            <img src="{{ img.url }}" alt="Image {{ img.id_image }}">
+                                            {% if img.cover %}<span class="badge badge-primary cover-badge">Cover</span>{% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <small class="form-text text-muted">{{ 'Select an existing image for the AI to use as inspiration.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
+                        </div>
+                        {% endif %}
+
+                        <div class="form-group mt-3">
+                            <label>{{ 'Additional context (optional):'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                            <textarea class="form-control" id="context-input" rows="2" placeholder="{{ 'E.g.: White background, minimalist style...'|trans({}, 'Modules.Itrblueboost.Admin') }}"></textarea>
+                        </div>
+                    </div>
+                    <div id="generate-progress" class="d-none text-center py-4">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="sr-only">{{ 'Generating...'|trans({}, 'Admin.Global') }}</span>
+                        </div>
+                        <p class="mt-2">{{ 'Generating image... This may take a few seconds.'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
+                    </div>
+                    <div id="generate-result" class="d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        {{ 'Close'|trans({}, 'Admin.Actions') }}
+                    </button>
+                    <button type="button" class="btn btn-success" id="btn-confirm-generate" disabled>
+                        <i class="material-icons">auto_awesome</i>
+                        {{ 'Generate'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function() {
+            'use strict';
+
+            var btnGenerate = document.getElementById('btn-generate-image');
+            var btnConfirm = document.getElementById('btn-confirm-generate');
+            var promptSelect = document.getElementById('prompt-select');
+            var promptDescription = document.getElementById('prompt-description');
+            var promptsLoading = document.getElementById('prompts-loading');
+            var promptsError = document.getElementById('prompts-error');
+            var promptsList = document.getElementById('prompts-list');
+            var generateProgress = document.getElementById('generate-progress');
+            var generateResult = document.getElementById('generate-result');
+            var modal = $('#generateImageModal');
+
+            if (btnGenerate) {
+                btnGenerate.addEventListener('click', function() {
+                    promptsLoading.classList.remove('d-none');
+                    promptsError.classList.add('d-none');
+                    promptsList.classList.add('d-none');
+                    generateProgress.classList.add('d-none');
+                    generateResult.classList.add('d-none');
+                    btnConfirm.disabled = true;
+                    btnConfirm.classList.remove('d-none');
+                    promptSelect.innerHTML = '<option value="">-- Choose a style --</option>';
+
+                    modal.modal('show');
+
+                    fetch(this.dataset.promptsUrl, {
+                        method: 'GET',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        promptsLoading.classList.add('d-none');
+
+                        if (!data.success) {
+                            promptsError.textContent = data.message || 'Error loading prompts.';
+                            promptsError.classList.remove('d-none');
+                            return;
+                        }
+
+                        var prompts = data.prompts || [];
+                        if (prompts.length === 0) {
+                            promptsError.textContent = 'No prompts available.';
+                            promptsError.classList.remove('d-none');
+                            return;
+                        }
+
+                        prompts.forEach(function(prompt) {
+                            var option = document.createElement('option');
+                            option.value = prompt.id;
+                            option.textContent = prompt.title;
+                            option.dataset.description = prompt.short_description || '';
+                            promptSelect.appendChild(option);
+                        });
+
+                        promptsList.classList.remove('d-none');
+                    })
+                    .catch(function() {
+                        promptsLoading.classList.add('d-none');
+                        promptsError.textContent = 'Connection error.';
+                        promptsError.classList.remove('d-none');
+                    });
+                });
+            }
+
+            if (promptSelect) {
+                promptSelect.addEventListener('change', function() {
+                    var selectedOption = this.options[this.selectedIndex];
+                    promptDescription.textContent = selectedOption.dataset.description || '';
+                    btnConfirm.disabled = !this.value;
+                });
+            }
+
+            var selectedBaseImageId = '';
+            document.querySelectorAll('.base-image-option').forEach(function(option) {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.base-image-option').forEach(function(o) {
+                        o.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                    selectedBaseImageId = this.dataset.imageId || '';
+                });
+            });
+
+            if (btnConfirm) {
+                btnConfirm.addEventListener('click', function() {
+                    var promptId = promptSelect.value;
+                    if (!promptId) return;
+
+                    promptsList.classList.add('d-none');
+                    btnConfirm.classList.add('d-none');
+                    generateProgress.classList.remove('d-none');
+
+                    var formData = new FormData();
+                    formData.append('prompt_id', promptId);
+
+                    if (selectedBaseImageId) {
+                        formData.append('base_image_id', selectedBaseImageId);
+                    }
+
+                    var contextInput = document.getElementById('context-input');
+                    if (contextInput && contextInput.value.trim()) {
+                        formData.append('context', contextInput.value.trim());
+                    }
+
+                    fetch(btnGenerate.dataset.generateUrl, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        generateProgress.classList.add('d-none');
+
+                        if (data.success) {
+                            generateResult.innerHTML = '<div class="alert alert-success">' +
+                                '<i class="material-icons">check_circle</i> ' + data.message +
+                                '<br><small>Credits used: ' + data.credits_used + ' | Credits remaining: ' + data.credits_remaining + '</small>' +
+                                '</div>';
+                            generateResult.classList.remove('d-none');
+                            setTimeout(function() { window.location.reload(); }, 2000);
+                        } else {
+                            generateResult.innerHTML = '<div class="alert alert-danger">' +
+                                '<i class="material-icons">error</i> ' + (data.message || 'Error') +
+                                '</div>';
+                            generateResult.classList.remove('d-none');
+                            btnConfirm.classList.remove('d-none');
+                            promptsList.classList.remove('d-none');
+                        }
+                    })
+                    .catch(function() {
+                        generateProgress.classList.add('d-none');
+                        generateResult.innerHTML = '<div class="alert alert-danger">Connection error.</div>';
+                        generateResult.classList.remove('d-none');
+                        btnConfirm.classList.remove('d-none');
+                        promptsList.classList.remove('d-none');
+                    });
+                });
+            }
+
+            function handleImageAction(button) {
+                var url = button.dataset.url;
+                var id = button.dataset.id;
+                var card = document.getElementById('image-card-' + id);
+
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        if (card) {
+                            card.style.transition = 'opacity 0.3s';
+                            card.style.opacity = '0';
+                            setTimeout(function() {
+                                card.remove();
+                                window.location.reload();
+                            }, 300);
+                        }
+                    } else {
+                        alert(data.message || 'Error');
+                        button.disabled = false;
+                        button.innerHTML = button.classList.contains('btn-accept') ? '<i class="material-icons">check</i>' :
+                                          button.classList.contains('btn-reject') ? '<i class="material-icons">close</i>' :
+                                          '<i class="material-icons">delete</i> Delete';
+                    }
+                })
+                .catch(function() {
+                    alert('Connection error.');
+                    button.disabled = false;
+                });
+            }
+
+            document.querySelectorAll('.btn-accept').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    handleImageAction(this);
+                });
+            });
+
+            document.querySelectorAll('.btn-reject').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    if (confirm('Reject this image?')) {
+                        handleImageAction(this);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.btn-delete').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    if (confirm('Permanently delete this image? The image will also be removed from the product gallery.')) {
+                        handleImageAction(this);
+                    }
+                });
+            });
+
+        })();
+    </script>
+{% endblock %}
