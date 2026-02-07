@@ -198,12 +198,11 @@
 
     /**
      * Inject buttons in PS1.7 footer (.product-footer.justify-content-md-center)
+     * Buttons are inserted directly in the second column without a wrapper div
      */
     function injectPS17FooterButtons(footer, faqUrl, imageUrl, faqCount) {
-        // Create container for our buttons
-        var container = document.createElement('div');
-        container.id = 'itrblueboost-buttons-container';
-        container.className = 'itrblueboost-ps17-buttons';
+        // Find the second column (.col-sm-5.col-lg-7.text-right) in footer
+        var targetColumn = footer.querySelector('.col-sm-5.col-lg-7.text-right') || footer;
 
         // Create FAQ button
         if (faqUrl && !document.getElementById('itrblueboost-faq-btn')) {
@@ -213,7 +212,7 @@
             faqBtn.className = 'btn btn-outline-secondary itrblueboost-btn';
             faqBtn.title = 'Manage product FAQs';
             faqBtn.innerHTML = '<i class="material-icons">help_outline</i> FAQs (' + faqCount + ')';
-            container.appendChild(faqBtn);
+            targetColumn.appendChild(faqBtn);
             console.log('[ITRBLUEBOOST] FAQ button created for PS1.7 footer');
         }
 
@@ -225,14 +224,11 @@
             imageBtn.className = 'btn btn-outline-secondary itrblueboost-btn';
             imageBtn.title = 'Manage AI product images';
             imageBtn.innerHTML = '<i class="material-icons">auto_awesome</i> AI Images';
-            container.appendChild(imageBtn);
+            targetColumn.appendChild(imageBtn);
             console.log('[ITRBLUEBOOST] AI Images button created for PS1.7 footer');
         }
 
-        // Insert at the beginning of footer
-        footer.insertBefore(container, footer.firstChild);
-
-        console.log('[ITRBLUEBOOST] Buttons injected in PS1.7 footer (.product-footer)');
+        console.log('[ITRBLUEBOOST] Buttons injected in PS1.7 footer (second column)');
     }
 
 })();

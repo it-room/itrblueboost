@@ -52,7 +52,17 @@ Once installed, configure the module:
    - Product image generation
    - Category FAQ generation
 
-The remaining API credits are displayed as a badge in the admin header.
+The remaining API credits are displayed as a badge in the admin header (see **Performance Optimization** below).
+
+### Configuration Keys
+
+The module uses the following configuration keys (stored in `ps_configuration`):
+
+- `ITRBLUEBOOST_API_KEY`: Your ITROOM API key (required)
+- `ITRBLUEBOOST_ENABLE_PRODUCT_FAQ`: Enable/disable product FAQ generation
+- `ITRBLUEBOOST_ENABLE_PRODUCT_IMAGE`: Enable/disable product image generation
+- `ITRBLUEBOOST_ENABLE_CATEGORY_FAQ`: Enable/disable category FAQ generation
+- `ITRBLUEBOOST_CREDITS_REMAINING`: Stores the last known remaining API credits (automatically updated)
 
 ## Admin Menu Structure
 
@@ -127,6 +137,22 @@ The module creates the following database tables:
 - `itrblueboost_api_log`: Complete log of all API requests
 - `itrblueboost_credit_history`: History of API credit usage
 
+## Performance Optimization
+
+### Efficient Credit Badge Display
+
+The credits badge displayed in the back office header is now highly optimized:
+
+- **No API calls on page loads**: Previously, the badge was refreshed with an API call on every admin page load
+- **Configuration-based storage**: The remaining credits are stored in `ps_configuration` with the key `ITRBLUEBOOST_CREDITS_REMAINING`
+- **Automatic updates**: The credit balance is automatically updated after each API interaction:
+  - FAQ generation (products and categories)
+  - Image generation
+  - Account info fetch
+- **Result**: Significantly reduced API calls and improved back office performance
+
+The credit value is retrieved from the database configuration table on every page load, eliminating unnecessary API requests while keeping the badge always up-to-date after each operation.
+
 ## Hooks
 
 The module registers the following PrestaShop hooks:
@@ -137,7 +163,7 @@ The module registers the following PrestaShop hooks:
 - `actionObjectImageDeleteAfter`: Update AI image records when PrestaShop images are deleted
 - `displayFooterCategory`: Display category FAQs on front-office
 - `actionCategoryDelete`: Clean up FAQs when category is deleted
-- `displayBackOfficeHeader`: Display credit badge in admin header
+- `displayBackOfficeHeader`: Display credit badge in admin header (optimized with Configuration storage)
 
 ## Compatibility
 
@@ -147,6 +173,13 @@ The module registers the following PrestaShop hooks:
 - **Multisite**: Fully supported
 
 ## Changelog
+
+### Version 1.5.0
+- **Performance improvement**: Eliminated API call on every admin page load for credit badge display
+- Implemented credit balance caching in `ps_configuration` (key: `ITRBLUEBOOST_CREDITS_REMAINING`)
+- Credit value is automatically updated after each API interaction (FAQ generation, image generation, account info fetch)
+- Created new hook handler class `src/Hooks/DisplayBackOfficeHeader.php` following single-responsibility pattern
+- Back office header now displays credits from database configuration instead of making API requests
 
 ### Version 1.4.1
 - Fixed PrestaShop 1.7.x compatibility issue with DataColumn namespace
@@ -187,6 +220,7 @@ itrblueboost/
 │   ├── Install/        # Installation and database setup
 │   ├── Controller/     # Admin and API controllers
 │   ├── Entity/         # Entity models (ProductFaq, CategoryFaq, ProductImage)
+│   ├── Hooks/          # Hook handler classes (one class per hook)
 │   ├── Repository/     # Data repository classes
 │   └── Service/        # Business logic services
 ├── views/
@@ -197,6 +231,15 @@ itrblueboost/
 ├── config/            # Symfony configuration
 └── itrblueboost.php   # Main module class
 ```
+
+### Hook Handler Architecture
+
+The module follows a single-responsibility pattern for hook handling:
+
+- Each hook has a dedicated handler class in `src/Hooks/`
+- Hook handler classes are instantiated by the main module class
+- Each handler implements its own logic with a single `execute()` method
+- Example: `DisplayBackOfficeHeader.php` handles the `displayBackOfficeHeader` hook for rendering the credits badge
 
 ### Code Standards
 

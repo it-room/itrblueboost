@@ -28,12 +28,13 @@ class Itrblueboost extends Module
     public const CONFIG_SERVICE_FAQ = 'ITRBLUEBOOST_SERVICE_FAQ';
     public const CONFIG_SERVICE_IMAGE = 'ITRBLUEBOOST_SERVICE_IMAGE';
     public const CONFIG_SERVICE_CATEGORY_FAQ = 'ITRBLUEBOOST_SERVICE_CATEGORY_FAQ';
+    public const CONFIG_CREDITS_REMAINING = 'ITRBLUEBOOST_CREDITS_REMAINING';
 
     public function __construct()
     {
         $this->name = 'itrblueboost';
         $this->tab = 'administration';
-        $this->version = '1.4.5';
+        $this->version = '1.5.0';
         $this->author = 'ITROOM';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
@@ -501,120 +502,8 @@ class Itrblueboost extends Module
      */
     public function hookDisplayBackOfficeHeader(array $params): string
     {
-        $apiKey = Configuration::get(self::CONFIG_API_KEY);
+        $hook = new \Itrblueboost\Hooks\DisplayBackOfficeHeader($this);
 
-        if (empty($apiKey)) {
-            return '';
-        }
-
-        // Use cache to avoid too many API calls (cache for 5 minutes)
-        $cacheKey = 'itrblueboost_credits_' . md5($apiKey);
-        $credits = null;
-
-        if (Cache::isStored($cacheKey)) {
-            $credits = Cache::retrieve($cacheKey);
-        } else {
-            $apiService = new \Itrblueboost\Service\ApiService();
-            $accountInfo = $apiService->getAccountInfo();
-
-            if (isset($accountInfo['success']) && $accountInfo['success'] && isset($accountInfo['client']['credits'])) {
-                $credits = (int) $accountInfo['client']['credits'];
-                Cache::store($cacheKey, $credits);
-            }
-        }
-
-        if ($credits === null) {
-            return '';
-        }
-
-        /** @var \Symfony\Component\Routing\RouterInterface $router */
-        $router = $this->get('router');
-        $configUrl = $router->generate('itrblueboost_configuration');
-
-        $html = '
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-        <style>
-            .itrblueboost-credits-badge {
-                display: inline-flex !important;
-                align-items: center !important;
-                gap: 6px;
-                background: linear-gradient(135deg, #70d99f 0%, #4caf50 100%) !important;
-                color: #fff !important;
-                padding: 6px 14px !important;
-                border-radius: 20px !important;
-                font-size: 13px !important;
-                font-weight: 600 !important;
-                text-decoration: none !important;
-                margin-left: 10px;
-                transition: all 0.2s ease;
-                box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
-                vertical-align: middle;
-                line-height: 1.4;
-                font-family: "Open Sans", Arial, Helvetica, sans-serif;
-            }
-            .itrblueboost-credits-badge:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4);
-                color: #fff !important;
-                text-decoration: none !important;
-            }
-            .itrblueboost-credits-badge .material-icons {
-                font-size: 16px;
-            }
-            .itrblueboost-credits-badge .credits-count {
-                font-weight: 700;
-            }
-        </style>
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                // Modern pages: new Symfony header
-                var shopLink = document.querySelector("#header-shop-list-container, .shop-list, a[href*=\'/\'][target=\'_blank\'].header-link, .header_shop_name");
-
-                if (!shopLink) {
-                    // Legacy pages: old header structure
-                    var allLinks = document.querySelectorAll("#header_infos a, .header-right a, #header_quick a, #header_employee_box a");
-                    for (var i = 0; i < allLinks.length; i++) {
-                        if (allLinks[i].getAttribute("target") === "_blank" || allLinks[i].textContent.toLowerCase().includes("boutique")) {
-                            shopLink = allLinks[i];
-                            break;
-                        }
-                    }
-                }
-
-                var badge = document.createElement("a");
-                badge.href = "' . $configUrl . '";
-                badge.className = "itrblueboost-credits-badge";
-                badge.innerHTML = \'<i class="material-icons">toll</i><span class="credits-count">' . $credits . '</span> crédits\';
-                badge.title = "Crédits ITROOM restants";
-
-                // Modern page: Symfony header detected
-                var isModern = document.querySelector("#header-shop-list-container, .component-name-wrapper, .header-right .shop-list");
-                if (isModern) {
-                    if (shopLink && shopLink.parentElement) {
-                        shopLink.parentElement.insertBefore(badge, shopLink.nextSibling);
-                    } else {
-                        var header = document.querySelector(".header-right, header .navbar");
-                        if (header) {
-                            header.appendChild(badge);
-                        }
-                    }
-                } else {
-                    // Legacy page: insert after the "Voir ma boutique" li
-                    var shopnameLi = document.querySelector("li.shopname");
-                    if (shopnameLi && shopnameLi.parentElement) {
-                        var li = document.createElement("li");
-                        li.className = "shopname";
-                        li.style.marginTop = "5px";
-                        li.setAttribute("data-mobile", "true");
-                        li.setAttribute("data-from", "header-list");
-                        li.setAttribute("data-target", "menu");
-                        li.appendChild(badge);
-                        shopnameLi.parentElement.insertBefore(li, shopnameLi.nextSibling);
-                    }
-                }
-            });
-        </script>';
-
-        return $html;
+        return $hook->execute($params);
     }
 }

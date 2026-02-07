@@ -2,6 +2,24 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.5.0] - 2026-02-04
+
+### Changed
+- Amélioration majeure des performances : suppression des appels API sur chaque chargement de page du back office
+- Les crédits restants sont maintenant stockés en base de données (`ps_configuration` avec la clé `ITRBLUEBOOST_CREDITS_REMAINING`) et lus depuis la configuration au lieu d'appels API
+- Les crédits en configuration sont automatiquement mis à jour après chaque appel API (génération FAQ, génération image, récupération infos compte, etc.)
+- Extraction de la logique du hook `displayBackOfficeHeader` dans une classe dédiée `src/Hooks/DisplayBackOfficeHeader.php` pour respecter le principe de responsabilité unique
+
+### Added
+- Nouvelle classe `src/Hooks/DisplayBackOfficeHeader.php` pour gérer l'affichage du header du back office
+- Nouvelle méthode `updateStoredCredits()` dans `src/Service/ApiLogger.php` pour persister les crédits après chaque réponse API
+- Nouvelle constante `CONFIG_CREDITS_REMAINING` dans le fichier principal du module
+- Ajout de la clé de configuration `ITRBLUEBOOST_CREDITS_REMAINING` à l'installation et désinstallation du module
+- Script d'upgrade `upgrade/upgrade-1.5.0.php` pour initialiser la nouvelle clé de configuration
+
+### Fixed
+- Correction du stockage des crédits lors de la sauvegarde/validation de la clé API dans `src/Form/ConfigurationDataConfiguration.php`
+
 ## [1.4.5] - 2026-02-03
 
 ### Improved

@@ -78,7 +78,7 @@
                                         <td>{{ record.question|striptags|slice(0, 100) }}{% if record.question|length > 100 %}...{% endif %}</td>
                                         <td>
                                             {% if record.answer %}
-                                                {{ record.answer|striptags|slice(0, 150) }}{% if record.answer|striptags|length > 150 %}...{% endif %}
+                                                {{ record.answer|striptags }}
                                             {% else %}
                                                 <span class="text-muted font-italic">{{ 'No answer'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
                                             {% endif %}

@@ -54,9 +54,6 @@
         .faq-answer {
             color: #666;
             font-size: 13px;
-            max-height: 80px;
-            overflow: hidden;
-            text-overflow: ellipsis;
             line-height: 1.4;
         }
         .faq-card-footer {
@@ -200,7 +197,7 @@
                             </div>
                             <div class="faq-card-body">
                                 <div class="faq-question">{{ faq.question|default('-') }}</div>
-                                <div class="faq-answer">{{ faq.answer|default('-')|striptags|slice(0, 200) }}{% if faq.answer|length > 200 %}...{% endif %}</div>
+                                <div class="faq-answer">{{ faq.answer|default('-')|striptags }}</div>
                             </div>
                             <div class="faq-card-footer">
                                 <div class="faq-card-info">

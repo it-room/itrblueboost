@@ -76,6 +76,7 @@ class ConfigurationDataConfiguration implements DataConfigurationInterface
             Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_FAQ, 0);
             Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_IMAGE, 0);
             Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CATEGORY_FAQ, 0);
+            Configuration::updateValue(Itrblueboost::CONFIG_CREDITS_REMAINING, '');
 
             return;
         }
@@ -88,6 +89,13 @@ class ConfigurationDataConfiguration implements DataConfigurationInterface
             Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CATEGORY_FAQ, 0);
 
             return;
+        }
+
+        if (isset($accountInfo['client']['credits'])) {
+            Configuration::updateValue(
+                Itrblueboost::CONFIG_CREDITS_REMAINING,
+                (int) $accountInfo['client']['credits']
+            );
         }
 
         $activeServices = $accountInfo['services']['active'] ?? [];

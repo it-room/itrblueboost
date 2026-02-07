@@ -157,9 +157,35 @@ class ApiLogger
             ];
         }
 
+        $this->updateStoredCredits($decoded);
+
         return array_merge($decoded, [
             'http_code' => $httpCode,
         ]);
+    }
+
+    /**
+     * Update stored credits in Configuration from API response.
+     *
+     * Handles two response formats:
+     * - credits_remaining at root level (FAQ/image generation responses)
+     * - client.credits in account info responses
+     *
+     * @param array<string, mixed> $response Decoded API response
+     */
+    private function updateStoredCredits(array $response): void
+    {
+        $credits = null;
+
+        if (isset($response['credits_remaining'])) {
+            $credits = (int) $response['credits_remaining'];
+        } elseif (isset($response['client']['credits'])) {
+            $credits = (int) $response['client']['credits'];
+        }
+
+        if ($credits !== null) {
+            Configuration::updateValue(Itrblueboost::CONFIG_CREDITS_REMAINING, $credits);
+        }
     }
 
     /**

@@ -434,7 +434,8 @@ class Installer
         return Configuration::updateValue(Itrblueboost::CONFIG_API_KEY, '')
             && Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_FAQ, 0)
             && Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_IMAGE, 0)
-            && Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CATEGORY_FAQ, 0);
+            && Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CATEGORY_FAQ, 0)
+            && Configuration::updateValue(Itrblueboost::CONFIG_CREDITS_REMAINING, '');
     }
 
     /**
@@ -445,6 +446,7 @@ class Installer
         return Configuration::deleteByName(Itrblueboost::CONFIG_API_KEY)
             && Configuration::deleteByName(Itrblueboost::CONFIG_SERVICE_FAQ)
             && Configuration::deleteByName(Itrblueboost::CONFIG_SERVICE_IMAGE)
-            && Configuration::deleteByName(Itrblueboost::CONFIG_SERVICE_CATEGORY_FAQ);
+            && Configuration::deleteByName(Itrblueboost::CONFIG_SERVICE_CATEGORY_FAQ)
+            && Configuration::deleteByName(Itrblueboost::CONFIG_CREDITS_REMAINING);
     }
 }
