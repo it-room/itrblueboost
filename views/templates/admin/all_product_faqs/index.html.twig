@@ -13,10 +13,14 @@
             border-radius: 8px;
             overflow: hidden;
             background: #fff;
-            transition: box-shadow 0.2s;
+            transition: box-shadow 0.2s, opacity 0.3s;
         }
         .faq-card:hover {
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .faq-card.selected {
+            border-color: #25b9d7;
+            box-shadow: 0 0 0 2px rgba(37,185,215,0.3);
         }
         .faq-card-header {
             padding: 12px;
@@ -25,6 +29,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+        .faq-card-header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .faq-card-product {
             font-size: 13px;
@@ -141,6 +150,34 @@
             gap: 15px;
             align-items: center;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .view-toggle {
+            margin-left: auto;
+            display: flex;
+            gap: 4px;
+        }
+        .view-toggle-btn {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            color: #666;
+            transition: all 0.2s;
+        }
+        .view-toggle-btn:hover {
+            background: #f0f0f0;
+        }
+        .view-toggle-btn.active {
+            background: #25b9d7;
+            color: #fff;
+            border-color: #25b9d7;
+        }
+        .view-toggle-btn .material-icons {
+            font-size: 20px;
         }
         .pagination-wrapper {
             display: flex;
@@ -151,6 +188,150 @@
             display: flex;
             gap: 5px;
             align-items: center;
+        }
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+        }
+        .toast-notification {
+            min-width: 280px;
+            padding: 14px 20px;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateX(40px);
+            transition: opacity 0.3s, transform 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .toast-notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .toast-notification.toast-success { background: #28a745; }
+        .toast-notification.toast-error { background: #dc3545; }
+
+        /* Checkbox styling */
+        .faq-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        /* List view table */
+        .faq-list-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .faq-list-table th,
+        .faq-list-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+        .faq-list-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #666;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .faq-list-table tr:hover {
+            background: #f8f9fa;
+        }
+        .faq-list-table tr.selected {
+            background: rgba(37,185,215,0.08);
+        }
+        .faq-list-table .col-checkbox { width: 40px; }
+        .faq-list-table .col-ref { width: 120px; }
+        .faq-list-table .col-status { width: 100px; }
+        .faq-list-table .col-active { width: 80px; }
+        .faq-list-table .col-date { width: 130px; }
+        .faq-list-table .col-actions { width: 180px; text-align: right; }
+        .faq-list-table .faq-card-actions { justify-content: flex-end; }
+        .faq-list-table .truncate-text {
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+
+        /* Bulk toolbar */
+        .bulk-toolbar {
+            position: fixed;
+            bottom: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #343a40;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 9999;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            transition: bottom 0.3s ease;
+            white-space: nowrap;
+        }
+        .bulk-toolbar.visible {
+            bottom: 30px;
+        }
+        .bulk-toolbar .bulk-count {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .bulk-toolbar .btn-bulk {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: opacity 0.2s;
+        }
+        .bulk-toolbar .btn-bulk:hover {
+            opacity: 0.85;
+        }
+        .bulk-toolbar .btn-bulk:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .bulk-toolbar .btn-bulk-accept {
+            background: #28a745;
+            color: #fff;
+        }
+        .bulk-toolbar .btn-bulk-reject {
+            background: #ffc107;
+            color: #000;
+        }
+        .bulk-toolbar .btn-bulk-delete {
+            background: #dc3545;
+            color: #fff;
+        }
+        .bulk-toolbar .btn-bulk-deselect {
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .bulk-toolbar .btn-bulk .material-icons {
+            font-size: 16px;
         }
     </style>
 
@@ -171,18 +352,30 @@
                     <option value="accepted" {{ statusFilter == 'accepted' ? 'selected' : '' }}>{{ 'Accepted'|trans({}, 'Admin.Global') }}</option>
                     <option value="rejected" {{ statusFilter == 'rejected' ? 'selected' : '' }}>{{ 'Rejected'|trans({}, 'Admin.Global') }}</option>
                 </select>
+                <div class="view-toggle">
+                    <button type="button" class="view-toggle-btn active" id="btnViewGrid" title="{{ 'Grid view'|trans({}, 'Modules.Itrblueboost.Admin') }}">
+                        <i class="material-icons">view_module</i>
+                    </button>
+                    <button type="button" class="view-toggle-btn" id="btnViewList" title="{{ 'List view'|trans({}, 'Modules.Itrblueboost.Admin') }}">
+                        <i class="material-icons">view_list</i>
+                    </button>
+                </div>
             </div>
 
             {% if faqs|length > 0 %}
-                <div class="faq-grid">
+                {# ===== GRID VIEW ===== #}
+                <div class="faq-grid" id="faqGridView">
                     {% for faq in faqs %}
-                        <div class="faq-card" id="faq-card-{{ faq.id_itrblueboost_product_faq }}">
+                        <div class="faq-card" id="faq-card-{{ faq.id_itrblueboost_product_faq }}" data-faq-id="{{ faq.id_itrblueboost_product_faq }}">
                             <div class="faq-card-header">
-                                <div class="faq-card-product">
-                                    <a href="{{ path('admin_product_form', {id: faq.id_product}) }}" target="_blank" title="{{ faq.product_name }}">
-                                        {{ faq.product_reference|default('N/A') }}
-                                    </a>
-                                    <span class="product-id">(ID: {{ faq.id_product }})</span>
+                                <div class="faq-card-header-left">
+                                    <input type="checkbox" class="faq-checkbox" value="{{ faq.id_itrblueboost_product_faq }}">
+                                    <div class="faq-card-product">
+                                        <a href="{{ path('admin_product_form', {id: faq.id_product}) }}" target="_blank" title="{{ faq.product_name }}">
+                                            {{ faq.product_reference|default('N/A') }}
+                                        </a>
+                                        <span class="product-id">(ID: {{ faq.id_product }})</span>
+                                    </div>
                                 </div>
                                 <div class="badge-status-row">
                                     <span class="status-badge status-{{ faq.status }}" id="status-{{ faq.id_itrblueboost_product_faq }}">
@@ -248,6 +441,100 @@
                     {% endfor %}
                 </div>
 
+                {# ===== LIST VIEW ===== #}
+                <div id="faqListView" style="display: none;">
+                    <table class="faq-list-table">
+                        <thead>
+                            <tr>
+                                <th class="col-checkbox">
+                                    <input type="checkbox" class="faq-checkbox" id="selectAllCheckbox">
+                                </th>
+                                <th class="col-ref">{{ 'Reference'|trans({}, 'Admin.Global') }}</th>
+                                <th>{{ 'Question'|trans({}, 'Admin.Global') }}</th>
+                                <th>{{ 'Answer'|trans({}, 'Admin.Global') }}</th>
+                                <th class="col-status">{{ 'Status'|trans({}, 'Admin.Global') }}</th>
+                                <th class="col-active">{{ 'Active'|trans({}, 'Admin.Global') }}</th>
+                                <th class="col-date">{{ 'Date'|trans({}, 'Admin.Global') }}</th>
+                                <th class="col-actions">{{ 'Actions'|trans({}, 'Admin.Global') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for faq in faqs %}
+                                <tr id="faq-row-{{ faq.id_itrblueboost_product_faq }}" data-faq-id="{{ faq.id_itrblueboost_product_faq }}">
+                                    <td>
+                                        <input type="checkbox" class="faq-checkbox" value="{{ faq.id_itrblueboost_product_faq }}">
+                                    </td>
+                                    <td>
+                                        <a href="{{ path('admin_product_form', {id: faq.id_product}) }}" target="_blank" title="{{ faq.product_name }}">
+                                            {{ faq.product_reference|default('N/A') }}
+                                        </a>
+                                        <small class="text-muted d-block">(ID: {{ faq.id_product }})</small>
+                                    </td>
+                                    <td><span class="truncate-text" title="{{ faq.question|default('-') }}">{{ faq.question|default('-')|slice(0, 80) }}{% if faq.question|default('')|length > 80 %}...{% endif %}</span></td>
+                                    <td><span class="truncate-text" title="{{ faq.answer|default('-')|striptags }}">{{ faq.answer|default('-')|striptags|slice(0, 100) }}{% if faq.answer|default('')|striptags|length > 100 %}...{% endif %}</span></td>
+                                    <td>
+                                        <span class="status-badge status-{{ faq.status }}" id="list-status-{{ faq.id_itrblueboost_product_faq }}">
+                                            {{ faq.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if faq.status == 'accepted' %}
+                                            <span class="status-badge status-{{ faq.active ? 'active' : 'inactive' }}" id="list-active-status-{{ faq.id_itrblueboost_product_faq }}">
+                                                {{ faq.active ? 'Actif'|trans({}, 'Admin.Global') : 'Inactif'|trans({}, 'Admin.Global') }}
+                                            </span>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ faq.date_add|date('d/m/Y H:i') }}</td>
+                                    <td>
+                                        <div class="faq-card-actions">
+                                            {% if faq.status == 'pending' %}
+                                                <button type="button"
+                                                        class="btn-action btn-accept"
+                                                        data-id="{{ faq.id_itrblueboost_product_faq }}"
+                                                        data-url="{{ path('itrblueboost_admin_all_product_faqs_accept', {faqId: faq.id_itrblueboost_product_faq}) }}"
+                                                        title="{{ 'Accept'|trans({}, 'Admin.Actions') }}">
+                                                    <i class="material-icons">check</i>
+                                                </button>
+                                                <button type="button"
+                                                        class="btn-action btn-reject"
+                                                        data-id="{{ faq.id_itrblueboost_product_faq }}"
+                                                        data-url="{{ path('itrblueboost_admin_all_product_faqs_reject', {faqId: faq.id_itrblueboost_product_faq}) }}"
+                                                        title="{{ 'Reject'|trans({}, 'Admin.Actions') }}">
+                                                    <i class="material-icons">close</i>
+                                                </button>
+                                            {% endif %}
+                                            {% if faq.status == 'accepted' %}
+                                                <button type="button"
+                                                        class="btn-action btn-toggle-{{ faq.active ? 'active' : 'inactive' }}"
+                                                        id="list-toggle-btn-{{ faq.id_itrblueboost_product_faq }}"
+                                                        data-id="{{ faq.id_itrblueboost_product_faq }}"
+                                                        data-url="{{ path('itrblueboost_admin_all_product_faqs_toggle', {faqId: faq.id_itrblueboost_product_faq}) }}"
+                                                        title="{{ faq.active ? 'Disable'|trans({}, 'Admin.Actions') : 'Enable'|trans({}, 'Admin.Actions') }}">
+                                                    <i class="material-icons">{{ faq.active ? 'visibility_off' : 'visibility' }}</i>
+                                                </button>
+                                            {% endif %}
+                                            <a href="{{ path('itrblueboost_admin_product_faq_edit', {id_product: faq.id_product, faqId: faq.id_itrblueboost_product_faq}) }}"
+                                               class="btn-action btn-edit"
+                                               title="{{ 'Edit'|trans({}, 'Admin.Actions') }}">
+                                                <i class="material-icons">edit</i>
+                                            </a>
+                                            <button type="button"
+                                                    class="btn-action btn-delete"
+                                                    data-id="{{ faq.id_itrblueboost_product_faq }}"
+                                                    data-url="{{ path('itrblueboost_admin_all_product_faqs_delete', {faqId: faq.id_itrblueboost_product_faq}) }}"
+                                                    title="{{ 'Delete'|trans({}, 'Admin.Actions') }}">
+                                                <i class="material-icons">delete</i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
                 {% if totalPages > 1 %}
                     <div class="pagination-wrapper">
                         <nav>
@@ -289,6 +576,25 @@
         </div>
     </div>
 
+    {# ===== BULK TOOLBAR ===== #}
+    <div class="bulk-toolbar" id="bulkToolbar">
+        <span class="bulk-count"><span id="bulkCount">0</span> {{ 'selected'|trans({}, 'Admin.Global') }}</span>
+        <button type="button" class="btn-bulk btn-bulk-accept" id="bulkAcceptBtn">
+            <i class="material-icons">check</i> {{ 'Accept all'|trans({}, 'Modules.Itrblueboost.Admin') }}
+        </button>
+        <button type="button" class="btn-bulk btn-bulk-reject" id="bulkRejectBtn">
+            <i class="material-icons">close</i> {{ 'Reject all'|trans({}, 'Modules.Itrblueboost.Admin') }}
+        </button>
+        <button type="button" class="btn-bulk btn-bulk-delete" id="bulkDeleteBtn">
+            <i class="material-icons">delete</i> {{ 'Delete all'|trans({}, 'Modules.Itrblueboost.Admin') }}
+        </button>
+        <button type="button" class="btn-bulk btn-bulk-deselect" id="bulkDeselectBtn">
+            <i class="material-icons">close</i>
+        </button>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
     <!-- Modal for rejection reason -->
     <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -323,24 +629,46 @@
 
             var rejectUrl = '';
             var rejectFaqId = 0;
+            var isBulkReject = false;
             var rejectModalEl = document.getElementById('rejectModal');
             var rejectModalBackdrop = null;
+            var toastContainer = document.getElementById('toastContainer');
+            var bulkToolbar = document.getElementById('bulkToolbar');
 
-            // Modal functions (vanilla JS - PS 1.7 compatible)
+            // Bulk URLs
+            var bulkAcceptUrl = '{{ path("itrblueboost_admin_all_product_faqs_bulk_accept") }}';
+            var bulkRejectUrl = '{{ path("itrblueboost_admin_all_product_faqs_bulk_reject") }}';
+            var bulkDeleteUrl = '{{ path("itrblueboost_admin_all_product_faqs_bulk_delete") }}';
+
+            // ===========================
+            // Toast
+            // ===========================
+            function showToast(message, type) {
+                var toast = document.createElement('div');
+                toast.className = 'toast-notification toast-' + (type || 'success');
+                toast.innerHTML = '<i class="material-icons">' + (type === 'error' ? 'error' : 'check_circle') + '</i> ' + message;
+                toastContainer.appendChild(toast);
+
+                setTimeout(function() { toast.classList.add('show'); }, 10);
+                setTimeout(function() {
+                    toast.classList.remove('show');
+                    setTimeout(function() { toast.remove(); }, 300);
+                }, 4000);
+            }
+
+            // ===========================
+            // Modal (vanilla JS - PS 1.7)
+            // ===========================
             function showModal() {
                 rejectModalEl.style.display = 'block';
                 rejectModalEl.classList.add('show');
                 document.body.classList.add('modal-open');
 
-                // Create backdrop
                 rejectModalBackdrop = document.createElement('div');
                 rejectModalBackdrop.className = 'modal-backdrop fade show';
                 document.body.appendChild(rejectModalBackdrop);
 
-                // Close on backdrop click
                 rejectModalBackdrop.addEventListener('click', hideModal);
-
-                // Close on escape key
                 document.addEventListener('keydown', handleEscapeKey);
             }
 
@@ -356,10 +684,11 @@
 
                 document.removeEventListener('keydown', handleEscapeKey);
 
-                // Reset confirm button
                 var confirmBtn = document.getElementById('confirmReject');
                 confirmBtn.disabled = false;
                 confirmBtn.innerHTML = '{{ 'Reject'|trans({}, 'Admin.Actions') }}';
+
+                isBulkReject = false;
             }
 
             function handleEscapeKey(e) {
@@ -368,7 +697,6 @@
                 }
             }
 
-            // Close modal on X button click
             var closeButtons = rejectModalEl.querySelectorAll('[data-dismiss="modal"], .close');
             closeButtons.forEach(function(btn) {
                 btn.addEventListener('click', function(e) {
@@ -377,20 +705,271 @@
                 });
             });
 
+            // ===========================
+            // View Toggle
+            // ===========================
+            function initViewToggle() {
+                var btnGrid = document.getElementById('btnViewGrid');
+                var btnList = document.getElementById('btnViewList');
+                var gridView = document.getElementById('faqGridView');
+                var listView = document.getElementById('faqListView');
+
+                if (!btnGrid || !btnList || !gridView || !listView) {
+                    return;
+                }
+
+                var savedView = localStorage.getItem('itrblueboost_faq_view_preference') || 'grid';
+                applyView(savedView);
+
+                btnGrid.addEventListener('click', function() {
+                    applyView('grid');
+                    localStorage.setItem('itrblueboost_faq_view_preference', 'grid');
+                });
+
+                btnList.addEventListener('click', function() {
+                    applyView('list');
+                    localStorage.setItem('itrblueboost_faq_view_preference', 'list');
+                });
+
+                function applyView(view) {
+                    if (view === 'list') {
+                        gridView.style.display = 'none';
+                        listView.style.display = 'block';
+                        btnList.classList.add('active');
+                        btnGrid.classList.remove('active');
+                    } else {
+                        gridView.style.display = 'grid';
+                        listView.style.display = 'none';
+                        btnGrid.classList.add('active');
+                        btnList.classList.remove('active');
+                    }
+                }
+            }
+
+            // ===========================
+            // Checkboxes + Sync
+            // ===========================
+            function getSelectedIds() {
+                var checked = document.querySelectorAll('.faq-checkbox:checked:not(#selectAllCheckbox)');
+                var idsMap = {};
+                checked.forEach(function(cb) {
+                    idsMap[cb.value] = true;
+                });
+                return Object.keys(idsMap).map(function(id) { return parseInt(id, 10); });
+            }
+
+            function syncCheckboxes(faqId, isChecked) {
+                var allCbs = document.querySelectorAll('.faq-checkbox[value="' + faqId + '"]');
+                allCbs.forEach(function(cb) {
+                    cb.checked = isChecked;
+                });
+
+                // Update card/row selected class
+                var card = document.getElementById('faq-card-' + faqId);
+                var row = document.getElementById('faq-row-' + faqId);
+                if (card) {
+                    if (isChecked) {
+                        card.classList.add('selected');
+                    } else {
+                        card.classList.remove('selected');
+                    }
+                }
+                if (row) {
+                    if (isChecked) {
+                        row.classList.add('selected');
+                    } else {
+                        row.classList.remove('selected');
+                    }
+                }
+            }
+
+            function updateBulkToolbar() {
+                var ids = getSelectedIds();
+                var countEl = document.getElementById('bulkCount');
+                countEl.textContent = ids.length;
+
+                if (ids.length > 0) {
+                    bulkToolbar.classList.add('visible');
+                } else {
+                    bulkToolbar.classList.remove('visible');
+                }
+            }
+
+            function deselectAll() {
+                var allCbs = document.querySelectorAll('.faq-checkbox');
+                allCbs.forEach(function(cb) {
+                    cb.checked = false;
+                });
+
+                document.querySelectorAll('.faq-card.selected, .faq-list-table tr.selected').forEach(function(el) {
+                    el.classList.remove('selected');
+                });
+
+                var selectAllCb = document.getElementById('selectAllCheckbox');
+                if (selectAllCb) {
+                    selectAllCb.checked = false;
+                }
+
+                updateBulkToolbar();
+            }
+
+            function initCheckboxes() {
+                // Individual checkboxes
+                document.addEventListener('change', function(e) {
+                    if (!e.target.classList.contains('faq-checkbox')) {
+                        return;
+                    }
+                    if (e.target.id === 'selectAllCheckbox') {
+                        return;
+                    }
+
+                    syncCheckboxes(e.target.value, e.target.checked);
+                    updateBulkToolbar();
+                });
+
+                // Select all checkbox
+                var selectAllCb = document.getElementById('selectAllCheckbox');
+                if (selectAllCb) {
+                    selectAllCb.addEventListener('change', function() {
+                        var isChecked = this.checked;
+                        var listCbs = document.querySelectorAll('#faqListView .faq-checkbox:not(#selectAllCheckbox)');
+                        listCbs.forEach(function(cb) {
+                            cb.checked = isChecked;
+                            syncCheckboxes(cb.value, isChecked);
+                        });
+                        updateBulkToolbar();
+                    });
+                }
+            }
+
+            // ===========================
+            // Bulk Actions
+            // ===========================
+            function removeProcessedItems(ids) {
+                ids.forEach(function(id) {
+                    var card = document.getElementById('faq-card-' + id);
+                    var row = document.getElementById('faq-row-' + id);
+
+                    if (card) {
+                        card.style.transition = 'opacity 0.3s';
+                        card.style.opacity = '0';
+                        setTimeout(function() { card.remove(); }, 300);
+                    }
+                    if (row) {
+                        row.style.transition = 'opacity 0.3s';
+                        row.style.opacity = '0';
+                        setTimeout(function() { row.remove(); }, 300);
+                    }
+                });
+            }
+
+            function executeBulkAction(url, formData, successMessage) {
+                // Disable bulk buttons during action
+                var bulkBtns = bulkToolbar.querySelectorAll('.btn-bulk');
+                bulkBtns.forEach(function(btn) { btn.disabled = true; });
+
+                var countEl = document.getElementById('bulkCount');
+                var originalCount = countEl.textContent;
+                countEl.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        showToast(data.message || successMessage, 'success');
+                        var ids = getSelectedIds();
+                        removeProcessedItems(ids);
+                        deselectAll();
+
+                        if (data.errors && data.errors.length > 0) {
+                            data.errors.forEach(function(err) {
+                                showToast(err, 'error');
+                            });
+                        }
+                    } else {
+                        showToast(data.message || '{{ 'An error occurred.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'error');
+                    }
+
+                    bulkBtns.forEach(function(btn) { btn.disabled = false; });
+                    countEl.textContent = originalCount;
+                })
+                .catch(function() {
+                    showToast('{{ 'Connection error.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'error');
+                    bulkBtns.forEach(function(btn) { btn.disabled = false; });
+                    countEl.textContent = originalCount;
+                });
+            }
+
+            function initBulkActions() {
+                // Bulk Accept
+                document.getElementById('bulkAcceptBtn').addEventListener('click', function() {
+                    var ids = getSelectedIds();
+                    if (ids.length === 0) {
+                        return;
+                    }
+                    if (!confirm('{{ 'Accept'|trans({}, 'Admin.Actions') }} ' + ids.length + ' FAQ(s) ?')) {
+                        return;
+                    }
+
+                    var formData = new FormData();
+                    formData.append('faq_ids', ids.join(','));
+                    executeBulkAction(bulkAcceptUrl, formData, ids.length + ' FAQ(s) accepted.');
+                });
+
+                // Bulk Reject - open modal
+                document.getElementById('bulkRejectBtn').addEventListener('click', function() {
+                    var ids = getSelectedIds();
+                    if (ids.length === 0) {
+                        return;
+                    }
+                    isBulkReject = true;
+                    document.getElementById('rejectionReason').value = '';
+                    document.getElementById('rejectModalLabel').textContent = '{{ 'Reject'|trans({}, 'Admin.Actions') }} ' + ids.length + ' FAQ(s)';
+                    showModal();
+                });
+
+                // Bulk Delete
+                document.getElementById('bulkDeleteBtn').addEventListener('click', function() {
+                    var ids = getSelectedIds();
+                    if (ids.length === 0) {
+                        return;
+                    }
+                    if (!confirm('{{ 'Delete'|trans({}, 'Admin.Actions') }} ' + ids.length + ' FAQ(s) ?')) {
+                        return;
+                    }
+
+                    var formData = new FormData();
+                    formData.append('faq_ids', ids.join(','));
+                    executeBulkAction(bulkDeleteUrl, formData, ids.length + ' FAQ(s) deleted.');
+                });
+
+                // Deselect
+                document.getElementById('bulkDeselectBtn').addEventListener('click', function() {
+                    deselectAll();
+                });
+            }
+
+            // ===========================
             // Filter
+            // ===========================
             document.getElementById('statusFilter').addEventListener('change', function() {
-                var url = window.location.href.split('?')[0];
-                var params = [];
+                var url = new URL(window.location.href);
                 if (this.value) {
-                    params.push('status=' + encodeURIComponent(this.value));
+                    url.searchParams.set('status', this.value);
+                } else {
+                    url.searchParams.delete('status');
                 }
-                if (params.length > 0) {
-                    url += '?' + params.join('&');
-                }
-                window.location.href = url;
+                url.searchParams.delete('page');
+                window.location.href = url.toString();
             });
 
-            // Accept
+            // ===========================
+            // Single Accept
+            // ===========================
             document.querySelectorAll('.btn-accept').forEach(function(btn) {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -425,20 +1004,26 @@
                 });
             });
 
-            // Reject - open modal
+            // ===========================
+            // Single Reject - open modal
+            // ===========================
             document.querySelectorAll('.btn-reject').forEach(function(btn) {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
 
+                    isBulkReject = false;
                     rejectFaqId = this.dataset.id;
                     rejectUrl = this.dataset.url;
                     document.getElementById('rejectionReason').value = '';
+                    document.getElementById('rejectModalLabel').textContent = '{{ 'Reject FAQ'|trans({}, 'Modules.Itrblueboost.Admin') }}';
                     showModal();
                 });
             });
 
-            // Confirm reject
+            // ===========================
+            // Confirm Reject (single + bulk)
+            // ===========================
             document.getElementById('confirmReject').addEventListener('click', function(e) {
                 e.preventDefault();
 
@@ -449,38 +1034,72 @@
                 var originalHtml = button.innerHTML;
                 button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> {{ 'Processing...'|trans({}, 'Admin.Global') }}';
 
-                var formData = new FormData();
-                formData.append('rejection_reason', rejectionReason);
+                if (isBulkReject) {
+                    // Bulk reject
+                    var ids = getSelectedIds();
+                    var formData = new FormData();
+                    formData.append('faq_ids', ids.join(','));
+                    formData.append('rejection_reason', rejectionReason);
 
-                fetch(rejectUrl, {
-                    method: 'POST',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                    body: formData
-                })
-                .then(function(response) { return response.json(); })
-                .then(function(data) {
-                    if (data.success) {
+                    fetch(bulkRejectUrl, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
                         hideModal();
-                        var card = document.getElementById('faq-card-' + rejectFaqId);
-                        if (card) {
-                            card.style.transition = 'opacity 0.3s';
-                            card.style.opacity = '0';
-                            setTimeout(function() { card.remove(); }, 300);
+                        if (data.success) {
+                            showToast(data.message || ids.length + ' FAQ(s) rejected.', 'success');
+                            removeProcessedItems(ids);
+                            deselectAll();
+
+                            if (data.errors && data.errors.length > 0) {
+                                data.errors.forEach(function(err) {
+                                    showToast(err, 'error');
+                                });
+                            }
+                        } else {
+                            showToast(data.message || '{{ 'An error occurred.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'error');
                         }
-                    } else {
-                        alert(data.message || 'Error');
+                    })
+                    .catch(function() {
+                        hideModal();
+                        showToast('{{ 'Connection error.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'error');
+                    });
+                } else {
+                    // Single reject
+                    var formData = new FormData();
+                    formData.append('rejection_reason', rejectionReason);
+
+                    fetch(rejectUrl, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            hideModal();
+                            showToast('{{ 'Rejection reason sent successfully.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'success');
+                            removeProcessedItems([rejectFaqId]);
+                        } else {
+                            showToast(data.message || '{{ 'An error occurred.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'error');
+                            button.disabled = false;
+                            button.innerHTML = originalHtml;
+                        }
+                    })
+                    .catch(function() {
+                        showToast('{{ 'Connection error.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'error');
                         button.disabled = false;
                         button.innerHTML = originalHtml;
-                    }
-                })
-                .catch(function() {
-                    alert('Connection error');
-                    button.disabled = false;
-                    button.innerHTML = originalHtml;
-                });
+                    });
+                }
             });
 
+            // ===========================
             // Toggle active
+            // ===========================
             document.querySelectorAll('.btn-action[data-url*="toggle"]').forEach(function(btn) {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -497,19 +1116,48 @@
                     .then(function(response) { return response.json(); })
                     .then(function(data) {
                         if (data.success) {
+                            // Update grid view
                             var statusBadge = document.getElementById('active-status-' + id);
                             var icon = button.querySelector('i');
 
+                            // Update list view
+                            var listStatusBadge = document.getElementById('list-active-status-' + id);
+                            var listToggleBtn = document.getElementById('list-toggle-btn-' + id);
+
                             if (data.active) {
-                                statusBadge.className = 'status-badge status-active';
-                                statusBadge.textContent = 'Actif';
+                                if (statusBadge) {
+                                    statusBadge.className = 'status-badge status-active';
+                                    statusBadge.textContent = 'Actif';
+                                }
                                 button.className = 'btn-action btn-toggle-active';
-                                icon.textContent = 'visibility_off';
+                                if (icon) { icon.textContent = 'visibility_off'; }
+
+                                if (listStatusBadge) {
+                                    listStatusBadge.className = 'status-badge status-active';
+                                    listStatusBadge.textContent = 'Actif';
+                                }
+                                if (listToggleBtn) {
+                                    listToggleBtn.className = 'btn-action btn-toggle-active';
+                                    var listIcon = listToggleBtn.querySelector('i');
+                                    if (listIcon) { listIcon.textContent = 'visibility_off'; }
+                                }
                             } else {
-                                statusBadge.className = 'status-badge status-inactive';
-                                statusBadge.textContent = 'Inactif';
+                                if (statusBadge) {
+                                    statusBadge.className = 'status-badge status-inactive';
+                                    statusBadge.textContent = 'Inactif';
+                                }
                                 button.className = 'btn-action btn-toggle-inactive';
-                                icon.textContent = 'visibility';
+                                if (icon) { icon.textContent = 'visibility'; }
+
+                                if (listStatusBadge) {
+                                    listStatusBadge.className = 'status-badge status-inactive';
+                                    listStatusBadge.textContent = 'Inactif';
+                                }
+                                if (listToggleBtn) {
+                                    listToggleBtn.className = 'btn-action btn-toggle-inactive';
+                                    var listIcon = listToggleBtn.querySelector('i');
+                                    if (listIcon) { listIcon.textContent = 'visibility'; }
+                                }
                             }
                         } else {
                             alert(data.message || 'Error');
@@ -521,7 +1169,9 @@
                 });
             });
 
-            // Delete
+            // ===========================
+            // Single Delete
+            // ===========================
             document.querySelectorAll('.btn-delete').forEach(function(btn) {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -533,7 +1183,6 @@
 
                     var id = this.dataset.id;
                     var url = this.dataset.url;
-                    var card = document.getElementById('faq-card-' + id);
 
                     this.disabled = true;
                     var originalHtml = this.innerHTML;
@@ -547,11 +1196,7 @@
                     .then(function(response) { return response.json(); })
                     .then(function(data) {
                         if (data.success) {
-                            if (card) {
-                                card.style.transition = 'opacity 0.3s';
-                                card.style.opacity = '0';
-                                setTimeout(function() { card.remove(); }, 300);
-                            }
+                            removeProcessedItems([id]);
                         } else {
                             alert(data.message || 'Error');
                             button.disabled = false;
@@ -565,6 +1210,13 @@
                     });
                 });
             });
+
+            // ===========================
+            // Init
+            // ===========================
+            initViewToggle();
+            initCheckboxes();
+            initBulkActions();
         })();
     </script>
 {% endblock %}

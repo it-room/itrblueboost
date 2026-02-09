@@ -12,10 +12,15 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 
 ## Features
 
+- **Product Description Generation**: Generate AI-powered product descriptions and short descriptions
 - **Product FAQ Generation**: Generate frequently asked questions for products using AI
 - **Category FAQ Generation**: Create FAQs at the category level
 - **AI Image Generation**: Generate product images using ITROOM API
-- **Bulk Operations**: Generate content in bulk for multiple products/categories
+- **Inline Content Generation**: Generate descriptions directly from product edit form with inline buttons
+- **Bulk Operations**: Generate content in bulk for multiple products/categories; perform Accept All, Reject All, and Delete All operations on FAQs
+- **Flexible FAQ View Modes**: Toggle between grid view (cards) and list view (table) with automatic preference persistence
+- **Checkbox Selection System**: Select multiple FAQs across grid/list views with synchronized checkboxes and visual feedback
+- **Floating Bulk Toolbar**: Context-aware floating action toolbar appears when items are selected for quick bulk operations
 - **Admin Dashboard**: Complete management interface for all generated content
 - **Credit System**: Track remaining API credits directly from admin header
 - **Multi-shop Support**: Compatible with multi-shop PrestaShop installations
@@ -69,6 +74,7 @@ The module uses the following configuration keys (stored in `ps_configuration`):
 The module creates a dropdown menu in the **Configurer** section with the following sub-menus:
 
 - **Settings**: Configure API key and enable/disable services
+- **All Product Contents**: Centralized view for managing all AI-generated product descriptions and short descriptions
 - **All generated images**: View and manage all AI-generated product images
 - **All product FAQs**: Browse and edit all generated product FAQs
 - **All category FAQs**: Browse and edit all generated category FAQs
@@ -77,8 +83,40 @@ Additional contextual tabs are automatically displayed:
 - Product FAQs tab on product edit page (when enabled)
 - AI Images tab on product edit page (when enabled)
 - Category FAQs tab on category edit page (when enabled)
+- Generate buttons next to description and short description fields on product edit page (when enabled)
 
 ## Usage
+
+### Generating Product Descriptions
+
+Product descriptions and short descriptions can be generated directly from the product edit form or through the centralized admin interface.
+
+**From Product Edit Form (Inline Generation):**
+1. Navigate to a product edit page
+2. Locate the "Description" or "Description courte" (Short Description) fields
+3. Click the "Generate" button next to the field to generate content using AI
+4. The generated content appears as a pending item
+
+**From All Product Contents Menu:**
+1. Go to **Configurer** → **ITR Blue Boost** → **All Product Contents**
+2. View all generated product descriptions in a paginated list
+3. Filter by status: pending, accepted, or rejected
+4. For pending contents:
+   - **Accept**: Click the accept button to apply the generated content to the product
+   - **Reject**: Click the reject button and optionally provide a rejection reason
+5. For accepted contents:
+   - Toggle the active/inactive status to enable or disable the content
+   - Delete contents you no longer need
+
+**Content Workflow:**
+- Generated content starts in **pending** status
+- Accept pending content to apply it to the product's description or short description
+- Rejected content is deleted and its rejection reason is sent to the API
+- Accepted content can be toggled active/inactive without losing the data
+
+**Supported Content Types:**
+- **Description**: Full product description (long form)
+- **Description courte**: Short description (for list views and summaries)
 
 ### Generating Product FAQs
 
@@ -93,6 +131,44 @@ Additional contextual tabs are automatically displayed:
 2. Select multiple products
 3. Click "Generate FAQ (AI)" from bulk actions
 4. Confirm to generate FAQs for all selected products
+
+### Managing Product FAQs - All Product FAQs Page
+
+The "All Product FAQs" admin page provides comprehensive FAQ management with flexible viewing options and bulk operations.
+
+**View Preferences:**
+- **Grid View** (default): Display FAQs as cards with question, answer, and status information
+- **List View**: Display FAQs as a table with detailed columns
+- View preference is automatically saved to browser localStorage and persists across page reloads
+
+**Filtering and Navigation:**
+- Filter FAQs by status: All, Pending, Accepted, or Rejected
+- Pagination for browsing large numbers of FAQs
+- Search and filter preferences are preserved during navigation
+
+**Bulk Actions:**
+Select multiple FAQs using checkboxes to perform batch operations:
+1. Click individual checkboxes to select specific FAQs, or
+2. Use the "Select All" checkbox in list view to select all FAQs on the current page
+3. A floating bulk action toolbar appears at the bottom when items are selected, displaying:
+   - Selected count indicator
+   - **Accept All**: Approve all selected pending FAQs in one action
+   - **Reject All**: Reject all selected pending FAQs with optional rejection reason
+   - **Delete All**: Remove all selected FAQs permanently
+   - **Deselect All**: Clear all selections
+
+**Checkbox Synchronization:**
+- Checkboxes remain synchronized between grid and list views
+- Selecting an item in grid view automatically checks the corresponding checkbox in list view and vice versa
+- Visual feedback (highlighted cards/rows) shows which items are currently selected
+
+**Single Item Actions:**
+For individual FAQs:
+- **Accept** (pending status): Approve and apply the FAQ
+- **Reject** (pending status): Reject with optional rejection reason sent to the API
+- **Toggle Active/Inactive** (accepted status): Enable or disable the FAQ without deleting
+- **Edit**: Modify the FAQ content
+- **Delete**: Remove the FAQ permanently
 
 ### Generating Product Images
 
@@ -126,6 +202,9 @@ Customers can view and interact with the generated FAQs without any additional c
 
 The module creates the following database tables:
 
+- `itrblueboost_product_content`: Product description and short description content data
+- `itrblueboost_product_content_lang`: Product content in different languages
+- `itrblueboost_product_content_shop`: Product content to shop associations
 - `itrblueboost_product_faq`: Product FAQ data
 - `itrblueboost_product_faq_lang`: FAQ content in different languages
 - `itrblueboost_product_faq_shop`: FAQ to shop associations
@@ -159,7 +238,7 @@ The module registers the following PrestaShop hooks:
 
 - `actionAdminControllerSetMedia`: Load JS/CSS assets on admin pages
 - `displayProductExtraContent`: Display product FAQs on front-office
-- `actionProductDelete`: Clean up FAQs/images when product is deleted
+- `actionProductDelete`: Clean up FAQs/images/contents when product is deleted
 - `actionObjectImageDeleteAfter`: Update AI image records when PrestaShop images are deleted
 - `displayFooterCategory`: Display category FAQs on front-office
 - `actionCategoryDelete`: Clean up FAQs when category is deleted
@@ -173,6 +252,29 @@ The module registers the following PrestaShop hooks:
 - **Multisite**: Fully supported
 
 ## Changelog
+
+### Version 1.6.1
+- **New Feature**: Flexible view modes for All Product FAQs page (grid and list view)
+- **New Feature**: Grid/list view preference persisted to browser localStorage
+- **New Feature**: Bulk actions with floating toolbar for Accept All, Reject All, and Delete All operations
+- **New Feature**: Multi-select with synchronized checkboxes across grid and list views
+- **UI Enhancement**: Visual feedback for selected items (highlighted cards/rows)
+- **UI Enhancement**: Floating bulk action toolbar appears when items are selected with operation counters
+- **UX Improvement**: All checkbox selections remain synchronized when switching between views
+
+### Version 1.6.0
+- **New Feature**: AI-powered product description generation (description and short description)
+- **New Admin Menu**: "All Product Contents" for centralized management of generated descriptions
+- **Inline Generation Buttons**: Generate descriptions directly from product edit form with action buttons
+- **Content Workflow**: Automatic content application to products upon acceptance (pending -> accept -> applied)
+- **Content Status Management**: Support for pending, accepted, and rejected content states
+- **Rejection Tracking**: Capture and send rejection reasons to the API
+- **Toggle Content Active Status**: Accepted content can be toggled between active/inactive states
+- **Multi-language Support**: All product descriptions are multilingual compatible
+- **Shop-aware Content**: Product contents are properly associated with shops in multi-shop installations
+- Created new entity class `src/Entity/ProductContent.php` for managing product descriptions
+- Implemented controller classes for All Product Contents management: `src/Controller/Admin/AllProductContentsController.php`
+- Added database tables: `itrblueboost_product_content`, `itrblueboost_product_content_lang`, `itrblueboost_product_content_shop`
 
 ### Version 1.5.0
 - **Performance improvement**: Eliminated API call on every admin page load for credit badge display

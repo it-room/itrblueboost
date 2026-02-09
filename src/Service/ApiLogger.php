@@ -313,4 +313,74 @@ class ApiLogger
     {
         return $this->call('GET', '/api/image/prompts', null, 'image');
     }
+
+    /**
+     * Get content prompts (for product descriptions).
+     *
+     * @return array{success: bool, prompts?: array, message?: string}
+     */
+    public function getContentPrompts(): array
+    {
+        $result = $this->call('GET', '/api/description/prompts', null, 'content');
+
+        if (!isset($result['success'])) {
+            $result['success'] = isset($result['prompts']);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Generate content for a product (description or short description).
+     *
+     * @param int $promptId Prompt ID
+     * @param array<string, mixed> $productData Product data
+     * @param string $contentType Content type (description or description_short)
+     * @param int|null $productId Product ID for history
+     *
+     * @return array{success: bool, data?: array, message?: string, credits_used?: int, credits_remaining?: int}
+     */
+    public function generateProductContent(
+        int $promptId,
+        array $productData,
+        string $contentType = 'description',
+        ?int $productId = null
+    ): array {
+        if ($productId !== null) {
+            $productData['id_product'] = $productId;
+        }
+
+        $result = $this->call('POST', '/api/description', [
+            'prompt_id' => $promptId,
+            'type' => 'product',
+            'content_type' => $contentType,
+            'product' => $productData,
+        ], 'product_content');
+
+        if (isset($result['success']) && $result['success'] && isset($result['credits_used']) && $result['credits_used'] > 0) {
+            CreditHistory::log(
+                'product_content',
+                (int) $result['credits_used'],
+                (int) ($result['credits_remaining'] ?? 0),
+                $productId,
+                'product',
+                $productData['name'] ?? null
+            );
+        }
+
+        return $result;
+    }
+
+    /**
+     * Update a content on the API.
+     *
+     * @param int $apiContentId API Content ID
+     * @param array<string, mixed> $data Update data
+     *
+     * @return array{success: bool, message?: string}
+     */
+    public function updateContent(int $apiContentId, array $data): array
+    {
+        return $this->call('PUT', '/api/description/' . $apiContentId, $data, 'product_content');
+    }
 }

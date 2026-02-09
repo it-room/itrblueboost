@@ -2,23 +2,23 @@
 
 {% block content %}
     <style>
-        .faq-grid {
+        .content-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 20px;
             padding: 15px;
         }
-        .faq-card {
+        .content-card {
             border: 1px solid #ddd;
             border-radius: 8px;
             overflow: hidden;
             background: #fff;
             transition: box-shadow 0.2s;
         }
-        .faq-card:hover {
+        .content-card:hover {
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
-        .faq-card-header {
+        .content-card-header {
             padding: 12px;
             background: #f8f9fa;
             border-bottom: 1px solid #eee;
@@ -26,47 +26,48 @@
             justify-content: space-between;
             align-items: center;
         }
-        .faq-card-category {
+        .content-card-product {
             font-size: 13px;
         }
-        .faq-card-category a {
-            color: #6f42c1;
+        .content-card-product a {
+            color: #25b9d7;
             text-decoration: none;
             font-weight: 600;
         }
-        .faq-card-category a:hover {
+        .content-card-product a:hover {
             text-decoration: underline;
         }
-        .faq-card-category .category-id {
+        .content-card-product .product-id {
             color: #666;
             font-size: 12px;
             margin-left: 5px;
         }
-        .faq-card-body {
+        .content-card-body {
             padding: 12px;
         }
-        .faq-question {
+        .content-type-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
             font-weight: 600;
-            color: #333;
+            background: #17a2b8;
+            color: #fff;
             margin-bottom: 8px;
-            font-size: 14px;
         }
-        .faq-answer {
+        .content-text {
             color: #666;
             font-size: 13px;
-            max-height: 80px;
-            overflow: hidden;
-            text-overflow: ellipsis;
             line-height: 1.4;
         }
-        .faq-card-footer {
+        .content-card-footer {
             padding: 12px;
             border-top: 1px solid #eee;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .faq-card-info {
+        .content-card-info {
             font-size: 12px;
             color: #666;
         }
@@ -83,7 +84,7 @@
         .status-rejected { background: #dc3545; color: #fff; }
         .status-active { background: #28a745; color: #fff; }
         .status-inactive { background: #6c757d; color: #fff; }
-        .faq-card-actions {
+        .content-card-actions {
             display: flex;
             gap: 5px;
         }
@@ -105,30 +106,12 @@
         .btn-action .material-icons {
             font-size: 16px;
         }
-        .btn-accept {
-            background: #28a745;
-            color: #fff;
-        }
-        .btn-reject {
-            background: #ffc107;
-            color: #000;
-        }
-        .btn-toggle-active {
-            background: #ffc107;
-            color: #000;
-        }
-        .btn-toggle-inactive {
-            background: #28a745;
-            color: #fff;
-        }
-        .btn-edit {
-            background: #17a2b8;
-            color: #fff;
-        }
-        .btn-delete {
-            background: #dc3545;
-            color: #fff;
-        }
+        .btn-accept { background: #28a745; color: #fff; }
+        .btn-reject { background: #ffc107; color: #000; }
+        .btn-toggle-active { background: #ffc107; color: #000; }
+        .btn-toggle-inactive { background: #28a745; color: #fff; }
+        .btn-edit { background: #17a2b8; color: #fff; }
+        .btn-delete { background: #dc3545; color: #fff; }
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -186,9 +169,9 @@
     <div class="card">
         <div class="card-header">
             <h3 class="card-header-title">
-                <i class="material-icons">help_outline</i>
-                {{ 'All Category FAQs'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                <span class="badge badge-primary ml-2">{{ totalFaqs }}</span>
+                <i class="material-icons">description</i>
+                {{ 'All Product Contents'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                <span class="badge badge-primary ml-2">{{ totalContents }}</span>
             </h3>
         </div>
         <div class="card-body">
@@ -202,72 +185,74 @@
                 </select>
             </div>
 
-            {% if faqs|length > 0 %}
-                <div class="faq-grid">
-                    {% for faq in faqs %}
-                        <div class="faq-card" id="faq-card-{{ faq.id_itrblueboost_category_faq }}">
-                            <div class="faq-card-header">
-                                <div class="faq-card-category">
-                                    <a href="{{ path('admin_categories_edit', {categoryId: faq.id_category}) }}" target="_blank" title="{{ faq.category_name }}">
-                                        {{ faq.category_name|default('Category') }}
+            {% if contents|length > 0 %}
+                <div class="content-grid">
+                    {% for content in contents %}
+                        <div class="content-card" id="content-card-{{ content.id_itrblueboost_product_content }}">
+                            <div class="content-card-header">
+                                <div class="content-card-product">
+                                    <a href="{{ path('admin_product_form', {id: content.id_product}) }}" target="_blank" title="{{ content.product_name }}">
+                                        {{ content.product_reference|default('N/A') }}
                                     </a>
-                                    <span class="category-id">(ID: {{ faq.id_category }})</span>
+                                    <span class="product-id">(ID: {{ content.id_product }})</span>
                                 </div>
                                 <div class="badge-status-row">
-                                    <span class="status-badge status-{{ faq.status }}" id="status-{{ faq.id_itrblueboost_category_faq }}">
-                                        {{ faq.status }}
+                                    <span class="status-badge status-{{ content.status }}" id="status-{{ content.id_itrblueboost_product_content }}">
+                                        {{ content.status }}
                                     </span>
-                                    {% if faq.status == 'accepted' %}
-                                        <span class="status-badge status-{{ faq.active ? 'active' : 'inactive' }}" id="active-status-{{ faq.id_itrblueboost_category_faq }}">
-                                            {{ faq.active ? 'Actif'|trans({}, 'Admin.Global') : 'Inactif'|trans({}, 'Admin.Global') }}
+                                    {% if content.status == 'accepted' %}
+                                        <span class="status-badge status-{{ content.active ? 'active' : 'inactive' }}" id="active-status-{{ content.id_itrblueboost_product_content }}">
+                                            {{ content.active ? 'Actif'|trans({}, 'Admin.Global') : 'Inactif'|trans({}, 'Admin.Global') }}
                                         </span>
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="faq-card-body">
-                                <div class="faq-question">{{ faq.question|default('-') }}</div>
-                                <div class="faq-answer">{{ faq.answer|default('-')|striptags|slice(0, 200) }}{% if faq.answer|length > 200 %}...{% endif %}</div>
+                            <div class="content-card-body">
+                                <span class="content-type-badge">
+                                    {{ content.content_type == 'description_short' ? 'Short desc.'|trans({}, 'Modules.Itrblueboost.Admin') : 'Description'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                                </span>
+                                <div class="content-text">{{ content.generated_content|default('-')|striptags|slice(0, 150) }}{% if content.generated_content|length > 150 %}...{% endif %}</div>
                             </div>
-                            <div class="faq-card-footer">
-                                <div class="faq-card-info">
-                                    {{ faq.date_add|date('d/m/Y H:i') }}
+                            <div class="content-card-footer">
+                                <div class="content-card-info">
+                                    {{ content.date_add|date('d/m/Y H:i') }}
                                 </div>
-                                <div class="faq-card-actions">
-                                    {% if faq.status == 'pending' %}
+                                <div class="content-card-actions">
+                                    {% if content.status == 'pending' %}
                                         <button type="button"
                                                 class="btn-action btn-accept"
-                                                data-id="{{ faq.id_itrblueboost_category_faq }}"
-                                                data-url="{{ path('itrblueboost_admin_all_category_faqs_accept', {faqId: faq.id_itrblueboost_category_faq}) }}"
+                                                data-id="{{ content.id_itrblueboost_product_content }}"
+                                                data-url="{{ path('itrblueboost_admin_all_product_contents_accept', {id: content.id_itrblueboost_product_content}) }}"
                                                 title="{{ 'Accept'|trans({}, 'Admin.Actions') }}">
                                             <i class="material-icons">check</i>
                                         </button>
                                         <button type="button"
                                                 class="btn-action btn-reject"
-                                                data-id="{{ faq.id_itrblueboost_category_faq }}"
-                                                data-url="{{ path('itrblueboost_admin_all_category_faqs_reject', {faqId: faq.id_itrblueboost_category_faq}) }}"
+                                                data-id="{{ content.id_itrblueboost_product_content }}"
+                                                data-url="{{ path('itrblueboost_admin_all_product_contents_reject', {id: content.id_itrblueboost_product_content}) }}"
                                                 title="{{ 'Reject'|trans({}, 'Admin.Actions') }}">
                                             <i class="material-icons">close</i>
                                         </button>
                                     {% endif %}
-                                    {% if faq.status == 'accepted' %}
+                                    {% if content.status == 'accepted' %}
                                         <button type="button"
-                                                class="btn-action btn-toggle-{{ faq.active ? 'active' : 'inactive' }}"
-                                                id="toggle-btn-{{ faq.id_itrblueboost_category_faq }}"
-                                                data-id="{{ faq.id_itrblueboost_category_faq }}"
-                                                data-url="{{ path('itrblueboost_admin_all_category_faqs_toggle', {faqId: faq.id_itrblueboost_category_faq}) }}"
-                                                title="{{ faq.active ? 'Disable'|trans({}, 'Admin.Actions') : 'Enable'|trans({}, 'Admin.Actions') }}">
-                                            <i class="material-icons">{{ faq.active ? 'visibility_off' : 'visibility' }}</i>
+                                                class="btn-action btn-toggle-{{ content.active ? 'active' : 'inactive' }}"
+                                                id="toggle-btn-{{ content.id_itrblueboost_product_content }}"
+                                                data-id="{{ content.id_itrblueboost_product_content }}"
+                                                data-url="{{ path('itrblueboost_admin_all_product_contents_toggle', {id: content.id_itrblueboost_product_content}) }}"
+                                                title="{{ content.active ? 'Disable'|trans({}, 'Admin.Actions') : 'Enable'|trans({}, 'Admin.Actions') }}">
+                                            <i class="material-icons">{{ content.active ? 'visibility_off' : 'visibility' }}</i>
                                         </button>
                                     {% endif %}
-                                    <a href="{{ path('itrblueboost_admin_category_faq_edit', {id_category: faq.id_category, faqId: faq.id_itrblueboost_category_faq}) }}"
+                                    <a href="{{ path('itrblueboost_admin_product_content_edit', {id_product: content.id_product, contentId: content.id_itrblueboost_product_content}) }}"
                                        class="btn-action btn-edit"
                                        title="{{ 'Edit'|trans({}, 'Admin.Actions') }}">
                                         <i class="material-icons">edit</i>
                                     </a>
                                     <button type="button"
                                             class="btn-action btn-delete"
-                                            data-id="{{ faq.id_itrblueboost_category_faq }}"
-                                            data-url="{{ path('itrblueboost_admin_all_category_faqs_delete', {faqId: faq.id_itrblueboost_category_faq}) }}"
+                                            data-id="{{ content.id_itrblueboost_product_content }}"
+                                            data-url="{{ path('itrblueboost_admin_all_product_contents_delete', {id: content.id_itrblueboost_product_content}) }}"
                                             title="{{ 'Delete'|trans({}, 'Admin.Actions') }}">
                                         <i class="material-icons">delete</i>
                                     </button>
@@ -283,7 +268,7 @@
                             <ul class="pagination">
                                 {% if currentPage > 1 %}
                                     <li class="page-item">
-                                        <a class="page-link" href="{{ path('itrblueboost_admin_all_category_faqs', {page: currentPage - 1, status: statusFilter}) }}">
+                                        <a class="page-link" href="{{ path('itrblueboost_admin_all_product_contents', {page: currentPage - 1, status: statusFilter}) }}">
                                             <i class="material-icons">chevron_left</i>
                                         </a>
                                     </li>
@@ -292,14 +277,14 @@
                                 {% for p in 1..totalPages %}
                                     {% if p >= currentPage - 2 and p <= currentPage + 2 %}
                                         <li class="page-item {{ p == currentPage ? 'active' : '' }}">
-                                            <a class="page-link" href="{{ path('itrblueboost_admin_all_category_faqs', {page: p, status: statusFilter}) }}">{{ p }}</a>
+                                            <a class="page-link" href="{{ path('itrblueboost_admin_all_product_contents', {page: p, status: statusFilter}) }}">{{ p }}</a>
                                         </li>
                                     {% endif %}
                                 {% endfor %}
 
                                 {% if currentPage < totalPages %}
                                     <li class="page-item">
-                                        <a class="page-link" href="{{ path('itrblueboost_admin_all_category_faqs', {page: currentPage + 1, status: statusFilter}) }}">
+                                        <a class="page-link" href="{{ path('itrblueboost_admin_all_product_contents', {page: currentPage + 1, status: statusFilter}) }}">
                                             <i class="material-icons">chevron_right</i>
                                         </a>
                                     </li>
@@ -310,9 +295,9 @@
                 {% endif %}
             {% else %}
                 <div class="empty-state">
-                    <i class="material-icons">quiz</i>
-                    <h4>{{ 'No category FAQs generated yet'|trans({}, 'Modules.Itrblueboost.Admin') }}</h4>
-                    <p class="text-muted">{{ 'Generated FAQs will appear here.'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
+                    <i class="material-icons">description</i>
+                    <h4>{{ 'No product contents generated yet'|trans({}, 'Modules.Itrblueboost.Admin') }}</h4>
+                    <p class="text-muted">{{ 'Generated contents will appear here.'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
                 </div>
             {% endif %}
         </div>
@@ -325,7 +310,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="rejectModalLabel">{{ 'Reject FAQ'|trans({}, 'Modules.Itrblueboost.Admin') }}</h5>
+                    <h5 class="modal-title" id="rejectModalLabel">{{ 'Reject Content'|trans({}, 'Modules.Itrblueboost.Admin') }}</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -353,7 +338,7 @@
             'use strict';
 
             var rejectUrl = '';
-            var rejectFaqId = 0;
+            var rejectContentId = 0;
             var rejectModalEl = document.getElementById('rejectModal');
             var rejectModalBackdrop = null;
             var toastContainer = document.getElementById('toastContainer');
@@ -371,21 +356,16 @@
                 }, 4000);
             }
 
-            // Modal functions (vanilla JS - PS 1.7 compatible)
             function showModal() {
                 rejectModalEl.style.display = 'block';
                 rejectModalEl.classList.add('show');
                 document.body.classList.add('modal-open');
 
-                // Create backdrop
                 rejectModalBackdrop = document.createElement('div');
                 rejectModalBackdrop.className = 'modal-backdrop fade show';
                 document.body.appendChild(rejectModalBackdrop);
 
-                // Close on backdrop click
                 rejectModalBackdrop.addEventListener('click', hideModal);
-
-                // Close on escape key
                 document.addEventListener('keydown', handleEscapeKey);
             }
 
@@ -401,7 +381,6 @@
 
                 document.removeEventListener('keydown', handleEscapeKey);
 
-                // Reset confirm button
                 var confirmBtn = document.getElementById('confirmReject');
                 confirmBtn.disabled = false;
                 confirmBtn.innerHTML = '{{ 'Reject'|trans({}, 'Admin.Actions') }}';
@@ -413,7 +392,6 @@
                 }
             }
 
-            // Close modal on X button click
             var closeButtons = rejectModalEl.querySelectorAll('[data-dismiss="modal"], .close');
             closeButtons.forEach(function(btn) {
                 btn.addEventListener('click', function(e) {
@@ -475,7 +453,7 @@
                     e.preventDefault();
                     e.stopPropagation();
 
-                    rejectFaqId = this.dataset.id;
+                    rejectContentId = this.dataset.id;
                     rejectUrl = this.dataset.url;
                     document.getElementById('rejectionReason').value = '';
                     showModal();
@@ -506,7 +484,7 @@
                     if (data.success) {
                         hideModal();
                         showToast('{{ 'Rejection reason sent successfully.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'success');
-                        var card = document.getElementById('faq-card-' + rejectFaqId);
+                        var card = document.getElementById('content-card-' + rejectContentId);
                         if (card) {
                             card.style.transition = 'opacity 0.3s';
                             card.style.opacity = '0';
@@ -572,13 +550,13 @@
                     e.preventDefault();
                     e.stopPropagation();
 
-                    if (!confirm('{{ 'Are you sure you want to delete this FAQ?'|trans({}, 'Modules.Itrblueboost.Admin') }}')) {
+                    if (!confirm('{{ 'Are you sure you want to delete this content?'|trans({}, 'Modules.Itrblueboost.Admin') }}')) {
                         return;
                     }
 
                     var id = this.dataset.id;
                     var url = this.dataset.url;
-                    var card = document.getElementById('faq-card-' + id);
+                    var card = document.getElementById('content-card-' + id);
 
                     this.disabled = true;
                     var originalHtml = this.innerHTML;

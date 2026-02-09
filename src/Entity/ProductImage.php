@@ -32,6 +32,9 @@ class ProductImage extends ObjectModel
     /** @var int|null PrestaShop image ID after acceptance */
     public $id_image;
 
+    /** @var string|null Rejection reason */
+    public $rejection_reason;
+
     /** @var string Creation date */
     public $date_add;
 
@@ -73,6 +76,11 @@ class ProductImage extends ObjectModel
             'id_image' => [
                 'type' => self::TYPE_INT,
                 'validate' => 'isUnsignedId',
+            ],
+            'rejection_reason' => [
+                'type' => self::TYPE_HTML,
+                'validate' => 'isCleanHtml',
+                'size' => 1000,
             ],
             'date_add' => [
                 'type' => self::TYPE_DATE,

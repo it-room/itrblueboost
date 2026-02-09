@@ -208,8 +208,11 @@ class GeneratedImagesController extends FrameworkBundleAdminController
             ]);
         }
 
+        $rejectionReason = $request->request->get('rejection_reason', '');
+
         $productImage->deleteFile();
         $productImage->status = 'rejected';
+        $productImage->rejection_reason = $rejectionReason;
 
         if (!$productImage->update()) {
             return new JsonResponse([

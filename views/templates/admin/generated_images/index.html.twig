@@ -137,6 +137,32 @@
         .image-lightbox-close:hover {
             opacity: 1;
         }
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+        }
+        .toast-notification {
+            min-width: 280px;
+            padding: 14px 20px;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateX(40px);
+            transition: opacity 0.3s, transform 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toast-notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .toast-notification.toast-success { background: #28a745; }
+        .toast-notification.toast-error { background: #dc3545; }
     </style>
 
     <div class="card">
@@ -249,9 +275,36 @@
         </div>
     </div>
 
+    <div class="toast-container" id="toastContainer"></div>
+
     <div class="image-lightbox" id="imageLightbox">
         <span class="image-lightbox-close">&times;</span>
         <img src="" alt="Zoom" id="lightboxImage">
+    </div>
+
+    <!-- Modal for rejection reason -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectModalLabel">{{ 'Reject Image'|trans({}, 'Modules.Itrblueboost.Admin') }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="rejectionReason">{{ 'Rejection reason'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                        <textarea class="form-control" id="rejectionReason" rows="3" placeholder="{{ 'Enter the reason for rejection...'|trans({}, 'Modules.Itrblueboost.Admin') }}"></textarea>
+                        <small class="form-text text-muted">{{ 'This reason will be sent to the API.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ 'Cancel'|trans({}, 'Admin.Actions') }}</button>
+                    <button type="button" class="btn btn-danger" id="confirmReject">{{ 'Reject'|trans({}, 'Admin.Actions') }}</button>
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}
 
@@ -260,6 +313,69 @@
     <script>
         (function() {
             'use strict';
+
+            var rejectUrl = '';
+            var rejectImageId = 0;
+            var rejectModalEl = document.getElementById('rejectModal');
+            var rejectModalBackdrop = null;
+            var toastContainer = document.getElementById('toastContainer');
+
+            function showToast(message, type) {
+                var toast = document.createElement('div');
+                toast.className = 'toast-notification toast-' + (type || 'success');
+                toast.innerHTML = '<i class="material-icons">' + (type === 'error' ? 'error' : 'check_circle') + '</i> ' + message;
+                toastContainer.appendChild(toast);
+
+                setTimeout(function() { toast.classList.add('show'); }, 10);
+                setTimeout(function() {
+                    toast.classList.remove('show');
+                    setTimeout(function() { toast.remove(); }, 300);
+                }, 4000);
+            }
+
+            function showModal() {
+                rejectModalEl.style.display = 'block';
+                rejectModalEl.classList.add('show');
+                document.body.classList.add('modal-open');
+
+                rejectModalBackdrop = document.createElement('div');
+                rejectModalBackdrop.className = 'modal-backdrop fade show';
+                document.body.appendChild(rejectModalBackdrop);
+
+                rejectModalBackdrop.addEventListener('click', hideModal);
+                document.addEventListener('keydown', handleEscapeKey);
+            }
+
+            function hideModal() {
+                rejectModalEl.style.display = 'none';
+                rejectModalEl.classList.remove('show');
+                document.body.classList.remove('modal-open');
+
+                if (rejectModalBackdrop && rejectModalBackdrop.parentNode) {
+                    rejectModalBackdrop.parentNode.removeChild(rejectModalBackdrop);
+                    rejectModalBackdrop = null;
+                }
+
+                document.removeEventListener('keydown', handleEscapeKey);
+
+                var confirmBtn = document.getElementById('confirmReject');
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '{{ 'Reject'|trans({}, 'Admin.Actions') }}';
+            }
+
+            function handleEscapeKey(e) {
+                if (e.key === 'Escape' || e.keyCode === 27) {
+                    hideModal();
+                }
+            }
+
+            var closeButtons = rejectModalEl.querySelectorAll('[data-dismiss="modal"], .close');
+            closeButtons.forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    hideModal();
+                });
+            });
 
             // Filter
             document.getElementById('statusFilter').addEventListener('change', function() {
@@ -300,7 +416,7 @@
                 }
             });
 
-            // Handle image actions
+            // Handle simple image actions (accept, delete)
             function handleImageAction(button, confirmMessage) {
                 if (confirmMessage && !confirm(confirmMessage)) {
                     return;
@@ -348,10 +464,59 @@
                 });
             });
 
-            // Reject buttons
+            // Reject buttons - open modal
             document.querySelectorAll('.btn-reject').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    handleImageAction(this, '{{ 'Reject this image?'|trans({}, 'Modules.Itrblueboost.Admin') }}');
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    rejectImageId = this.dataset.id;
+                    rejectUrl = this.dataset.url;
+                    document.getElementById('rejectionReason').value = '';
+                    showModal();
+                });
+            });
+
+            // Confirm reject
+            document.getElementById('confirmReject').addEventListener('click', function(e) {
+                e.preventDefault();
+
+                var rejectionReason = document.getElementById('rejectionReason').value;
+                var button = this;
+
+                button.disabled = true;
+                var originalHtml = button.innerHTML;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> {{ 'Processing...'|trans({}, 'Admin.Global') }}';
+
+                var formData = new FormData();
+                formData.append('rejection_reason', rejectionReason);
+
+                fetch(rejectUrl, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        hideModal();
+                        showToast('{{ 'Rejection reason sent successfully.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'success');
+                        var card = document.getElementById('image-card-' + rejectImageId);
+                        if (card) {
+                            card.style.transition = 'opacity 0.3s';
+                            card.style.opacity = '0';
+                            setTimeout(function() { card.remove(); }, 300);
+                        }
+                    } else {
+                        showToast(data.message || '{{ 'An error occurred.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'error');
+                        button.disabled = false;
+                        button.innerHTML = originalHtml;
+                    }
+                })
+                .catch(function() {
+                    showToast('{{ 'Connection error.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'error');
+                    button.disabled = false;
+                    button.innerHTML = originalHtml;
                 });
             });
 

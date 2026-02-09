@@ -271,6 +271,263 @@ class AllProductFaqsController extends FrameworkBundleAdminController
     }
 
     /**
+     * Bulk accept FAQs.
+     *
+     * @AdminSecurity("is_granted('update', request.get('_legacy_controller'))")
+     */
+    public function bulkAcceptAction(Request $request): JsonResponse
+    {
+        $ids = $this->parseFaqIds($request);
+
+        if (empty($ids)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'No FAQ IDs provided.',
+            ]);
+        }
+
+        $errors = [];
+        $processed = 0;
+
+        foreach ($ids as $id) {
+            $result = $this->acceptSingleFaq($id);
+            if ($result === true) {
+                ++$processed;
+            } else {
+                $errors[] = 'FAQ ' . $id . ': ' . $result;
+            }
+        }
+
+        return new JsonResponse([
+            'success' => $processed > 0,
+            'message' => $processed . ' FAQ(s) accepted.',
+            'processed' => $processed,
+            'errors' => $errors,
+        ]);
+    }
+
+    /**
+     * Bulk reject FAQs.
+     *
+     * @AdminSecurity("is_granted('update', request.get('_legacy_controller'))")
+     */
+    public function bulkRejectAction(Request $request): JsonResponse
+    {
+        $ids = $this->parseFaqIds($request);
+
+        if (empty($ids)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'No FAQ IDs provided.',
+            ]);
+        }
+
+        $rejectionReason = (string) $request->request->get('rejection_reason', '');
+        $errors = [];
+        $processed = 0;
+
+        foreach ($ids as $id) {
+            $result = $this->rejectSingleFaq($id, $rejectionReason);
+            if ($result === true) {
+                ++$processed;
+            } else {
+                $errors[] = 'FAQ ' . $id . ': ' . $result;
+            }
+        }
+
+        return new JsonResponse([
+            'success' => $processed > 0,
+            'message' => $processed . ' FAQ(s) rejected.',
+            'processed' => $processed,
+            'errors' => $errors,
+        ]);
+    }
+
+    /**
+     * Bulk delete FAQs.
+     *
+     * @AdminSecurity("is_granted('delete', request.get('_legacy_controller'))")
+     */
+    public function bulkDeleteAction(Request $request): JsonResponse
+    {
+        $ids = $this->parseFaqIds($request);
+
+        if (empty($ids)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'No FAQ IDs provided.',
+            ]);
+        }
+
+        $errors = [];
+        $processed = 0;
+
+        foreach ($ids as $id) {
+            $result = $this->deleteSingleFaq($id);
+            if ($result === true) {
+                ++$processed;
+            } else {
+                $errors[] = 'FAQ ' . $id . ': ' . $result;
+            }
+        }
+
+        return new JsonResponse([
+            'success' => $processed > 0,
+            'message' => $processed . ' FAQ(s) deleted.',
+            'processed' => $processed,
+            'errors' => $errors,
+        ]);
+    }
+
+    /**
+     * Parse and validate FAQ IDs from request.
+     *
+     * @param Request $request HTTP request
+     *
+     * @return int[]
+     */
+    private function parseFaqIds(Request $request): array
+    {
+        $rawIds = (string) $request->request->get('faq_ids', '');
+
+        if (empty($rawIds)) {
+            return [];
+        }
+
+        $ids = array_map('intval', explode(',', $rawIds));
+
+        return array_filter($ids, function (int $id): bool {
+            return $id > 0;
+        });
+    }
+
+    /**
+     * Accept a single FAQ.
+     *
+     * @param int $faqId FAQ ID
+     *
+     * @return true|string True on success, error message on failure
+     */
+    private function acceptSingleFaq(int $faqId)
+    {
+        $faq = new ProductFaq($faqId);
+
+        if (!$faq->id) {
+            return 'FAQ not found';
+        }
+
+        if ($faq->status === ProductFaq::STATUS_ACCEPTED) {
+            return 'Already accepted';
+        }
+
+        $faq->status = ProductFaq::STATUS_ACCEPTED;
+        $faq->active = true;
+
+        if ($faq->hasApiFaqId()) {
+            $apiResult = $this->syncAcceptToApi($faq);
+            if (!$apiResult['success']) {
+                return 'API error - ' . ($apiResult['message'] ?? 'Unknown');
+            }
+        }
+
+        if (!$faq->update()) {
+            return 'Update failed';
+        }
+
+        return true;
+    }
+
+    /**
+     * Reject a single FAQ.
+     *
+     * @param int $faqId FAQ ID
+     * @param string $reason Rejection reason
+     *
+     * @return true|string True on success, error message on failure
+     */
+    private function rejectSingleFaq(int $faqId, string $reason)
+    {
+        $faq = new ProductFaq($faqId);
+
+        if (!$faq->id) {
+            return 'FAQ not found';
+        }
+
+        if ($faq->hasApiFaqId()) {
+            $apiResult = $this->updateFaqOnApi((int) $faq->api_faq_id, [
+                'status' => 'rejected',
+                'rejection_reason' => $reason,
+                'is_enabled' => false,
+            ]);
+
+            if (!$apiResult['success']) {
+                return 'API error - ' . ($apiResult['message'] ?? 'Unknown');
+            }
+        }
+
+        if (!$faq->delete()) {
+            return 'Delete failed';
+        }
+
+        return true;
+    }
+
+    /**
+     * Delete a single FAQ.
+     *
+     * @param int $faqId FAQ ID
+     *
+     * @return true|string True on success, error message on failure
+     */
+    private function deleteSingleFaq(int $faqId)
+    {
+        $faq = new ProductFaq($faqId);
+
+        if (!$faq->id) {
+            return 'FAQ not found';
+        }
+
+        if ($faq->hasApiFaqId()) {
+            $this->updateFaqOnApi((int) $faq->api_faq_id, [
+                'status' => 'rejected',
+                'rejection_reason' => 'Deleted by user',
+                'is_enabled' => false,
+            ]);
+        }
+
+        if (!$faq->delete()) {
+            return 'Delete failed';
+        }
+
+        return true;
+    }
+
+    /**
+     * Sync FAQ acceptance to API.
+     *
+     * @param ProductFaq $faq FAQ entity
+     *
+     * @return array{success: bool, message?: string}
+     */
+    private function syncAcceptToApi(ProductFaq $faq): array
+    {
+        $idLang = (int) Configuration::get('PS_LANG_DEFAULT');
+        $questionText = is_array($faq->question)
+            ? ($faq->question[$idLang] ?? reset($faq->question))
+            : $faq->question;
+        $answerText = is_array($faq->answer)
+            ? ($faq->answer[$idLang] ?? reset($faq->answer))
+            : $faq->answer;
+
+        return $this->updateFaqOnApi((int) $faq->api_faq_id, [
+            'status' => 'accepted',
+            'is_enabled' => true,
+            'question' => $questionText,
+            'answer' => $answerText,
+        ]);
+    }
+
+    /**
      * Update FAQ on API.
      *
      * @param int $apiFaqId API FAQ ID

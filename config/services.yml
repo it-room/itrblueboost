@@ -255,3 +255,77 @@ services:
         calls:
             - [setContainer, ['@service_container']]
         public: true
+
+    # ==========================================
+    # Product Content - Services
+    # ==========================================
+
+    # Form Type Content
+    Itrblueboost\Form\ProductContentType:
+        class: Itrblueboost\Form\ProductContentType
+        parent: 'form.type.translatable.aware'
+        public: true
+        tags:
+            - { name: form.type }
+
+    # Grid Definition Factory
+    itrblueboost.grid.definition.factory.product_content:
+        class: Itrblueboost\Grid\Definition\Factory\ProductContentGridDefinitionFactory
+        parent: 'prestashop.core.grid.definition.factory.abstract_grid_definition'
+        public: true
+
+    # Grid Query Builder
+    itrblueboost.grid.query_builder.product_content:
+        class: Itrblueboost\Grid\Query\ProductContentQueryBuilder
+        arguments:
+            - '@doctrine.dbal.default_connection'
+            - '%database_prefix%'
+            - '@prestashop.core.query.doctrine_search_criteria_applicator'
+            - '@=service("prestashop.adapter.legacy.context").getContext().language.id'
+            - '@=service("prestashop.adapter.legacy.context").getContext().shop.id'
+        public: true
+
+    # Grid Data Factory (Doctrine)
+    itrblueboost.grid.data_factory.product_content_doctrine:
+        class: PrestaShop\PrestaShop\Core\Grid\Data\Factory\DoctrineGridDataFactory
+        arguments:
+            - '@itrblueboost.grid.query_builder.product_content'
+            - '@prestashop.core.hook.dispatcher'
+            - '@prestashop.core.grid.query.doctrine_query_parser'
+            - 'itrblueboost_product_content'
+        public: true
+
+    # Grid Data Factory (Decorator)
+    itrblueboost.grid.data_factory.product_content:
+        class: Itrblueboost\Grid\Data\Factory\ProductContentGridDataFactory
+        arguments:
+            - '@itrblueboost.grid.data_factory.product_content_doctrine'
+        public: true
+
+    # Grid Factory
+    itrblueboost.grid.factory.product_content:
+        class: PrestaShop\PrestaShop\Core\Grid\GridFactory
+        arguments:
+            - '@itrblueboost.grid.definition.factory.product_content'
+            - '@itrblueboost.grid.data_factory.product_content'
+            - '@prestashop.core.grid.filter.form_factory'
+            - '@prestashop.core.hook.dispatcher'
+        public: true
+
+    # Controller Product Content
+    Itrblueboost\Controller\Admin\ProductContentController:
+        class: Itrblueboost\Controller\Admin\ProductContentController
+        tags:
+            - { name: controller.service_arguments }
+        calls:
+            - [setContainer, ['@service_container']]
+        public: true
+
+    # Controller All Product Contents
+    Itrblueboost\Controller\Admin\AllProductContentsController:
+        class: Itrblueboost\Controller\Admin\AllProductContentsController
+        tags:
+            - { name: controller.service_arguments }
+        calls:
+            - [setContainer, ['@service_container']]
+        public: true

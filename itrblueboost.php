@@ -11,6 +11,7 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 }
 
 use Itrblueboost\Entity\CategoryFaq;
+use Itrblueboost\Entity\ProductContent;
 use Itrblueboost\Entity\ProductFaq;
 use Itrblueboost\Entity\ProductImage;
 use Itrblueboost\Install\Installer;
@@ -28,13 +29,14 @@ class Itrblueboost extends Module
     public const CONFIG_SERVICE_FAQ = 'ITRBLUEBOOST_SERVICE_FAQ';
     public const CONFIG_SERVICE_IMAGE = 'ITRBLUEBOOST_SERVICE_IMAGE';
     public const CONFIG_SERVICE_CATEGORY_FAQ = 'ITRBLUEBOOST_SERVICE_CATEGORY_FAQ';
+    public const CONFIG_SERVICE_CONTENT = 'ITRBLUEBOOST_SERVICE_CONTENT';
     public const CONFIG_CREDITS_REMAINING = 'ITRBLUEBOOST_CREDITS_REMAINING';
 
     public function __construct()
     {
         $this->name = 'itrblueboost';
         $this->tab = 'administration';
-        $this->version = '1.5.0';
+        $this->version = '1.6.1';
         $this->author = 'ITROOM';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
@@ -116,10 +118,11 @@ class Itrblueboost extends Module
         $faqServiceActive = (bool) Configuration::get(self::CONFIG_SERVICE_FAQ);
         $imageServiceActive = (bool) Configuration::get(self::CONFIG_SERVICE_IMAGE);
         $categoryFaqServiceActive = (bool) Configuration::get(self::CONFIG_SERVICE_CATEGORY_FAQ);
+        $contentServiceActive = (bool) Configuration::get(self::CONFIG_SERVICE_CONTENT);
 
-        error_log('[ITRBLUEBOOST] Services - FAQ: ' . ($faqServiceActive ? 'ON' : 'OFF') . ', Image: ' . ($imageServiceActive ? 'ON' : 'OFF') . ', CatFAQ: ' . ($categoryFaqServiceActive ? 'ON' : 'OFF'));
+        error_log('[ITRBLUEBOOST] Services - FAQ: ' . ($faqServiceActive ? 'ON' : 'OFF') . ', Image: ' . ($imageServiceActive ? 'ON' : 'OFF') . ', CatFAQ: ' . ($categoryFaqServiceActive ? 'ON' : 'OFF') . ', Content: ' . ($contentServiceActive ? 'ON' : 'OFF'));
 
-        if (!$faqServiceActive && !$imageServiceActive && !$categoryFaqServiceActive) {
+        if (!$faqServiceActive && !$imageServiceActive && !$categoryFaqServiceActive && !$contentServiceActive) {
             error_log('[ITRBLUEBOOST] No services active, returning');
             return;
         }
@@ -215,9 +218,28 @@ class Itrblueboost extends Module
             ]);
         }
 
+        if ($contentServiceActive) {
+            $jsDef['itrblueboostProductId'] = $idProduct;
+            $jsDef['itrblueboostContentPromptsUrl'] = $router->generate('itrblueboost_admin_product_content_prompts');
+            $jsDef['itrblueboostContentGenerateUrl'] = $router->generate('itrblueboost_admin_product_content_generate', [
+                'id_product' => $idProduct,
+            ]);
+            $jsDef['itrblueboostContentAcceptUrl'] = $router->generate('itrblueboost_admin_product_content_accept', [
+                'id_product' => $idProduct,
+                'contentId' => 0,
+            ]);
+            $jsDef['itrblueboostContentUrl'] = $router->generate('itrblueboost_admin_product_content_index', [
+                'id_product' => $idProduct,
+            ]);
+        }
+
         Media::addJsDef($jsDef);
 
         $this->context->controller->addJS($this->_path . 'views/js/admin-product-toolbar.js?v=' . $this->version);
+
+        if ($contentServiceActive) {
+            $this->context->controller->addJS($this->_path . 'views/js/admin-content-inline.js?v=' . $this->version);
+        }
 
         // Load version-specific CSS
         if ($this->isPrestaShop8()) {
@@ -376,6 +398,7 @@ class Itrblueboost extends Module
         if ($idProduct > 0) {
             ProductFaq::deleteByProduct($idProduct);
             ProductImage::deleteByProduct($idProduct);
+            ProductContent::deleteByProduct($idProduct);
         }
     }
 

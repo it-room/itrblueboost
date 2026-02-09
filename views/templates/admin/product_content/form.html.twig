@@ -1,0 +1,354 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .content-form-card {
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        .content-form-card .card-header {
+            background: linear-gradient(135deg, #25b9d7 0%, #1e9bb5 100%);
+            color: #fff;
+            padding: 1.25rem;
+        }
+        .content-form-card .card-header-title {
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+        .content-form-card .card-header-title .material-icons {
+            font-size: 1.5rem;
+        }
+        .content-form-card .card-body {
+            padding: 0;
+        }
+        .content-field-section {
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        .content-field-section:last-child {
+            border-bottom: none;
+        }
+        .content-field-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0.75rem;
+        }
+        .content-field-header .material-icons {
+            color: #25b9d7;
+            font-size: 1.25rem;
+        }
+        .content-field-header label {
+            font-weight: 600;
+            color: #363a41;
+            margin: 0;
+            font-size: 0.95rem;
+        }
+        .content-field-header .required-indicator {
+            color: #dc3545;
+            margin-left: 2px;
+        }
+        .content-field-help {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+        }
+        .content-switch-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8f9fa;
+            padding: 1rem 1.25rem;
+            border-radius: 6px;
+        }
+        .content-switch-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .content-switch-label .material-icons {
+            color: #25b9d7;
+        }
+        .content-switch-text strong {
+            display: block;
+            color: #363a41;
+            font-size: 0.95rem;
+        }
+        .content-switch-text span {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .content-preview {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+        .content-preview-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-lg-8">
+            {{ form_start(form) }}
+                <div class="card content-form-card">
+                    <div class="card-header">
+                        <h3 class="card-header-title">
+                            <i class="material-icons">description</i>
+                            {{ layoutTitle }}
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        {{ form_widget(form.id_product) }}
+
+                        <div class="content-field-section">
+                            <div class="content-field-header">
+                                <i class="material-icons">category</i>
+                                <label>{{ 'Content type'|trans({}, 'Modules.Itrblueboost.Admin') }}<span class="required-indicator">*</span></label>
+                            </div>
+                            {{ form_widget(form.content_type) }}
+                            {{ form_errors(form.content_type) }}
+                            <div class="content-field-help">
+                                {{ 'Select whether this is for the main description or short description.'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                            </div>
+                        </div>
+
+                        <div class="content-field-section">
+                            <div class="content-field-header">
+                                <i class="material-icons">edit</i>
+                                <label>{{ 'Generated content'|trans({}, 'Modules.Itrblueboost.Admin') }}<span class="required-indicator">*</span></label>
+                            </div>
+                            {{ form_widget(form.generated_content) }}
+                            {{ form_errors(form.generated_content) }}
+                            <div class="content-field-help">
+                                {{ 'Edit the AI-generated content. You can use HTML formatting.'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                            </div>
+                        </div>
+
+                        <div class="content-field-section">
+                            {% if content is defined and content.id and content.status == 'pending' %}
+                                <div class="alert alert-warning d-flex align-items-center mb-3">
+                                    <i class="material-icons mr-2">hourglass_empty</i>
+                                    <div>
+                                        <strong>{{ 'Content pending approval'|trans({}, 'Modules.Itrblueboost.Admin') }}</strong><br>
+                                        <small>{{ 'This content must be accepted to be applied to the product.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="content-switch-row">
+                                <div class="content-switch-label">
+                                    <i class="material-icons">visibility</i>
+                                    <div class="content-switch-text">
+                                        <strong>{{ 'Active'|trans({}, 'Modules.Itrblueboost.Admin') }}</strong>
+                                        <span>{{ 'Mark this content as active'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                                    </div>
+                                </div>
+                                {{ form_widget(form.active) }}
+                            </div>
+                            {{ form_errors(form.active) }}
+                        </div>
+
+                        {% if content is defined and content.id and content.hasApiContentId() %}
+                        <div class="content-field-section">
+                            <div class="content-field-header">
+                                <i class="material-icons">edit_note</i>
+                                <label>{{ 'Modification reason'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                            </div>
+                            {{ form_widget(form.modification_reason, {'attr': {'placeholder': 'Explain why you are modifying this content...'|trans({}, 'Modules.Itrblueboost.Admin'), 'rows': '2'}}) }}
+                            {{ form_errors(form.modification_reason) }}
+                            <div class="content-field-help">
+                                {{ 'Required if you modify the content. This information will be sent to the API.'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{{ path('itrblueboost_admin_product_content_index', { id_product: id_product }) }}" class="btn btn-outline-secondary">
+                                    <i class="material-icons">arrow_back</i>
+                                    {{ 'Back'|trans({}, 'Admin.Actions') }}
+                                </a>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                {% if content is defined and content.id %}
+                                    <button type="button" class="btn btn-danger mr-2" id="btn-reject-content"
+                                            data-content-id="{{ content.id }}"
+                                            data-reject-url="{{ path('itrblueboost_admin_product_content_reject', { id_product: id_product, contentId: content.id }) }}">
+                                        <i class="material-icons">cancel</i>
+                                        {{ 'Reject'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                                    </button>
+
+                                    {% if content.status == 'pending' %}
+                                        <button type="button" class="btn btn-success mr-2" id="btn-accept-content"
+                                                data-accept-url="{{ path('itrblueboost_admin_product_content_accept', { id_product: id_product, contentId: content.id }) }}">
+                                            <i class="material-icons">check_circle</i>
+                                            {{ 'Accept'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                                        </button>
+                                    {% endif %}
+                                {% endif %}
+
+                                <button type="submit" class="btn btn-primary" id="btn-save-content">
+                                    <i class="material-icons">save</i>
+                                    {{ 'Save'|trans({}, 'Admin.Actions') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {{ form_end(form) }}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="content-preview">
+                <div class="content-preview-title">
+                    <i class="material-icons">lightbulb</i>
+                    {{ 'Tips'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                </div>
+                <ul class="mb-0 pl-3" style="font-size: 0.9rem; color: #666;">
+                    <li class="mb-2">{{ 'Review the generated content before accepting.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
+                    <li class="mb-2">{{ 'Accepting will update the product description.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
+                    <li>{{ 'You can edit the content before accepting.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {# Reject Content Modal #}
+    {% if content is defined and content.id %}
+    <div class="modal fade" id="rejectContentModal" tabindex="-1" role="dialog" aria-labelledby="rejectContentModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectContentModalLabel">
+                        <i class="material-icons">cancel</i>
+                        {{ 'Reject Content'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="material-icons mr-1">warning</i>
+                        {{ 'This action will permanently delete this content.'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </div>
+                    <div class="form-group">
+                        <label for="rejection-reason">{{ 'Rejection reason'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                        <textarea class="form-control" id="rejection-reason" rows="3" placeholder="{{ 'Explain why this content is being rejected (optional)'|trans({}, 'Modules.Itrblueboost.Admin') }}"></textarea>
+                        <small class="form-text text-muted">{{ 'This information will be sent to the API for traceability.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
+                    </div>
+                    <input type="hidden" id="reject-content-url" value="">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        {{ 'Cancel'|trans({}, 'Admin.Actions') }}
+                    </button>
+                    <button type="button" class="btn btn-danger" id="btn-confirm-reject">
+                        <i class="material-icons">cancel</i>
+                        {{ 'Reject'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+    (function() {
+        'use strict';
+
+        // Reject button handler
+        var btnReject = document.getElementById('btn-reject-content');
+        var rejectModal = document.getElementById('rejectContentModal');
+
+        if (btnReject && rejectModal) {
+            var rejectReasonInput = document.getElementById('rejection-reason');
+            var rejectContentUrl = document.getElementById('reject-content-url');
+            var btnConfirmReject = document.getElementById('btn-confirm-reject');
+
+            btnReject.addEventListener('click', function() {
+                rejectContentUrl.value = this.dataset.rejectUrl;
+                rejectReasonInput.value = '';
+                $(rejectModal).modal('show');
+            });
+
+            if (btnConfirmReject) {
+                btnConfirmReject.addEventListener('click', function() {
+                    var url = rejectContentUrl.value;
+                    var reason = rejectReasonInput.value;
+
+                    btnConfirmReject.disabled = true;
+
+                    var formData = new FormData();
+                    formData.append('rejection_reason', reason);
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            $(rejectModal).modal('hide');
+                            window.location.href = '{{ path('itrblueboost_admin_product_content_index', { id_product: id_product }) }}';
+                        } else {
+                            alert(data.message || 'Error');
+                            btnConfirmReject.disabled = false;
+                        }
+                    })
+                    .catch(function() {
+                        alert('Connection error');
+                        btnConfirmReject.disabled = false;
+                    });
+                });
+            }
+        }
+
+        // Accept button handler
+        var btnAccept = document.getElementById('btn-accept-content');
+        if (btnAccept) {
+            btnAccept.addEventListener('click', function() {
+                var url = this.dataset.acceptUrl;
+                var btn = this;
+                btn.disabled = true;
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Error');
+                        btn.disabled = false;
+                    }
+                })
+                .catch(function() {
+                    alert('Connection error');
+                    btn.disabled = false;
+                });
+            });
+        }
+    })();
+    </script>
+{% endblock %}

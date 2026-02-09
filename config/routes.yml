@@ -55,6 +55,27 @@ itrblueboost_admin_all_product_faqs:
     _controller: Itrblueboost\Controller\Admin\AllProductFaqsController::indexAction
     _legacy_controller: AdminItrblueboostAllProductFaqs
 
+itrblueboost_admin_all_product_faqs_bulk_accept:
+  path: itrblueboost/all-product-faqs/bulk-accept
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllProductFaqsController::bulkAcceptAction
+    _legacy_controller: AdminItrblueboostAllProductFaqs
+
+itrblueboost_admin_all_product_faqs_bulk_reject:
+  path: itrblueboost/all-product-faqs/bulk-reject
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllProductFaqsController::bulkRejectAction
+    _legacy_controller: AdminItrblueboostAllProductFaqs
+
+itrblueboost_admin_all_product_faqs_bulk_delete:
+  path: itrblueboost/all-product-faqs/bulk-delete
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllProductFaqsController::bulkDeleteAction
+    _legacy_controller: AdminItrblueboostAllProductFaqs
+
 itrblueboost_admin_all_product_faqs_accept:
   path: itrblueboost/all-product-faqs/{faqId}/accept
   methods: [POST]
@@ -458,3 +479,126 @@ itrblueboost_admin_api_log_delete_old:
   defaults:
     _controller: Itrblueboost\Controller\Admin\ApiLogController::deleteOldAction
     _legacy_controller: AdminItrblueboostApiLogs
+
+# ==========================================
+# Product Content Routes
+# ==========================================
+
+itrblueboost_admin_product_content_index:
+  path: itrblueboost/product/{id_product}/content
+  methods: [GET]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\ProductContentController::indexAction
+    _legacy_controller: AdminProducts
+  requirements:
+    id_product: \d+
+
+itrblueboost_admin_product_content_prompts:
+  path: itrblueboost/content/prompts
+  methods: [GET]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\ProductContentController::getPromptsAction
+    _legacy_controller: AdminProducts
+
+itrblueboost_admin_product_content_generate:
+  path: itrblueboost/product/{id_product}/content/generate
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\ProductContentController::generateAction
+    _legacy_controller: AdminProducts
+  requirements:
+    id_product: \d+
+
+itrblueboost_admin_product_content_edit:
+  path: itrblueboost/product/{id_product}/content/{contentId}/edit
+  methods: [GET, POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\ProductContentController::editAction
+    _legacy_controller: AdminProducts
+  requirements:
+    id_product: \d+
+    contentId: \d+
+
+itrblueboost_admin_product_content_accept:
+  path: itrblueboost/product/{id_product}/content/{contentId}/accept
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\ProductContentController::acceptAction
+    _legacy_controller: AdminProducts
+  requirements:
+    id_product: \d+
+    contentId: \d+
+
+itrblueboost_admin_product_content_reject:
+  path: itrblueboost/product/{id_product}/content/{contentId}/reject
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\ProductContentController::rejectAction
+    _legacy_controller: AdminProducts
+  requirements:
+    id_product: \d+
+    contentId: \d+
+
+itrblueboost_admin_product_content_delete:
+  path: itrblueboost/product/{id_product}/content/{contentId}/delete
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\ProductContentController::deleteAction
+    _legacy_controller: AdminProducts
+  requirements:
+    id_product: \d+
+    contentId: \d+
+
+itrblueboost_admin_product_content_bulk_generate:
+  path: itrblueboost/content/bulk-generate
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\ProductContentController::bulkGenerateAction
+    _legacy_controller: AdminProducts
+
+# ==========================================
+# All Product Contents Routes
+# ==========================================
+
+itrblueboost_admin_all_product_contents:
+  path: itrblueboost/all-product-contents
+  methods: [GET]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllProductContentsController::indexAction
+    _legacy_controller: AdminItrblueboostAllProductContents
+
+itrblueboost_admin_all_product_contents_accept:
+  path: itrblueboost/all-product-contents/{id}/accept
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllProductContentsController::acceptAction
+    _legacy_controller: AdminItrblueboostAllProductContents
+  requirements:
+    id: \d+
+
+itrblueboost_admin_all_product_contents_reject:
+  path: itrblueboost/all-product-contents/{id}/reject
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllProductContentsController::rejectAction
+    _legacy_controller: AdminItrblueboostAllProductContents
+  requirements:
+    id: \d+
+
+itrblueboost_admin_all_product_contents_toggle:
+  path: itrblueboost/all-product-contents/{id}/toggle
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllProductContentsController::toggleActiveAction
+    _legacy_controller: AdminItrblueboostAllProductContents
+  requirements:
+    id: \d+
+
+itrblueboost_admin_all_product_contents_delete:
+  path: itrblueboost/all-product-contents/{id}/delete
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllProductContentsController::deleteAction
+    _legacy_controller: AdminItrblueboostAllProductContents
+  requirements:
+    id: \d+
