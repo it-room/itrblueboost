@@ -6,10 +6,13 @@ namespace Itrblueboost\Controller\Admin;
 
 use Configuration;
 use Context;
+use finfo;
 use Image;
 use ImageManager;
 use ImageType;
+use Itrblueboost\Entity\GenerationJob;
 use Itrblueboost\Entity\ProductImage;
+use Itrblueboost\Service\ApiLogger;
 use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
 use PrestaShopBundle\Security\Annotation\AdminSecurity;
 use Product;
@@ -23,7 +26,13 @@ use Tools;
  */
 class ProductImageController extends FrameworkBundleAdminController
 {
-    private const API_BASE_URL = 'https://apitr-sf.itroom.fr';
+    /** @var ApiLogger */
+    private $apiLogger;
+
+    public function __construct()
+    {
+        $this->apiLogger = new ApiLogger();
+    }
 
     /**
      * @AdminSecurity("is_granted('read', request.get('_legacy_controller'))")
@@ -63,28 +72,18 @@ class ProductImageController extends FrameworkBundleAdminController
      */
     public function getPromptsAction(): JsonResponse
     {
-        $apiKey = Configuration::get('ITRBLUEBOOST_API_KEY');
+        $result = $this->apiLogger->getImagePrompts();
 
-        if (empty($apiKey)) {
-            return new JsonResponse([
-                'success' => false,
-                'message' => 'API key not configured.',
-            ]);
+        if (!isset($result['success'])) {
+            $result['success'] = isset($result['prompts']);
         }
 
-        $response = $this->callApi('GET', '/api/image/prompts', $apiKey);
-
-        if ($response === null) {
-            return new JsonResponse([
-                'success' => false,
-                'message' => 'Error retrieving prompts.',
-            ]);
-        }
-
-        return new JsonResponse($response);
+        return new JsonResponse($result);
     }
 
     /**
+     * Async image generation: creates a job and launches background processing.
+     *
      * @AdminSecurity("is_granted('create', request.get('_legacy_controller'))")
      */
     public function generateAction(Request $request, int $id_product): JsonResponse
@@ -106,153 +105,93 @@ class ProductImageController extends FrameworkBundleAdminController
             ]);
         }
 
-        $context = Context::getContext();
-        $idLang = $context->language ? (int) $context->language->id : (int) Configuration::get('PS_LANG_DEFAULT');
-
-        $product = new Product($id_product, false, $idLang);
-        if (!$product->id || !\Validate::isLoadedObject($product)) {
+        $product = $this->loadProduct($id_product);
+        if ($product === null) {
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Product not found (ID: ' . $id_product . ').',
             ]);
         }
 
-        $baseImageId = $request->request->get('base_image_id');
-        $baseImageUrl = null;
+        $apiData = $this->buildApiData($request, $product, $promptId);
 
-        if (!empty($baseImageId)) {
-            $baseImage = new Image((int) $baseImageId);
-            if ($baseImage->id) {
-                $baseImageUrl = $this->getImageUrl($baseImage);
-            }
-        }
-
-        $productName = is_array($product->name)
-            ? ($product->name[$idLang] ?? reset($product->name))
-            : $product->name;
-
-        $apiData = [
-            'prompt_id' => $promptId,
-            'product_name' => $productName,
-        ];
-
-        $contextText = $request->request->get('context');
-        if (!empty($contextText)) {
-            $apiData['context'] = $contextText;
-        }
-
-        if (!empty($baseImageUrl)) {
-            $apiData['image_url'] = $baseImageUrl;
-        }
-
-        $response = $this->callApiWithError('POST', '/api/image', $apiKey, $apiData);
-
-        if ($response['error'] !== null) {
+        $job = $this->createGenerationJob($id_product, $apiData);
+        if ($job === null) {
             return new JsonResponse([
                 'success' => false,
-                'message' => 'API error: ' . $response['error'],
-            ]);
-        }
-
-        $response = $response['data'];
-
-        if (!isset($response['success']) || !$response['success']) {
-            $errorMessage = $response['message'] ?? 'Unknown API error.';
-
-            return new JsonResponse([
-                'success' => false,
-                'message' => $errorMessage,
-            ]);
-        }
-
-        $images = $response['data']['images'] ?? [];
-        $apiErrors = $response['data']['errors'] ?? [];
-
-        if (empty($images)) {
-            $errorMessage = 'No images returned by API.';
-            if (!empty($apiErrors)) {
-                $errorMessage = $apiErrors[0]['error'] ?? $errorMessage;
-            }
-
-            return new JsonResponse([
-                'success' => false,
-                'message' => $errorMessage,
-            ]);
-        }
-
-        $savedImages = [];
-        $saveErrors = [];
-
-        foreach ($images as $imageData) {
-            $base64 = $imageData['base64'] ?? null;
-            $mimeType = $imageData['mime_type'] ?? 'image/png';
-
-            if (empty($base64)) {
-                $saveErrors[] = [
-                    'index' => $imageData['index'] ?? count($saveErrors),
-                    'error' => 'Missing base64 data.',
-                ];
-                continue;
-            }
-
-            $saveResult = $this->saveBase64Image($base64, $mimeType, $id_product);
-            if (!$saveResult['success']) {
-                $saveErrors[] = [
-                    'index' => $imageData['index'] ?? count($saveErrors),
-                    'error' => $saveResult['message'],
-                ];
-                continue;
-            }
-
-            $productImage = new ProductImage();
-            $productImage->id_product = $id_product;
-            $productImage->filename = $saveResult['filename'];
-            $productImage->status = 'pending';
-            $productImage->prompt_id = $promptId;
-
-            if (!$productImage->add()) {
-                @unlink($saveResult['filepath']);
-                $saveErrors[] = [
-                    'index' => $imageData['index'] ?? count($saveErrors),
-                    'error' => 'Database save error.',
-                ];
-                continue;
-            }
-
-            $savedImages[] = [
-                'id' => $productImage->id,
-                'url' => _MODULE_DIR_ . 'itrblueboost/uploads/pending/' . $saveResult['filename'],
-                'index' => $imageData['index'] ?? count($savedImages) - 1,
-            ];
-        }
-
-        $allErrors = array_merge($apiErrors, $saveErrors);
-
-        if (empty($savedImages)) {
-            $errorMessage = 'Failed to save any images.';
-            if (!empty($allErrors)) {
-                $errorMessage = $allErrors[0]['error'] ?? $errorMessage;
-            }
-
-            return new JsonResponse([
-                'success' => false,
-                'message' => $errorMessage,
-                'errors' => $allErrors,
+                'message' => 'Failed to create generation job.',
             ]);
         }
 
         return new JsonResponse([
             'success' => true,
-            'message' => count($savedImages) === 1
-                ? 'Image generated successfully.'
-                : count($savedImages) . ' images generated successfully.',
-            'images' => $savedImages,
-            'total_generated' => count($savedImages),
-            'total_requested' => $response['data']['total_requested'] ?? count($savedImages),
-            'errors' => $allErrors,
-            'credits_used' => $response['credits_used'] ?? 0,
-            'credits_remaining' => $response['credits_remaining'] ?? 0,
+            'job_id' => (int) $job->id,
+            'message' => 'Generation started.',
         ]);
+    }
+
+    /**
+     * Process a generation job. Called fire-and-forget by the frontend.
+     *
+     * @AdminSecurity("is_granted('create', request.get('_legacy_controller'))")
+     */
+    public function processJobAction(int $jobId): JsonResponse
+    {
+        @set_time_limit(300);
+        @ignore_user_abort(true);
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
+        $job = new GenerationJob($jobId);
+
+        if (!$job->id) {
+            return new JsonResponse(['success' => false, 'message' => 'Job not found.'], 404);
+        }
+
+        if ($job->status !== GenerationJob::STATUS_PENDING) {
+            return new JsonResponse(['success' => true, 'message' => 'Job already processed.']);
+        }
+
+        $this->processJobInline($job);
+
+        return new JsonResponse(['success' => true]);
+    }
+
+    /**
+     * Poll endpoint for generation job status.
+     *
+     * @AdminSecurity("is_granted('read', request.get('_legacy_controller'))")
+     */
+    public function jobStatusAction(int $jobId): JsonResponse
+    {
+        $job = new GenerationJob($jobId);
+
+        if (!$job->id) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Job not found.',
+            ], 404);
+        }
+
+        $response = [
+            'success' => true,
+            'status' => $job->status,
+            'progress' => (int) $job->progress,
+            'progress_label' => $job->progress_label ?: '',
+        ];
+
+        if ($job->status === GenerationJob::STATUS_COMPLETED) {
+            $responseData = $job->getResponseDataArray();
+            $response['data'] = $this->enrichCompletedJobData($responseData, (int) $job->id_product);
+        }
+
+        if ($job->status === GenerationJob::STATUS_FAILED) {
+            $response['error_message'] = $job->error_message ?: 'Unknown error.';
+        }
+
+        return new JsonResponse($response);
     }
 
     /**
@@ -319,29 +258,7 @@ class ProductImageController extends FrameworkBundleAdminController
             ]);
         }
 
-        $imageTypes = ImageType::getImagesTypes('products');
-        foreach ($imageTypes as $imageType) {
-            $width = (int) $imageType['width'];
-            $height = (int) $imageType['height'];
-
-            ImageManager::resize(
-                $destPath . '.jpg',
-                $destPath . '-' . $imageType['name'] . '.jpg',
-                $width,
-                $height,
-                'jpg'
-            );
-
-            if (function_exists('imagewebp')) {
-                ImageManager::resize(
-                    $destPath . '.jpg',
-                    $destPath . '-' . $imageType['name'] . '.webp',
-                    $width,
-                    $height,
-                    'webp'
-                );
-            }
-        }
+        $this->generateImageThumbnails($destPath);
 
         $productImage->status = 'accepted';
         $productImage->id_image = (int) $image->id;
@@ -435,67 +352,186 @@ class ProductImageController extends FrameworkBundleAdminController
         ]);
     }
 
-    /**
-     * @return array{success: bool, message?: string, filename?: string, filepath?: string}
-     */
-    private function downloadImage(string $url, int $idProduct): array
+    private function loadProduct(int $idProduct): ?Product
     {
-        $pendingPath = _PS_MODULE_DIR_ . 'itrblueboost/uploads/pending/';
+        $context = Context::getContext();
+        $idLang = $context->language ? (int) $context->language->id : (int) Configuration::get('PS_LANG_DEFAULT');
 
-        if (!is_dir($pendingPath) && !mkdir($pendingPath, 0755, true)) {
-            return [
-                'success' => false,
-                'message' => 'Cannot create uploads/pending directory.',
-            ];
+        $product = new Product($idProduct, false, $idLang);
+
+        if (!$product->id || !\Validate::isLoadedObject($product)) {
+            return null;
         }
 
-        $filename = 'product_' . $idProduct . '_' . uniqid() . '_' . time() . '.jpg';
-        $filepath = $pendingPath . $filename;
+        return $product;
+    }
 
-        $ch = curl_init();
-        curl_setopt_array($ch, [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_TIMEOUT => 60,
-            CURLOPT_SSL_VERIFYPEER => true,
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildApiData(Request $request, Product $product, int $promptId): array
+    {
+        $context = Context::getContext();
+        $idLang = $context->language ? (int) $context->language->id : (int) Configuration::get('PS_LANG_DEFAULT');
+
+        $productName = is_array($product->name)
+            ? ($product->name[$idLang] ?? reset($product->name))
+            : $product->name;
+
+        $apiData = [
+            'prompt_id' => $promptId,
+            'product_name' => $productName,
+        ];
+
+        $contextText = $request->request->get('context');
+        if (!empty($contextText)) {
+            $apiData['context'] = $contextText;
+        }
+
+        $baseImageId = $request->request->get('base_image_id');
+        if (!empty($baseImageId)) {
+            $baseImage = new Image((int) $baseImageId);
+            if ($baseImage->id) {
+                $apiData['image_url'] = $this->getImageUrl($baseImage);
+            }
+        }
+
+        return $apiData;
+    }
+
+    /**
+     * @param array<string, mixed> $apiData
+     */
+    private function createGenerationJob(int $idProduct, array $apiData): ?GenerationJob
+    {
+        $job = new GenerationJob();
+        $job->job_type = GenerationJob::TYPE_IMAGE;
+        $job->status = GenerationJob::STATUS_PENDING;
+        $job->progress = 0;
+        $job->progress_label = 'Initializing...';
+        $job->id_product = $idProduct;
+        $job->request_data = json_encode([
+            'api_data' => $apiData,
         ]);
 
-        $imageData = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        curl_close($ch);
+        if (!$job->add()) {
+            return null;
+        }
 
-        if ($imageData === false || $httpCode !== 200) {
-            return [
-                'success' => false,
-                'message' => 'Download error: ' . ($error ?: 'HTTP ' . $httpCode),
+        return $job;
+    }
+
+    private function processJobInline(GenerationJob $job): void
+    {
+        $requestData = $job->getRequestDataArray();
+        $apiData = $requestData['api_data'] ?? [];
+        $idProduct = (int) $job->id_product;
+        $promptId = (int) ($apiData['prompt_id'] ?? 0);
+
+        if (empty($apiData) || $idProduct <= 0) {
+            $job->markFailed('Invalid job parameters.');
+
+            return;
+        }
+
+        $job->markProcessing('Sending request to API...');
+        $job->updateProgress(30, 'Waiting for AI response...');
+
+        $response = $this->apiLogger->generateImage($apiData, $idProduct);
+
+        if (!isset($response['success']) || !$response['success']) {
+            $job->markFailed($response['message'] ?? 'Unknown API error.');
+
+            return;
+        }
+
+        $job->updateProgress(60, 'Processing API response...');
+
+        $images = $response['data']['images'] ?? [];
+        $apiErrors = $response['data']['errors'] ?? [];
+
+        if (empty($images)) {
+            $errorMsg = !empty($apiErrors) ? ($apiErrors[0]['error'] ?? 'No images returned.') : 'No images returned.';
+            $job->markFailed($errorMsg);
+
+            return;
+        }
+
+        $job->updateProgress(70, 'Saving generated images...');
+
+        $savedImages = $this->saveGeneratedImages($images, $idProduct, $promptId);
+
+        if (empty($savedImages['saved'])) {
+            $allErrors = array_merge($apiErrors, $savedImages['errors']);
+            $errorMsg = !empty($allErrors) ? ($allErrors[0]['error'] ?? 'Failed to save images.') : 'Failed to save images.';
+            $job->markFailed($errorMsg);
+
+            return;
+        }
+
+        $job->markCompleted([
+            'images' => $savedImages['saved'],
+            'total_generated' => count($savedImages['saved']),
+            'errors' => array_merge($apiErrors, $savedImages['errors']),
+            'credits_used' => $response['credits_used'] ?? 0,
+            'credits_remaining' => $response['credits_remaining'] ?? 0,
+        ]);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $images
+     *
+     * @return array{saved: array, errors: array}
+     */
+    private function saveGeneratedImages(array $images, int $idProduct, int $promptId): array
+    {
+        $savedImages = [];
+        $saveErrors = [];
+
+        foreach ($images as $imageData) {
+            $base64 = $imageData['base64'] ?? null;
+            $mimeType = $imageData['mime_type'] ?? 'image/png';
+
+            if (empty($base64)) {
+                $saveErrors[] = [
+                    'index' => $imageData['index'] ?? count($saveErrors),
+                    'error' => 'Missing base64 data.',
+                ];
+                continue;
+            }
+
+            $saveResult = $this->saveBase64Image($base64, $mimeType, $idProduct);
+            if (!$saveResult['success']) {
+                $saveErrors[] = [
+                    'index' => $imageData['index'] ?? count($saveErrors),
+                    'error' => $saveResult['message'],
+                ];
+                continue;
+            }
+
+            $productImage = new ProductImage();
+            $productImage->id_product = $idProduct;
+            $productImage->filename = $saveResult['filename'];
+            $productImage->status = 'pending';
+            $productImage->prompt_id = $promptId;
+
+            if (!$productImage->add()) {
+                @unlink($saveResult['filepath']);
+                $saveErrors[] = [
+                    'index' => $imageData['index'] ?? count($saveErrors),
+                    'error' => 'Database save error.',
+                ];
+                continue;
+            }
+
+            $savedImages[] = [
+                'id' => $productImage->id,
+                'filename' => $saveResult['filename'],
+                'index' => $imageData['index'] ?? count($savedImages) - 1,
             ];
         }
 
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $mimeType = $finfo->buffer($imageData);
-
-        $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (!in_array($mimeType, $allowedMimes, true)) {
-            return [
-                'success' => false,
-                'message' => 'Downloaded file is not a valid image.',
-            ];
-        }
-
-        if (file_put_contents($filepath, $imageData) === false) {
-            return [
-                'success' => false,
-                'message' => 'Image save error.',
-            ];
-        }
-
-        return [
-            'success' => true,
-            'filename' => $filename,
-            'filepath' => $filepath,
-        ];
+        return ['saved' => $savedImages, 'errors' => $saveErrors];
     }
 
     /**
@@ -537,7 +573,7 @@ class ProductImageController extends FrameworkBundleAdminController
         $filename = 'product_' . $idProduct . '_' . uniqid() . '_' . time() . '.' . $extension;
         $filepath = $pendingPath . $filename;
 
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
         $detectedMime = $finfo->buffer($imageData);
 
         $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -562,97 +598,50 @@ class ProductImageController extends FrameworkBundleAdminController
         ];
     }
 
-    /**
-     * @return array{data: array<string, mixed>|null, error: string|null}
-     */
-    private function callApiWithError(string $method, string $endpoint, string $apiKey, ?array $data = null): array
+    private function generateImageThumbnails(string $destPath): void
     {
-        $ch = curl_init();
+        $imageTypes = ImageType::getImagesTypes('products');
+        foreach ($imageTypes as $imageType) {
+            $width = (int) $imageType['width'];
+            $height = (int) $imageType['height'];
 
-        $isImageEndpoint = strpos($endpoint, '/image') !== false;
-        $timeout = $isImageEndpoint ? 300 : 120;
+            ImageManager::resize(
+                $destPath . '.jpg',
+                $destPath . '-' . $imageType['name'] . '.jpg',
+                $width,
+                $height,
+                'jpg'
+            );
 
-        $options = [
-            CURLOPT_URL => self::API_BASE_URL . $endpoint,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => $timeout,
-            CURLOPT_CONNECTTIMEOUT => 30,
-            CURLOPT_HTTPHEADER => [
-                'X-API-Key: ' . $apiKey,
-                'Accept: application/json',
-                'Content-Type: application/json',
-            ],
-        ];
-
-        if ($method === 'POST') {
-            $options[CURLOPT_POST] = true;
-            if ($data !== null) {
-                $options[CURLOPT_POSTFIELDS] = json_encode($data);
+            if (function_exists('imagewebp')) {
+                ImageManager::resize(
+                    $destPath . '.jpg',
+                    $destPath . '-' . $imageType['name'] . '.webp',
+                    $width,
+                    $height,
+                    'webp'
+                );
             }
         }
-
-        curl_setopt_array($ch, $options);
-
-        $response = curl_exec($ch);
-        $curlError = curl_error($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($response === false) {
-            error_log('ITRBLUEBOOST API curl error: ' . $curlError);
-            return ['data' => null, 'error' => 'Connection failed: ' . $curlError];
-        }
-
-        // Try to decode response even on HTTP errors to get detailed error message
-        $decoded = json_decode($response, true);
-
-        if ($httpCode < 200 || $httpCode >= 300) {
-            $errorMessage = 'HTTP error ' . $httpCode;
-
-            // Extract detailed error message from API response if available
-            if (is_array($decoded)) {
-                if (!empty($decoded['message'])) {
-                    $errorMessage = $decoded['message'];
-                } elseif (!empty($decoded['error'])) {
-                    $errorMessage = is_array($decoded['error'])
-                        ? ($decoded['error']['message'] ?? json_encode($decoded['error']))
-                        : $decoded['error'];
-                } elseif (!empty($decoded['detail'])) {
-                    $errorMessage = $decoded['detail'];
-                } elseif (!empty($decoded['errors']) && is_array($decoded['errors'])) {
-                    $firstError = reset($decoded['errors']);
-                    $errorMessage = is_array($firstError)
-                        ? ($firstError['message'] ?? json_encode($firstError))
-                        : $firstError;
-                }
-            }
-
-            error_log('ITRBLUEBOOST API HTTP error ' . $httpCode . ': ' . $errorMessage);
-            error_log('ITRBLUEBOOST API response: ' . substr($response, 0, 1000));
-
-            return ['data' => null, 'error' => $errorMessage . ' (HTTP ' . $httpCode . ')'];
-        }
-
-        if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
-            $errorMsg = json_last_error_msg();
-            error_log('ITRBLUEBOOST API JSON decode error: ' . $errorMsg . ' (response length: ' . strlen($response) . ')');
-            return ['data' => null, 'error' => 'JSON decode failed: ' . $errorMsg];
-        }
-
-        if (!is_array($decoded)) {
-            return ['data' => null, 'error' => 'Invalid response format'];
-        }
-
-        return ['data' => $decoded, 'error' => null];
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @param array<string, mixed> $responseData
+     *
+     * @return array<string, mixed>
      */
-    private function callApi(string $method, string $endpoint, string $apiKey, ?array $data = null): ?array
+    private function enrichCompletedJobData(array $responseData, int $idProduct): array
     {
-        $result = $this->callApiWithError($method, $endpoint, $apiKey, $data);
-        return $result['data'];
+        $modulePath = _MODULE_DIR_ . 'itrblueboost/uploads/pending/';
+        $images = $responseData['images'] ?? [];
+
+        foreach ($images as &$img) {
+            $img['url'] = $modulePath . ($img['filename'] ?? '');
+        }
+
+        $responseData['images'] = $images;
+
+        return $responseData;
     }
 
     private function getImageUrl(Image $image): string

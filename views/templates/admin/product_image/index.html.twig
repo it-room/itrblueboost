@@ -144,6 +144,74 @@
         .image-lightbox-close:hover {
             opacity: 1;
         }
+
+        /* Progress bar styles */
+        .generation-progress-wrapper {
+            padding: 20px 10px;
+        }
+        .generation-progress-bar-track {
+            width: 100%;
+            height: 24px;
+            background: #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        .generation-progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            border-radius: 12px;
+            transition: width 0.5s ease;
+            position: relative;
+            min-width: 0;
+        }
+        .generation-progress-bar-fill.animated {
+            background: linear-gradient(90deg, #28a745, #20c997, #28a745);
+            background-size: 200% 100%;
+            animation: progressShimmer 2s ease infinite;
+        }
+        @keyframes progressShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .generation-progress-percent {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            margin-top: 12px;
+        }
+        .generation-progress-label {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            margin-top: 6px;
+        }
+        .generation-progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 16px;
+            padding: 0 4px;
+        }
+        .generation-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 11px;
+            color: #aaa;
+            transition: color 0.3s;
+        }
+        .generation-step.active {
+            color: #28a745;
+            font-weight: 600;
+        }
+        .generation-step.done {
+            color: #28a745;
+        }
+        .generation-step i {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
     </style>
 
     <div class="card mb-4">
@@ -155,7 +223,9 @@
             <div class="toolbar-icons">
                 <button type="button" class="btn btn-success" id="btn-generate-image"
                         data-prompts-url="{{ path('itrblueboost_admin_product_image_prompts') }}"
-                        data-generate-url="{{ path('itrblueboost_admin_product_image_generate', { id_product: id_product }) }}">
+                        data-generate-url="{{ path('itrblueboost_admin_product_image_generate', { id_product: id_product }) }}"
+                        data-status-url="{{ path('itrblueboost_admin_product_image_job_status', { jobId: 0 }) }}"
+                        data-process-url="{{ path('itrblueboost_admin_product_image_process_job', { jobId: 0 }) }}">
                     <i class="material-icons">auto_awesome</i>
                     {{ 'Generate Image (AI)'|trans({}, 'Modules.Itrblueboost.Admin') }}
                 </button>
@@ -266,7 +336,7 @@
                         <i class="material-icons">auto_awesome</i>
                         {{ 'Generate an image with AI'|trans({}, 'Modules.Itrblueboost.Admin') }}
                     </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="btn-modal-close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -313,20 +383,41 @@
                             <small class="form-text text-muted">{{ 'Select an existing image for the AI to use as inspiration.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
                         </div>
                         {% endif %}
+                    </div>
 
-                        {# Désactivé pour les premières MEP
-                        <div class="form-group mt-3">
-                            <label>{{ 'Additional context (optional):'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
-                            <textarea class="form-control" id="context-input" rows="2" placeholder="{{ 'E.g.: White background, minimalist style...'|trans({}, 'Modules.Itrblueboost.Admin') }}"></textarea>
+                    {# Progress bar section #}
+                    <div id="generate-progress" class="d-none">
+                        <div class="generation-progress-wrapper">
+                            <div class="generation-progress-bar-track">
+                                <div class="generation-progress-bar-fill animated" id="progress-bar-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="generation-progress-percent" id="progress-percent">0%</div>
+                            <div class="generation-progress-label" id="progress-label">{{ 'Initializing...'|trans({}, 'Modules.Itrblueboost.Admin') }}</div>
+                            <div class="generation-progress-steps">
+                                <div class="generation-step" id="step-init">
+                                    <i class="material-icons">play_circle</i>
+                                    <span>{{ 'Start'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                                </div>
+                                <div class="generation-step" id="step-api">
+                                    <i class="material-icons">cloud_upload</i>
+                                    <span>{{ 'API call'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                                </div>
+                                <div class="generation-step" id="step-generate">
+                                    <i class="material-icons">auto_awesome</i>
+                                    <span>{{ 'Generation'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                                </div>
+                                <div class="generation-step" id="step-save">
+                                    <i class="material-icons">save</i>
+                                    <span>{{ 'Save'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                                </div>
+                                <div class="generation-step" id="step-done">
+                                    <i class="material-icons">check_circle</i>
+                                    <span>{{ 'Done'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                                </div>
+                            </div>
                         </div>
-                        #}
                     </div>
-                    <div id="generate-progress" class="d-none text-center py-4">
-                        <div class="spinner-border text-success" role="status">
-                            <span class="sr-only">{{ 'Generating...'|trans({}, 'Admin.Global') }}</span>
-                        </div>
-                        <p class="mt-2">{{ 'Generating image... This may take a few seconds.'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
-                    </div>
+
                     <div id="generate-result" class="d-none"></div>
                 </div>
                 <div class="modal-footer">
@@ -379,6 +470,7 @@
 
             var btnGenerate = document.getElementById('btn-generate-image');
             var btnConfirm = document.getElementById('btn-confirm-generate');
+            var btnModalClose = document.getElementById('btn-modal-close');
             var promptSelect = document.getElementById('prompt-select');
             var promptDescription = document.getElementById('prompt-description');
             var promptsLoading = document.getElementById('prompts-loading');
@@ -386,7 +478,189 @@
             var promptsList = document.getElementById('prompts-list');
             var generateProgress = document.getElementById('generate-progress');
             var generateResult = document.getElementById('generate-result');
+            var progressBarFill = document.getElementById('progress-bar-fill');
+            var progressPercent = document.getElementById('progress-percent');
+            var progressLabel = document.getElementById('progress-label');
             var modal = $('#generateImageModal');
+
+            var pollingInterval = null;
+            var isGenerating = false;
+
+            function updateProgressBar(progress, label) {
+                progressBarFill.style.width = progress + '%';
+                progressPercent.textContent = progress + '%';
+                if (label) {
+                    progressLabel.textContent = label;
+                }
+                updateSteps(progress);
+            }
+
+            function updateSteps(progress) {
+                var steps = [
+                    { id: 'step-init', threshold: 0 },
+                    { id: 'step-api', threshold: 10 },
+                    { id: 'step-generate', threshold: 30 },
+                    { id: 'step-save', threshold: 70 },
+                    { id: 'step-done', threshold: 100 }
+                ];
+
+                steps.forEach(function(step) {
+                    var el = document.getElementById(step.id);
+                    if (!el) return;
+
+                    el.classList.remove('active', 'done');
+
+                    if (progress >= step.threshold) {
+                        var nextStep = steps[steps.indexOf(step) + 1];
+                        if (!nextStep || progress < nextStep.threshold) {
+                            el.classList.add('active');
+                        } else {
+                            el.classList.add('done');
+                        }
+                    }
+                });
+            }
+
+            function resetProgressBar() {
+                updateProgressBar(0, 'Initializing...');
+                progressBarFill.classList.add('animated');
+            }
+
+            function stopPolling() {
+                if (pollingInterval) {
+                    clearInterval(pollingInterval);
+                    pollingInterval = null;
+                }
+                isGenerating = false;
+            }
+
+            function buildStatusUrl(jobId) {
+                var baseUrl = btnGenerate.dataset.statusUrl;
+                return baseUrl.replace('/0/', '/' + jobId + '/');
+            }
+
+            function buildProcessUrl(jobId) {
+                var baseUrl = btnGenerate.dataset.processUrl;
+                return baseUrl.replace('/0/', '/' + jobId + '/');
+            }
+
+            function fireAndForgetProcess(jobId) {
+                var url = buildProcessUrl(jobId);
+                console.log('[ITR] Fire-and-forget process URL:', url);
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                }).catch(function() {});
+            }
+
+            function startPolling(jobId) {
+                isGenerating = true;
+                var pollCount = 0;
+                var maxPolls = 60;
+                var consecutiveErrors = 0;
+                var statusUrl = buildStatusUrl(jobId);
+                var polling = false;
+
+                console.log('[ITR] Polling status URL:', statusUrl);
+
+                pollingInterval = setInterval(function() {
+                    if (polling) {
+                        return;
+                    }
+
+                    pollCount++;
+                    if (pollCount > maxPolls) {
+                        stopPolling();
+                        showError('Generation timeout. Please check the pending images section.');
+                        return;
+                    }
+
+                    polling = true;
+
+                    fetch(statusUrl, {
+                        method: 'GET',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(function(response) {
+                        if (!response.ok) {
+                            throw new Error('HTTP ' + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        polling = false;
+                        consecutiveErrors = 0;
+
+                        if (!data.success) {
+                            stopPolling();
+                            showError(data.message || 'Status check failed.');
+                            return;
+                        }
+
+                        updateProgressBar(data.progress, data.progress_label);
+
+                        if (data.status === 'completed') {
+                            stopPolling();
+                            onGenerationCompleted(data.data || {});
+                        } else if (data.status === 'failed') {
+                            stopPolling();
+                            showError(data.error_message || 'Generation failed.');
+                        }
+                    })
+                    .catch(function(err) {
+                        polling = false;
+                        consecutiveErrors++;
+                        console.warn('[ITR] Poll retry #' + consecutiveErrors + ':', err.message);
+                        if (consecutiveErrors >= 20) {
+                            stopPolling();
+                            showError('Cannot reach status endpoint. Please refresh the page to check results.');
+                        }
+                    });
+                }, 5000);
+            }
+
+            function onGenerationCompleted(data) {
+                progressBarFill.classList.remove('animated');
+                updateProgressBar(100, 'Generation completed!');
+
+                var totalGenerated = data.total_generated || 0;
+                var creditsUsed = data.credits_used || 0;
+                var creditsRemaining = data.credits_remaining || 0;
+
+                var msg = totalGenerated === 1
+                    ? 'Image generated successfully.'
+                    : totalGenerated + ' images generated successfully.';
+
+                setTimeout(function() {
+                    generateProgress.classList.add('d-none');
+                    generateResult.innerHTML = '<div class="alert alert-success">' +
+                        '<i class="material-icons" style="vertical-align: middle;">check_circle</i> ' + msg +
+                        '<br><small>Credits used: ' + creditsUsed + ' | Credits remaining: ' + creditsRemaining + '</small>' +
+                        '</div>';
+                    generateResult.classList.remove('d-none');
+                    setTimeout(function() { window.location.reload(); }, 2000);
+                }, 800);
+            }
+
+            function showError(message) {
+                progressBarFill.classList.remove('animated');
+                generateProgress.classList.add('d-none');
+                generateResult.innerHTML = '<div class="alert alert-danger">' +
+                    '<i class="material-icons" style="vertical-align: middle;">error</i> ' + message +
+                    '</div>';
+                generateResult.classList.remove('d-none');
+                btnConfirm.classList.remove('d-none');
+                promptsList.classList.remove('d-none');
+            }
+
+            // Prevent closing modal during generation
+            modal.on('hide.bs.modal', function(e) {
+                if (isGenerating) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    return false;
+                }
+            });
 
             if (btnGenerate) {
                 btnGenerate.addEventListener('click', function() {
@@ -467,6 +741,8 @@
                     promptsList.classList.add('d-none');
                     btnConfirm.classList.add('d-none');
                     generateProgress.classList.remove('d-none');
+                    generateResult.classList.add('d-none');
+                    resetProgressBar();
 
                     var formData = new FormData();
                     formData.append('prompt_id', promptId);
@@ -475,12 +751,6 @@
                         formData.append('base_image_id', selectedBaseImageId);
                     }
 
-                    // Désactivé pour les premières MEP
-                    // var contextInput = document.getElementById('context-input');
-                    // if (contextInput && contextInput.value.trim()) {
-                    //     formData.append('context', contextInput.value.trim());
-                    // }
-
                     fetch(btnGenerate.dataset.generateUrl, {
                         method: 'POST',
                         headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -488,30 +758,16 @@
                     })
                     .then(function(response) { return response.json(); })
                     .then(function(data) {
-                        generateProgress.classList.add('d-none');
-
-                        if (data.success) {
-                            generateResult.innerHTML = '<div class="alert alert-success">' +
-                                '<i class="material-icons">check_circle</i> ' + data.message +
-                                '<br><small>Credits used: ' + data.credits_used + ' | Credits remaining: ' + data.credits_remaining + '</small>' +
-                                '</div>';
-                            generateResult.classList.remove('d-none');
-                            setTimeout(function() { window.location.reload(); }, 2000);
+                        if (data.success && data.job_id) {
+                            updateProgressBar(5, 'Job created, starting generation...');
+                            fireAndForgetProcess(data.job_id);
+                            startPolling(data.job_id);
                         } else {
-                            generateResult.innerHTML = '<div class="alert alert-danger">' +
-                                '<i class="material-icons">error</i> ' + (data.message || 'Error') +
-                                '</div>';
-                            generateResult.classList.remove('d-none');
-                            btnConfirm.classList.remove('d-none');
-                            promptsList.classList.remove('d-none');
+                            showError(data.message || 'Failed to start generation.');
                         }
                     })
                     .catch(function() {
-                        generateProgress.classList.add('d-none');
-                        generateResult.innerHTML = '<div class="alert alert-danger">Connection error.</div>';
-                        generateResult.classList.remove('d-none');
-                        btnConfirm.classList.remove('d-none');
-                        promptsList.classList.remove('d-none');
+                        showError('Connection error. Please try again.');
                     });
                 });
             }

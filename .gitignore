@@ -1,5 +1,7 @@
 uploads/pending/*
 !uploads/pending/index.php
 
+var/
+
 config.xml
 config_*.xml

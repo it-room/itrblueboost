@@ -23,6 +23,7 @@ class ApiLogger
      * @param string $endpoint API endpoint (e.g., /api/faq)
      * @param array<string, mixed>|null $data Request body data
      * @param string|null $context Context for logging (product_faq, category_faq, image, etc.)
+     * @param int $timeout cURL timeout in seconds (default 120, use 300 for image endpoints)
      *
      * @return array{success: bool, data?: mixed, message?: string, http_code: int, raw_response?: string}
      */
@@ -30,7 +31,8 @@ class ApiLogger
         string $method,
         string $endpoint,
         ?array $data = null,
-        ?string $context = null
+        ?string $context = null,
+        int $timeout = 120
     ): array {
         $apiKey = Configuration::get(Itrblueboost::CONFIG_API_KEY);
 
@@ -61,7 +63,7 @@ class ApiLogger
         $options = [
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 120,
+            CURLOPT_TIMEOUT => $timeout,
             CURLOPT_HTTPHEADER => $curlHeaders,
             CURLOPT_FOLLOWLOCATION => true,
         ];
@@ -312,6 +314,32 @@ class ApiLogger
     public function getImagePrompts(): array
     {
         return $this->call('GET', '/api/image/prompts', null, 'image');
+    }
+
+    /**
+     * Generate images for a product.
+     *
+     * @param array<string, mixed> $apiData API request data (prompt_id, product_name, etc.)
+     * @param int|null $productId Product ID for credit history
+     *
+     * @return array{success: bool, data?: array, message?: string, credits_used?: int, credits_remaining?: int, http_code: int}
+     */
+    public function generateImage(array $apiData, ?int $productId = null): array
+    {
+        $result = $this->call('POST', '/api/image', $apiData, 'image', 300);
+
+        if (isset($result['success']) && $result['success'] && isset($result['credits_used']) && $result['credits_used'] > 0) {
+            CreditHistory::log(
+                'image',
+                (int) $result['credits_used'],
+                (int) ($result['credits_remaining'] ?? 0),
+                $productId,
+                'product',
+                null
+            );
+        }
+
+        return $result;
     }
 
     /**

@@ -2,6 +2,35 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.7.0] - 2026-02-12
+
+### Added
+- Nouvelle entité `GenerationJob` (`src/Entity/GenerationJob.php`) pour le suivi des jobs API asynchrones
+- Nouvelle commande Symfony `itrblueboost:process-generation-job` pour le traitement en arrière-plan de la génération d'images
+- Endpoint de sondage du statut des jobs (`/itrblueboost/images/job/{jobId}/status`) pour le suivi en temps réel de la progression
+- Barre de progression animée avec indicateurs d'étapes (Démarrage, Appel API, Génération, Sauvegarde, Terminé) dans la modale de génération d'images
+- Fallback pour traitement inline utilisant `fastcgi_finish_request()` lorsque `exec()` n'est pas disponible
+- Nouvelle table de base de données `ps_itrblueboost_generation_job` avec association aux boutiques
+- Script d'upgrade `upgrade/upgrade-1.7.0.php` pour créer la table et la configuration requises
+
+### Changed
+- `ProductImageController::generateAction()` crée maintenant un job en arrière-plan au lieu de bloquer la requête HTTP
+- La réponse de génération d'image retourne désormais un `job_id` au lieu d'attendre la réponse API complète
+- Refactorisation du contrôleur avec extraction de méthodes helper (`loadProduct`, `buildApiData`, `createGenerationJob`, etc.) pour une meilleure maintenabilité
+- Intégration du service `ApiLogger` dans le flux de génération d'images (`ProcessGenerationJobCommand` et `ProductImageController`)
+- Suppression du code d'appel API dupliqué (`callApi`, `callApiWithError`, `extractErrorMessage`, `updateStoredCredits`, `logCreditUsage`) remplacé par l'utilisation centralisée d'`ApiLogger`
+- La clé API n'est plus stockée dans les données de demande du job de génération (lue depuis Configuration par ApiLogger)
+
+### Fixed
+- Correction des erreurs HTTP 504 Gateway Timeout lors de la génération d'images en rendant les appels API asynchrones
+- La modale empêche maintenant la fermeture accidentelle pendant une génération active
+
+### Improved
+- Intégration de tous les appels API de génération d'images dans les logs centralisés d'ApiLogger (appels de prompts + génération d'images)
+- Ajout du paramètre optionnel `$timeout` à `ApiLogger::call()` pour supporter les timeouts prolongés (300s pour les endpoints d'images vs 120s par défaut)
+- Nouvelle méthode pratique `ApiLogger::generateImage()` avec timeout 300s et journalisation automatique des crédits
+- Injection du service `ApiLogger` via `services.yml` dans `ProcessGenerationJobCommand` et `ProductImageController` pour une meilleure testabilité
+
 ## [1.6.1] - 2026-02-09
 
 ### Added

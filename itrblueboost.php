@@ -36,7 +36,7 @@ class Itrblueboost extends Module
     {
         $this->name = 'itrblueboost';
         $this->tab = 'administration';
-        $this->version = '1.6.1';
+        $this->version = '1.7.0';
         $this->author = 'ITROOM';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [

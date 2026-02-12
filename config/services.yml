@@ -321,6 +321,16 @@ services:
             - [setContainer, ['@service_container']]
         public: true
 
+    # ==========================================
+    # Symfony Commands
+    # ==========================================
+
+    Itrblueboost\Command\ProcessGenerationJobCommand:
+        class: Itrblueboost\Command\ProcessGenerationJobCommand
+        tags:
+            - { name: console.command }
+        public: true
+
     # Controller All Product Contents
     Itrblueboost\Controller\Admin\AllProductContentsController:
         class: Itrblueboost\Controller\Admin\AllProductContentsController

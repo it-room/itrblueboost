@@ -77,6 +77,8 @@ class Installer
             'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'itrblueboost_product_content_shop`',
             'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'itrblueboost_product_content_lang`',
             'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'itrblueboost_product_content`',
+            'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'itrblueboost_generation_job_shop`',
+            'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'itrblueboost_generation_job`',
         ];
 
         foreach ($queries as $query) {
@@ -230,6 +232,31 @@ class Installer
                 `id_itrblueboost_product_content` INT(11) UNSIGNED NOT NULL,
                 `id_shop` INT(11) UNSIGNED NOT NULL,
                 PRIMARY KEY (`id_itrblueboost_product_content`, `id_shop`)
+            ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8mb4',
+
+            'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'itrblueboost_generation_job` (
+                `id_itrblueboost_generation_job` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `job_type` VARCHAR(50) NOT NULL,
+                `status` VARCHAR(20) NOT NULL DEFAULT \'pending\',
+                `progress` INT(11) UNSIGNED NOT NULL DEFAULT 0,
+                `progress_label` VARCHAR(255) NULL,
+                `id_product` INT(11) UNSIGNED NULL,
+                `id_category` INT(11) UNSIGNED NULL,
+                `request_data` LONGTEXT NULL,
+                `response_data` LONGTEXT NULL,
+                `error_message` TEXT NULL,
+                `date_add` DATETIME NOT NULL,
+                `date_upd` DATETIME NOT NULL,
+                PRIMARY KEY (`id_itrblueboost_generation_job`),
+                KEY `idx_status` (`status`),
+                KEY `idx_job_type` (`job_type`),
+                KEY `idx_date_add` (`date_add`)
+            ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8mb4',
+
+            'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'itrblueboost_generation_job_shop` (
+                `id_itrblueboost_generation_job` INT(11) UNSIGNED NOT NULL,
+                `id_shop` INT(11) UNSIGNED NOT NULL,
+                PRIMARY KEY (`id_itrblueboost_generation_job`, `id_shop`)
             ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8mb4',
         ];
     }

@@ -320,6 +320,24 @@ itrblueboost_admin_product_image_reject:
     id_product: \d+
     imageId: \d+
 
+itrblueboost_admin_product_image_process_job:
+  path: itrblueboost/images/job/{jobId}/process
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\ProductImageController::processJobAction
+    _legacy_controller: AdminProducts
+  requirements:
+    jobId: \d+
+
+itrblueboost_admin_product_image_job_status:
+  path: itrblueboost/images/job/{jobId}/status
+  methods: [GET]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\ProductImageController::jobStatusAction
+    _legacy_controller: AdminProducts
+  requirements:
+    jobId: \d+
+
 itrblueboost_admin_product_image_delete:
   path: itrblueboost/product/{id_product}/images/{imageId}/delete
   methods: [POST]

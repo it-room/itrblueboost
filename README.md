@@ -15,7 +15,11 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 - **Product Description Generation**: Generate AI-powered product descriptions and short descriptions
 - **Product FAQ Generation**: Generate frequently asked questions for products using AI
 - **Category FAQ Generation**: Create FAQs at the category level
-- **AI Image Generation**: Generate product images using ITROOM API
+- **AI Image Generation**: Generate product images using ITROOM API with async processing to prevent HTTP 504 timeouts
+- **Async Generation Jobs**: Image generation runs in background via Symfony command with progress tracking
+- **Animated Progress Bar**: Real-time progress display with step indicators (Start → API Call → Generation → Save → Done) and percentage completion
+- **Job Status Polling**: Frontend automatically polls for job status updates every 2 seconds with fallback to manual refresh
+- **Fallback Processing**: Automatic fallback to inline processing using `fastcgi_finish_request()` if command execution is unavailable
 - **Inline Content Generation**: Generate descriptions directly from product edit form with inline buttons
 - **Bulk Operations**: Generate content in bulk for multiple products/categories; perform Accept All, Reject All, and Delete All operations on FAQs
 - **Flexible FAQ View Modes**: Toggle between grid view (cards) and list view (table) with automatic preference persistence
@@ -27,6 +31,7 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 - **Language Support**: Support for all PrestaShop languages
 - **Modern Admin UI**: Symfony-based modern admin controllers
 - **Front-office Display**: Automatically displays generated FAQs on product and category pages
+- **Complete API Logging**: All API calls (FAQ generation, image generation, content generation, account info) are logged with full request/response details, context, and error messages
 
 ## Requirements
 
@@ -213,8 +218,49 @@ The module creates the following database tables:
 - `itrblueboost_category_faq`: Category FAQ data
 - `itrblueboost_category_faq_lang`: Category FAQ content by language
 - `itrblueboost_category_faq_shop`: Category FAQ to shop associations
+- `itrblueboost_generation_job`: Tracks async generation job status, progress, and errors
+- `itrblueboost_generation_job_shop`: Generation job to shop associations
 - `itrblueboost_api_log`: Complete log of all API requests
 - `itrblueboost_credit_history`: History of API credit usage
+
+## Async Image Generation
+
+Starting with version 1.7.0, image generation is fully asynchronous to prevent HTTP 504 timeout errors. The process works as follows:
+
+### How It Works
+
+1. **Immediate Response**: When a user requests image generation, a `GenerationJob` record is created and returned immediately (with job ID)
+2. **Background Processing**: A Symfony command (`itrblueboost:process-generation-job`) processes the job separately from the web request
+3. **Progress Tracking**: The job status updates through distinct phases:
+   - **Start**: Job created and queued
+   - **API Call**: Contacting ITROOM API
+   - **Generation**: API processing the image
+   - **Save**: Storing generated image in PrestaShop
+   - **Done**: Job completed successfully
+4. **Frontend Polling**: The admin interface automatically polls for status updates every 2 seconds
+5. **Automatic Fallback**: If command execution is unavailable, the system automatically falls back to inline processing using `fastcgi_finish_request()`
+6. **Complete API Logging**: All image generation API calls are logged in the API logs section (see **API Logging** below)
+
+### Progress Display
+
+During generation, users see an animated progress bar displaying:
+- Overall progress percentage (0-100%)
+- Current step with human-readable status label
+- Animated shimmer effect for visual feedback
+
+### Job Status States
+
+- **pending**: Job created, waiting to be processed
+- **processing**: Job is currently being processed
+- **completed**: Job finished successfully with generated image
+- **failed**: Job encountered an error; error message is stored
+
+### Fallback Mechanism
+
+If the Symfony command cannot be executed via `exec()` or `bin/console` is unavailable:
+1. The system detects the execution failure
+2. It automatically switches to inline processing using `fastcgi_finish_request()`
+3. The web request returns immediately, but processing continues on the server
 
 ## Performance Optimization
 
@@ -231,6 +277,39 @@ The credits badge displayed in the back office header is now highly optimized:
 - **Result**: Significantly reduced API calls and improved back office performance
 
 The credit value is retrieved from the database configuration table on every page load, eliminating unnecessary API requests while keeping the badge always up-to-date after each operation.
+
+## API Logging
+
+Starting with version 1.7.0, all API interactions with the ITROOM API are comprehensively logged and visible in the API logs section.
+
+### What Gets Logged
+
+The following API calls are automatically logged with full request/response details:
+
+- **FAQ Generation**: Product and category FAQ generation requests
+- **Image Generation**: Product image generation requests (with 300-second timeout for longer processing)
+- **Product Content**: Product description and short description generation
+- **Account Info**: API account information queries
+- **API Updates**: FAQ and content status updates (accept, reject, toggle)
+
+### Log Details
+
+Each API log entry includes:
+- **Request Method**: HTTP method (GET, POST, PUT, DELETE)
+- **Endpoint**: API endpoint URL
+- **Request Body**: Sent parameters and data
+- **Response Status**: HTTP response code
+- **Response Body**: Complete API response
+- **Duration**: Execution time in seconds
+- **Error Messages**: Detailed error information if the request failed
+- **Context**: Operation type (product_faq, category_faq, image, content, account, etc.)
+
+### Accessing Logs
+
+Navigate to **Configurer** → **ITR Blue Boost** → **API Logs** to view:
+- Real-time log entries sorted by timestamp
+- Filter and search capabilities for troubleshooting
+- Complete request/response inspection for debugging
 
 ## Hooks
 
@@ -252,6 +331,21 @@ The module registers the following PrestaShop hooks:
 - **Multisite**: Fully supported
 
 ## Changelog
+
+### Version 1.7.0
+- **Major Feature**: Async image generation to prevent HTTP 504 timeouts
+- **Major Feature**: Comprehensive API logging for all API interactions (now visible in API logs section)
+- **New Entity**: `GenerationJob` for tracking async operation status and progress
+- **New Command**: `itrblueboost:process-generation-job {jobId}` for background processing
+- **New UI**: Animated progress bar with step indicators and percentage completion
+- **New Functionality**: Real-time status polling every 2 seconds for job progress
+- **Image Generation Logging**: All image generation API calls now go through ApiLogger with automatic credit logging
+- **Timeout Configuration**: ApiLogger::call() accepts optional $timeout parameter (default 120s, image endpoints use 300s)
+- **Fallback Mechanism**: Automatic inline processing with `fastcgi_finish_request()` if command execution unavailable
+- **Database**: New `itrblueboost_generation_job` and `itrblueboost_generation_job_shop` tables for job tracking
+- **API Logging Refactor**: ProcessGenerationJobCommand and ProductImageController refactored to use ApiLogger instead of custom cURL code
+- **Status States**: Support for pending, processing, completed, and failed job states with error messages
+- **Architecture**: Created `src/Command/ProcessGenerationJobCommand.php` for Symfony command handler
 
 ### Version 1.6.1
 - **New Feature**: Flexible view modes for All Product FAQs page (grid and list view)
