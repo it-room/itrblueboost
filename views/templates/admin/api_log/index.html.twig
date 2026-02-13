@@ -119,7 +119,7 @@
                                         <span class="log-method {{ log.method|lower }}">{{ log.method }}</span>
                                     </td>
                                     <td class="log-endpoint" title="{{ log.endpoint }}">
-                                        {{ log.endpoint|replace({'https://apitr-sf.itroom.fr': ''}) }}
+                                        {{ log.endpoint|replace({'https://apitr-sf.itroom.fr': '', 'https://blueboost.itroom.fr': ''}) }}
                                     </td>
                                     <td>
                                         {% if log.response_code >= 200 and log.response_code < 300 %}

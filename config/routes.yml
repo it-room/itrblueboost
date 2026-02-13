@@ -1,3 +1,11 @@
+itrblueboost_compatibility:
+  path: itrblueboost/compatibility
+  methods: [GET, POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\CompatibilityController::indexAction
+    _legacy_controller: AdminItrblueboostCompatibility
+    _legacy_link: AdminItrblueboostCompatibility
+
 itrblueboost_configuration:
   path: itrblueboost/configuration
   methods: [GET, POST]
@@ -334,6 +342,22 @@ itrblueboost_admin_product_image_job_status:
   methods: [GET]
   defaults:
     _controller: Itrblueboost\Controller\Admin\ProductImageController::jobStatusAction
+    _legacy_controller: AdminProducts
+  requirements:
+    jobId: \d+
+
+itrblueboost_admin_product_image_bulk_generate:
+  path: itrblueboost/images/bulk-generate
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\ProductImageController::bulkGenerateAction
+    _legacy_controller: AdminProducts
+
+itrblueboost_admin_product_image_bulk_process:
+  path: itrblueboost/images/bulk-job/{jobId}/process
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\ProductImageController::bulkProcessJobAction
     _legacy_controller: AdminProducts
   requirements:
     jobId: \d+

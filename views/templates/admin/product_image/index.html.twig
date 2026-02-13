@@ -328,6 +328,37 @@
         <img src="" alt="Zoom" id="lightboxImage">
     </div>
 
+    {# Modal for rejection reason #}
+    <div class="modal fade" id="rejectImageModal" tabindex="-1" role="dialog" aria-labelledby="rejectImageModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectImageModalLabel">
+                        <i class="material-icons" style="vertical-align: middle;">close</i>
+                        {{ 'Reject Image'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </h5>
+                    <button type="button" class="close" id="btn-reject-modal-close" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="rejectionReason">{{ 'Rejection reason'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                        <textarea class="form-control" id="rejectionReason" rows="3" placeholder="{{ 'Enter the reason for rejection...'|trans({}, 'Modules.Itrblueboost.Admin') }}"></textarea>
+                        <small class="form-text text-muted">{{ 'This reason will be sent to the API.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-reject-cancel">{{ 'Cancel'|trans({}, 'Admin.Actions') }}</button>
+                    <button type="button" class="btn btn-danger" id="btn-reject-confirm">
+                        <i class="material-icons" style="vertical-align: middle;">close</i>
+                        {{ 'Reject'|trans({}, 'Admin.Actions') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="generateImageModal" tabindex="-1" role="dialog" aria-labelledby="generateImageModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -772,7 +803,7 @@
                 });
             }
 
-            function handleImageAction(button) {
+            function handleImageAction(button, formData) {
                 var url = button.dataset.url;
                 var id = button.dataset.id;
                 var card = document.getElementById('image-card-' + id);
@@ -780,10 +811,16 @@
                 button.disabled = true;
                 button.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
-                fetch(url, {
+                var fetchOptions = {
                     method: 'POST',
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                })
+                };
+
+                if (formData) {
+                    fetchOptions.body = formData;
+                }
+
+                fetch(url, fetchOptions)
                 .then(function(response) { return response.json(); })
                 .then(function(data) {
                     if (data.success) {
@@ -815,12 +852,76 @@
                 });
             });
 
+            // Reject modal logic
+            var rejectModalEl = document.getElementById('rejectImageModal');
+            var rejectModalBackdrop = null;
+            var currentRejectButton = null;
+
+            function showRejectModal() {
+                rejectModalEl.style.display = 'block';
+                rejectModalEl.classList.add('show');
+                document.body.classList.add('modal-open');
+
+                rejectModalBackdrop = document.createElement('div');
+                rejectModalBackdrop.className = 'modal-backdrop fade show';
+                document.body.appendChild(rejectModalBackdrop);
+
+                rejectModalBackdrop.addEventListener('click', hideRejectModal);
+                document.addEventListener('keydown', handleRejectEscape);
+            }
+
+            function hideRejectModal() {
+                rejectModalEl.style.display = 'none';
+                rejectModalEl.classList.remove('show');
+                document.body.classList.remove('modal-open');
+
+                if (rejectModalBackdrop && rejectModalBackdrop.parentNode) {
+                    rejectModalBackdrop.parentNode.removeChild(rejectModalBackdrop);
+                    rejectModalBackdrop = null;
+                }
+
+                document.removeEventListener('keydown', handleRejectEscape);
+
+                var confirmBtn = document.getElementById('btn-reject-confirm');
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="material-icons" style="vertical-align: middle;">close</i> {{ 'Reject'|trans({}, 'Admin.Actions') }}';
+
+                currentRejectButton = null;
+            }
+
+            function handleRejectEscape(e) {
+                if (e.key === 'Escape' || e.keyCode === 27) {
+                    hideRejectModal();
+                }
+            }
+
+            document.getElementById('btn-reject-modal-close').addEventListener('click', hideRejectModal);
+            document.getElementById('btn-reject-cancel').addEventListener('click', hideRejectModal);
+
             document.querySelectorAll('.btn-reject').forEach(function(btn) {
                 btn.addEventListener('click', function() {
-                    if (confirm('Reject this image?')) {
-                        handleImageAction(this);
-                    }
+                    currentRejectButton = this;
+                    document.getElementById('rejectionReason').value = '';
+                    showRejectModal();
                 });
+            });
+
+            document.getElementById('btn-reject-confirm').addEventListener('click', function() {
+                if (!currentRejectButton) {
+                    return;
+                }
+
+                var rejectionReason = document.getElementById('rejectionReason').value;
+                var confirmBtn = this;
+
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> {{ 'Processing...'|trans({}, 'Admin.Global') }}';
+
+                var formData = new FormData();
+                formData.append('rejection_reason', rejectionReason);
+
+                hideRejectModal();
+                handleImageAction(currentRejectButton, formData);
             });
 
             document.querySelectorAll('.btn-delete').forEach(function(btn) {

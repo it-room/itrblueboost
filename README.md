@@ -21,10 +21,12 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 - **Job Status Polling**: Frontend automatically polls for job status updates every 2 seconds with fallback to manual refresh
 - **Fallback Processing**: Automatic fallback to inline processing using `fastcgi_finish_request()` if command execution is unavailable
 - **Inline Content Generation**: Generate descriptions directly from product edit form with inline buttons
-- **Bulk Operations**: Generate content in bulk for multiple products/categories; perform Accept All, Reject All, and Delete All operations on FAQs
+- **Bulk Operations**: Generate content in bulk for multiple products/categories; perform Accept All, Reject All, and Delete All operations on FAQs and images
 - **Flexible FAQ View Modes**: Toggle between grid view (cards) and list view (table) with automatic preference persistence
 - **Checkbox Selection System**: Select multiple FAQs across grid/list views with synchronized checkboxes and visual feedback
 - **Floating Bulk Toolbar**: Context-aware floating action toolbar appears when items are selected for quick bulk operations
+- **Theme Compatibility Settings**: Configure Bootstrap version compatibility (Bootstrap 4, Bootstrap 4 Alpha, Bootstrap 5) for proper theme integration
+- **API Mode Selection**: Switch between Production and Test API environments without code changes
 - **Admin Dashboard**: Complete management interface for all generated content
 - **Credit System**: Track remaining API credits directly from admin header
 - **Multi-shop Support**: Compatible with multi-shop PrestaShop installations
@@ -64,6 +66,42 @@ Once installed, configure the module:
 
 The remaining API credits are displayed as a badge in the admin header (see **Performance Optimization** below).
 
+### Theme Compatibility
+
+To ensure compatibility with your site theme:
+
+1. Go to **Configurer** → **ITR Blue Boost** → **Compatibility** in the admin menu
+2. Select the Bootstrap version used by your theme from the dropdown:
+   - **Bootstrap 4**: Standard Bootstrap 4 framework
+   - **Bootstrap 4 Alpha**: Bootstrap 4 alpha version
+   - **Bootstrap 5**: Latest Bootstrap 5 framework
+3. Default value is **Bootstrap 5**
+
+The selected version is stored in the configuration and affects frontend presentation of module elements.
+
+### API Mode Configuration
+
+Configure which ITROOM API environment the module uses:
+
+1. Go to **Configurer** → **ITR Blue Boost** → **Compatibility** in the admin menu
+2. Select your desired API mode from the dropdown:
+   - **Production** (default): Uses `apitr-sf.itroom.fr` - for live operations
+   - **Test**: Uses `blueboost.itroom.fr` - for testing and development
+3. Default value is **Production**
+
+The selected API mode is stored in the configuration. Both ApiService and ApiLogger dynamically resolve the API base URL based on this setting, ensuring all API calls connect to the correct endpoint.
+
+#### How Bootstrap Version Affects FAQ Display
+
+The Bootstrap version setting directly controls how FAQ accordions are rendered on the front-office:
+
+- **FAQ Template Adaptation**: Both product FAQs (product_faq.tpl) and category FAQs (category_faq.tpl) contain conditional logic that renders different HTML markup depending on the selected Bootstrap version
+- **CSS Classes**: Bootstrap 5 uses `accordion-*` classes while Bootstrap 4 uses `card-*` classes for styling
+- **JavaScript Attributes**: Bootstrap 5 uses `data-bs-*` attributes (data-bs-toggle, data-bs-target, data-bs-parent) while Bootstrap 4 uses `data-*` attributes (data-toggle, data-target, data-parent) for collapse functionality
+- **Automatic Application**: Once you select your theme's Bootstrap version, all FAQ accordions will use the appropriate markup automatically—no additional template editing required
+
+This ensures that FAQ accordions work correctly with your theme's Bootstrap implementation and maintain proper styling and interactivity.
+
 ### Configuration Keys
 
 The module uses the following configuration keys (stored in `ps_configuration`):
@@ -72,6 +110,8 @@ The module uses the following configuration keys (stored in `ps_configuration`):
 - `ITRBLUEBOOST_ENABLE_PRODUCT_FAQ`: Enable/disable product FAQ generation
 - `ITRBLUEBOOST_ENABLE_PRODUCT_IMAGE`: Enable/disable product image generation
 - `ITRBLUEBOOST_ENABLE_CATEGORY_FAQ`: Enable/disable category FAQ generation
+- `ITRBLUEBOOST_BOOTSTRAP_VERSION`: Selected Bootstrap version (bootstrap4, bootstrap4alpha, or bootstrap5; default: bootstrap5)
+- `ITRBLUEBOOST_API_MODE`: API environment mode (prod or test; default: prod)
 - `ITRBLUEBOOST_CREDITS_REMAINING`: Stores the last known remaining API credits (automatically updated)
 
 ## Admin Menu Structure
@@ -79,6 +119,7 @@ The module uses the following configuration keys (stored in `ps_configuration`):
 The module creates a dropdown menu in the **Configurer** section with the following sub-menus:
 
 - **Settings**: Configure API key and enable/disable services
+- **Compatibility**: Select the Bootstrap version used on your site theme
 - **All Product Contents**: Centralized view for managing all AI-generated product descriptions and short descriptions
 - **All generated images**: View and manage all AI-generated product images
 - **All product FAQs**: Browse and edit all generated product FAQs
@@ -182,6 +223,27 @@ For individual FAQs:
 2. Look for the "AI Product Images" tab
 3. Use the interface to generate new images with custom prompts
 
+**Bulk Operations:**
+1. Go to product list view
+2. Select multiple products
+3. Click "Generate Images (AI)" from bulk actions
+4. Choose an image prompt from the modal
+5. Watch the real-time progress bar as images are generated for each product sequentially
+6. Once complete, click on each product link in the results to view the generated images in the product's image management page
+
+### Bulk Operations Summary
+
+The module supports bulk operations for both FAQ and image generation from the product and category list pages:
+
+**Product List Bulk Actions:**
+- "Generate FAQ (AI)": Generate FAQs for multiple products simultaneously
+- "Generate Images (AI)": Generate images for multiple products with the same prompt
+
+**Category List Bulk Actions:**
+- "Generate FAQ (AI)": Generate FAQs for multiple categories simultaneously
+
+These bulk operations use the same asynchronous GenerationJob pattern as single-product operations, ensuring no HTTP timeouts regardless of how many items are processed.
+
 ### Generating Category FAQs
 
 **Individual Category:**
@@ -202,6 +264,22 @@ Generated content automatically appears on the front-office:
 - **Category FAQs**: Displayed in the category page footer
 
 Customers can view and interact with the generated FAQs without any additional configuration.
+
+#### Bootstrap Version Compatibility
+
+The front-office FAQ templates automatically adapt their HTML markup and styling based on the Bootstrap version selected in the **Compatibility settings**:
+
+**Bootstrap 5** (default):
+- Uses modern Bootstrap 5 accordion markup with `accordion-*` classes
+- Applies `data-bs-toggle="collapse"`, `data-bs-target`, and `data-bs-parent` attributes
+- Renders as: `<div class="accordion">` → `<div class="accordion-item">` → `<button class="accordion-button">`
+
+**Bootstrap 4 / Bootstrap 4 Alpha**:
+- Uses Bootstrap 4 card-based collapse markup with `card-*` classes
+- Applies `data-toggle="collapse"`, `data-target`, and `data-parent` attributes
+- Renders as: `<div role="tablist">` → `<div class="card">` → `<a class="itrblueboost-faq-link">`
+
+The `bootstrap_version` variable is automatically passed from the hooks (`hookDisplayProductExtraContent` and `hookDisplayFooterCategory`) to the Smarty templates, ensuring FAQs display with correct styling and functionality regardless of your theme's Bootstrap version. No additional configuration is required beyond selecting the correct Bootstrap version in the Compatibility settings.
 
 ## Database Tables
 
@@ -243,10 +321,16 @@ Starting with version 1.7.0, image generation is fully asynchronous to prevent H
 
 ### Progress Display
 
-During generation, users see an animated progress bar displaying:
+During single-product generation, users see an animated progress bar displaying:
 - Overall progress percentage (0-100%)
 - Current step with human-readable status label
 - Animated shimmer effect for visual feedback
+
+For bulk image generation on the product list, users see:
+- Real-time progress bar showing completion percentage
+- Current operation status (e.g., "Creating generation job", "Starting image generation")
+- Results displayed after completion showing which products had images generated successfully
+- Direct links to each product's image management page for quick verification
 
 ### Job Status States
 
@@ -331,6 +415,33 @@ The module registers the following PrestaShop hooks:
 - **Multisite**: Fully supported
 
 ## Changelog
+
+### Version 1.8.0
+- **New Feature**: Compatibility tab for theme Bootstrap version configuration
+- **New Feature**: API mode switching (Production/Test environments)
+- **New Feature**: Bulk image generation from product list page
+- **New Menu**: "Compatibility" sub-menu under Configurer → ITR Blue Boost
+- **Bootstrap Version Selection**: Choose between Bootstrap 4, Bootstrap 4 Alpha, and Bootstrap 5
+- **API Mode Selection**: Choose between Production (apitr-sf.itroom.fr) and Test (blueboost.itroom.fr)
+- **Default Configuration**: Bootstrap 5 selected by default, Production API mode selected by default
+- **Configuration Storage**:
+  - Bootstrap version stored as `ITRBLUEBOOST_BOOTSTRAP_VERSION` in Configuration
+  - API mode stored as `ITRBLUEBOOST_API_MODE` in Configuration (values: 'prod' or 'test')
+- **Form Validation**: Server-side validation of allowed Bootstrap versions and API modes
+- **Dynamic URL Resolution**: Both ApiService and ApiLogger dynamically resolve the base URL based on configured API mode
+- **Adaptive FAQ Templates**: Front-office FAQ templates (product and category) automatically adapt HTML markup based on Bootstrap version:
+  - Bootstrap 5: Uses `accordion-*` classes with `data-bs-toggle/data-bs-target/data-bs-parent` attributes
+  - Bootstrap 4 / Bootstrap 4 Alpha: Uses `card-*` classes with `data-toggle/data-target/data-parent` attributes
+- **Template Auto-Adaptation**: `bootstrap_version` variable automatically passed from hooks to Smarty templates for proper rendering
+- **Bulk Image Generation**: Generate images for multiple products simultaneously with:
+  - Modal dialog to select an image prompt
+  - Real-time progress tracking with percentage and status updates
+  - Asynchronous processing using GenerationJob pattern
+  - Results display with direct links to each product's image management page
+  - Error handling with detailed error reporting
+- **New JavaScript File**: `views/js/admin-product-list-bulk-images.js` for bulk image generation UI and logic
+- **New Routes**: `itrblueboost_admin_product_image_bulk_generate` and `itrblueboost_admin_product_image_bulk_process` for bulk workflow
+- **Enhanced ProductImageController**: New methods `bulkGenerateAction`, `bulkProcessJobAction`, `processBulkJobInline` for batch processing
 
 ### Version 1.7.0
 - **Major Feature**: Async image generation to prevent HTTP 504 timeouts

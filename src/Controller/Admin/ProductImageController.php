@@ -282,7 +282,7 @@ class ProductImageController extends FrameworkBundleAdminController
     /**
      * @AdminSecurity("is_granted('update', request.get('_legacy_controller'))")
      */
-    public function rejectAction(int $id_product, int $imageId): JsonResponse
+    public function rejectAction(Request $request, int $id_product, int $imageId): JsonResponse
     {
         $productImage = new ProductImage($imageId);
 
@@ -300,8 +300,24 @@ class ProductImageController extends FrameworkBundleAdminController
             ]);
         }
 
+        $rejectionReason = (string) $request->request->get('rejection_reason', '');
+
+        $apiResult = $this->apiLogger->rejectImage(
+            (int) $productImage->prompt_id,
+            $id_product,
+            $rejectionReason
+        );
+
+        if (!isset($apiResult['success']) || !$apiResult['success']) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'API sync error: ' . ($apiResult['message'] ?? 'Unknown error'),
+            ]);
+        }
+
         $productImage->deleteFile();
         $productImage->status = 'rejected';
+        $productImage->rejection_reason = $rejectionReason;
 
         if (!$productImage->update()) {
             return new JsonResponse([
@@ -350,6 +366,208 @@ class ProductImageController extends FrameworkBundleAdminController
             'success' => true,
             'message' => 'Image deleted.',
         ]);
+    }
+
+    /**
+     * Bulk image generation: creates a batch job for multiple products.
+     *
+     * @AdminSecurity("is_granted('create', request.get('_legacy_controller'))")
+     */
+    public function bulkGenerateAction(Request $request): JsonResponse
+    {
+        $apiKey = Configuration::get('ITRBLUEBOOST_API_KEY');
+
+        if (empty($apiKey)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'API key not configured.',
+            ]);
+        }
+
+        $promptId = (int) $request->request->get('prompt_id');
+        if ($promptId <= 0) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Prompt not selected.',
+            ]);
+        }
+
+        $rawIds = $request->request->get('product_ids', '');
+        $productIds = array_filter(array_map('intval', explode(',', (string) $rawIds)));
+
+        if (empty($productIds)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'No products selected.',
+            ]);
+        }
+
+        $job = new GenerationJob();
+        $job->job_type = GenerationJob::TYPE_IMAGE;
+        $job->status = GenerationJob::STATUS_PENDING;
+        $job->progress = 0;
+        $job->progress_label = 'Initializing batch...';
+        $job->id_product = 0;
+        $job->request_data = json_encode([
+            'product_ids' => $productIds,
+            'prompt_id' => $promptId,
+        ]);
+
+        if (!$job->add()) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Failed to create generation job.',
+            ]);
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'job_id' => (int) $job->id,
+        ]);
+    }
+
+    /**
+     * Process a bulk image generation job (fire-and-forget).
+     *
+     * @AdminSecurity("is_granted('create', request.get('_legacy_controller'))")
+     */
+    public function bulkProcessJobAction(int $jobId): JsonResponse
+    {
+        @set_time_limit(0);
+        @ignore_user_abort(true);
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
+        $job = new GenerationJob($jobId);
+
+        if (!$job->id) {
+            return new JsonResponse(['success' => false, 'message' => 'Job not found.'], 404);
+        }
+
+        if ($job->status !== GenerationJob::STATUS_PENDING) {
+            return new JsonResponse(['success' => true, 'message' => 'Job already processed.']);
+        }
+
+        $this->processBulkJobInline($job);
+
+        return new JsonResponse(['success' => true]);
+    }
+
+    private function processBulkJobInline(GenerationJob $job): void
+    {
+        $requestData = $job->getRequestDataArray();
+        $productIds = $requestData['product_ids'] ?? [];
+        $promptId = (int) ($requestData['prompt_id'] ?? 0);
+
+        if (empty($productIds) || $promptId <= 0) {
+            $job->markFailed('Invalid job parameters.');
+
+            return;
+        }
+
+        $job->markProcessing('Starting batch generation...');
+
+        $context = Context::getContext();
+        $idLang = $context->language ? (int) $context->language->id : (int) Configuration::get('PS_LANG_DEFAULT');
+
+        $total = count($productIds);
+        $processedItems = [];
+        $errors = [];
+
+        /** @var \Symfony\Component\Routing\RouterInterface $router */
+        $router = $this->get('router');
+
+        foreach ($productIds as $index => $idProduct) {
+            $current = $index + 1;
+            $product = $this->loadProduct((int) $idProduct);
+
+            if ($product === null) {
+                $errors[] = 'Product ID ' . $idProduct . ' not found.';
+                $this->updateBulkProgress($job, $current, $total, 'Product ' . $current . '/' . $total . ' : not found, skipping...');
+                continue;
+            }
+
+            $productName = $this->getProductName($product, $idLang);
+            $this->updateBulkProgress($job, $current, $total, 'Product ' . $current . '/' . $total . ' : ' . $productName . '...');
+
+            $apiData = $this->buildApiDataFromProduct($product, $promptId, $idLang);
+            $response = $this->apiLogger->generateImage($apiData, (int) $idProduct);
+
+            if (!isset($response['success']) || !$response['success']) {
+                $errors[] = $productName . ': ' . ($response['message'] ?? 'Unknown API error.');
+                continue;
+            }
+
+            $images = $response['data']['images'] ?? [];
+
+            if (empty($images)) {
+                $apiErrors = $response['data']['errors'] ?? [];
+                $errors[] = $productName . ': ' . (!empty($apiErrors) ? ($apiErrors[0]['error'] ?? 'No images returned.') : 'No images returned.');
+                continue;
+            }
+
+            $savedImages = $this->saveGeneratedImages($images, (int) $idProduct, $promptId);
+
+            $imageUrl = $router->generate('itrblueboost_admin_product_image_index', [
+                'id_product' => (int) $idProduct,
+            ]);
+
+            $processedItems[] = [
+                'id' => (int) $idProduct,
+                'name' => $productName,
+                'image_count' => count($savedImages['saved']),
+                'image_url' => $imageUrl,
+            ];
+
+            if (!empty($savedImages['errors'])) {
+                foreach ($savedImages['errors'] as $saveError) {
+                    $errors[] = $productName . ': ' . ($saveError['error'] ?? 'Save error.');
+                }
+            }
+        }
+
+        if (empty($processedItems) && !empty($errors)) {
+            $job->markFailed(implode(' | ', $errors));
+
+            return;
+        }
+
+        $job->markCompleted([
+            'processed_items' => $processedItems,
+            'errors' => $errors,
+            'total_products' => $total,
+            'total_processed' => count($processedItems),
+        ]);
+    }
+
+    private function updateBulkProgress(GenerationJob $job, int $current, int $total, string $label): void
+    {
+        $progress = (int) round(($current / $total) * 90) + 5;
+        $job->updateProgress(min($progress, 95), $label);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildApiDataFromProduct(Product $product, int $promptId, int $idLang): array
+    {
+        $productName = $this->getProductName($product, $idLang);
+
+        return [
+            'prompt_id' => $promptId,
+            'product_name' => $productName,
+        ];
+    }
+
+    private function getProductName(Product $product, int $idLang): string
+    {
+        if (is_array($product->name)) {
+            return $product->name[$idLang] ?? reset($product->name);
+        }
+
+        return (string) $product->name;
     }
 
     private function loadProduct(int $idProduct): ?Product
@@ -632,6 +850,10 @@ class ProductImageController extends FrameworkBundleAdminController
      */
     private function enrichCompletedJobData(array $responseData, int $idProduct): array
     {
+        if ($idProduct === 0) {
+            return $responseData;
+        }
+
         $modulePath = _MODULE_DIR_ . 'itrblueboost/uploads/pending/';
         $images = $responseData['images'] ?? [];
 

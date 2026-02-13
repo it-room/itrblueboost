@@ -57,6 +57,52 @@ services:
         public: true
 
     # ==========================================
+    # Compatibility - Services
+    # ==========================================
+
+    # Form Type Compatibility
+    Itrblueboost\Form\CompatibilityType:
+        class: Itrblueboost\Form\CompatibilityType
+        parent: 'form.type.translatable.aware'
+        public: true
+        tags:
+            - { name: form.type }
+
+    # Data Configuration Compatibility
+    itrblueboost.form.compatibility_data_configuration:
+        class: Itrblueboost\Form\CompatibilityDataConfiguration
+        public: true
+
+    # Form Data Provider Compatibility
+    itrblueboost.form.compatibility_form_data_provider:
+        class: Itrblueboost\Form\CompatibilityFormDataProvider
+        arguments:
+            - '@itrblueboost.form.compatibility_data_configuration'
+        public: true
+
+    # Form Handler Compatibility
+    itrblueboost.form.compatibility_form_handler:
+        class: PrestaShop\PrestaShop\Core\Form\Handler
+        arguments:
+            - '@form.factory'
+            - '@prestashop.core.hook.dispatcher'
+            - '@itrblueboost.form.compatibility_form_data_provider'
+            - 'Itrblueboost\Form\CompatibilityType'
+            - 'ItrblueboostCompatibility'
+        public: true
+
+    # Controller Compatibility
+    Itrblueboost\Controller\Admin\CompatibilityController:
+        class: Itrblueboost\Controller\Admin\CompatibilityController
+        arguments:
+            - '@itrblueboost.form.compatibility_form_handler'
+        tags:
+            - { name: controller.service_arguments }
+        calls:
+            - [setContainer, ['@service_container']]
+        public: true
+
+    # ==========================================
     # FAQ Produit - Services
     # ==========================================
 

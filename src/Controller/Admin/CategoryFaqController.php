@@ -570,6 +570,10 @@ class CategoryFaqController extends FrameworkBundleAdminController
         $totalCreditsUsed = 0;
         $creditsRemaining = 0;
         $errors = [];
+        $processedItems = [];
+
+        /** @var \Symfony\Component\Routing\RouterInterface $router */
+        $router = $this->get('router');
 
         foreach ($categoryIdsArray as $idCategory) {
             $category = new Category($idCategory, $idLang);
@@ -620,9 +624,18 @@ class CategoryFaqController extends FrameworkBundleAdminController
             $totalCreated += $createdCount;
             $totalCreditsUsed += $response['credits_used'] ?? 0;
             $creditsRemaining = $response['credits_remaining'] ?? 0;
+
+            $processedItems[] = [
+                'id' => $idCategory,
+                'name' => $category->name,
+                'faq_count' => $createdCount,
+                'faq_url' => $router->generate('itrblueboost_admin_category_faq_index', [
+                    'id_category' => $idCategory,
+                ]),
+            ];
         }
 
-        $message = sprintf('%d FAQs generated for %d categories.', $totalCreated, count($categoryIdsArray) - count($errors));
+        $message = sprintf('%d FAQs generated for %d categories.', $totalCreated, count($processedItems));
 
         if (!empty($errors)) {
             $message .= ' Errors: ' . count($errors);
@@ -635,7 +648,8 @@ class CategoryFaqController extends FrameworkBundleAdminController
             'credits_used' => $totalCreditsUsed,
             'credits_remaining' => $creditsRemaining,
             'errors' => $errors,
-            'categories_processed' => count($categoryIdsArray) - count($errors),
+            'processed_items' => $processedItems,
+            'categories_processed' => count($processedItems),
             'categories_failed' => count($errors),
         ]);
     }

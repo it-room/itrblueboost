@@ -268,6 +268,13 @@
             text-overflow: ellipsis;
             display: block;
         }
+        .faq-list-table .answer-text {
+            max-width: 450px;
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.4;
+            display: block;
+        }
 
         /* Bulk toolbar */
         .bulk-toolbar {
@@ -471,7 +478,7 @@
                                         <small class="text-muted d-block">(ID: {{ faq.id_product }})</small>
                                     </td>
                                     <td><span class="truncate-text" title="{{ faq.question|default('-') }}">{{ faq.question|default('-')|slice(0, 80) }}{% if faq.question|default('')|length > 80 %}...{% endif %}</span></td>
-                                    <td><span class="truncate-text" title="{{ faq.answer|default('-')|striptags }}">{{ faq.answer|default('-')|striptags|slice(0, 100) }}{% if faq.answer|default('')|striptags|length > 100 %}...{% endif %}</span></td>
+                                    <td><span class="answer-text">{{ faq.answer|default('-')|striptags }}</span></td>
                                     <td>
                                         <span class="status-badge status-{{ faq.status }}" id="list-status-{{ faq.id_itrblueboost_product_faq }}">
                                             {{ faq.status }}

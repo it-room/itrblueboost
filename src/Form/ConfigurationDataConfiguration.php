@@ -104,7 +104,7 @@ class ConfigurationDataConfiguration implements DataConfigurationInterface
 
         $faqActive = $this->isServiceActive($activeServices, ['faq', 'product_faq', 'faq_product', 'qa', 'question']);
         $imageActive = $this->isServiceActive($activeServices, ['image', 'product_image', 'image_product', 'img']);
-        $categoryFaqActive = $this->isServiceActive($activeServices, ['category_faq', 'faq_category', 'cat_faq', 'category_qa']);
+        $categoryFaqActive = $this->isServiceActive($activeServices, ['faq', 'category_faq', 'faq_category', 'cat_faq', 'category_qa']);
         $contentActive = $this->isServiceActive($activeServices, ['content', 'product_content', 'description', 'product_description']);
 
         Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_FAQ, $faqActive ? 1 : 0);

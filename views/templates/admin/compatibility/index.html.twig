@@ -1,0 +1,98 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --itr-primary: #25b9d7;
+            --itr-primary-dark: #1e9bb5;
+            --itr-dark: #363a41;
+            --itr-gray: #6c757d;
+            --itr-light: #f8f9fa;
+        }
+
+        .itr-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 1.5rem;
+        }
+
+        .itr-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
+
+        .itr-card-header {
+            padding: 1.25rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .itr-card-header .material-icons {
+            margin-right: 12px;
+            font-size: 1.5rem;
+            opacity: 0.9;
+        }
+
+        .itr-card-header.primary {
+            background: linear-gradient(135deg, var(--itr-primary) 0%, var(--itr-primary-dark) 100%);
+        }
+
+        .itr-card-body {
+            padding: 1.5rem;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="itr-card">
+        <div class="itr-card-header primary">
+            <i class="material-icons">settings_suggest</i>
+            {{ 'Compatibility Settings'|trans({}, 'Modules.Itrblueboost.Admin') }}
+        </div>
+        <div class="itr-card-body">
+            {{ form_start(form, {'action': path('itrblueboost_compatibility')}) }}
+                <div class="form-group row">
+                    <label class="form-control-label col-lg-3" for="{{ form.bootstrap_version.vars.id }}">
+                        {{ form_label(form.bootstrap_version) }}
+                    </label>
+                    <div class="col-lg-9">
+                        {{ form_widget(form.bootstrap_version, {'attr': {'class': 'form-control'}}) }}
+                        {% if form.bootstrap_version.vars.help is defined and form.bootstrap_version.vars.help %}
+                            <small class="form-text text-muted">{{ form.bootstrap_version.vars.help }}</small>
+                        {% endif %}
+                        {{ form_errors(form.bootstrap_version) }}
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="form-control-label col-lg-3" for="{{ form.api_mode.vars.id }}">
+                        {{ form_label(form.api_mode) }}
+                    </label>
+                    <div class="col-lg-9">
+                        {{ form_widget(form.api_mode, {'attr': {'class': 'form-control'}}) }}
+                        {% if form.api_mode.vars.help is defined and form.api_mode.vars.help %}
+                            <small class="form-text text-muted">{{ form.api_mode.vars.help }}</small>
+                        {% endif %}
+                        {{ form_errors(form.api_mode) }}
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="material-icons">save</i>
+                            {{ 'Save'|trans({}, 'Admin.Actions') }}
+                        </button>
+                    </div>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+{% endblock %}

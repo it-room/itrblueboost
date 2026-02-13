@@ -14,7 +14,19 @@ use Itrblueboost\Entity\CreditHistory;
  */
 class ApiLogger
 {
-    private const API_BASE_URL = 'https://apitr-sf.itroom.fr';
+    /**
+     * Get the API base URL based on configured mode.
+     */
+    private function getBaseUrl(): string
+    {
+        $mode = Configuration::get(Itrblueboost::CONFIG_API_MODE);
+
+        if ($mode === 'test') {
+            return Itrblueboost::API_BASE_URL_TEST;
+        }
+
+        return Itrblueboost::API_BASE_URL_PROD;
+    }
 
     /**
      * Make an API call with logging.
@@ -44,7 +56,7 @@ class ApiLogger
             ];
         }
 
-        $url = self::API_BASE_URL . $endpoint;
+        $url = $this->getBaseUrl() . $endpoint;
 
         $headers = [
             'X-API-Key' => $apiKey,
@@ -340,6 +352,25 @@ class ApiLogger
         }
 
         return $result;
+    }
+
+    /**
+     * Reject an image via the API.
+     *
+     * @param int $promptId Prompt ID used for generation
+     * @param int $productId Product ID
+     * @param string $rejectionReason Rejection reason
+     *
+     * @return array{success: bool, message?: string}
+     */
+    public function rejectImage(int $promptId, int $productId, string $rejectionReason): array
+    {
+        return $this->call('POST', '/api/image/reject', [
+            'prompt_id' => $promptId,
+            'id_product' => $productId,
+            'rejection_reason' => $rejectionReason,
+            'status' => 'rejected',
+        ], 'image');
     }
 
     /**

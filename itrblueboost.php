@@ -31,12 +31,17 @@ class Itrblueboost extends Module
     public const CONFIG_SERVICE_CATEGORY_FAQ = 'ITRBLUEBOOST_SERVICE_CATEGORY_FAQ';
     public const CONFIG_SERVICE_CONTENT = 'ITRBLUEBOOST_SERVICE_CONTENT';
     public const CONFIG_CREDITS_REMAINING = 'ITRBLUEBOOST_CREDITS_REMAINING';
+    public const CONFIG_BOOTSTRAP_VERSION = 'ITRBLUEBOOST_BOOTSTRAP_VERSION';
+    public const CONFIG_API_MODE = 'ITRBLUEBOOST_API_MODE';
+
+    public const API_BASE_URL_PROD = 'https://apitr-sf.itroom.fr';
+    public const API_BASE_URL_TEST = 'https://blueboost.itroom.fr';
 
     public function __construct()
     {
         $this->name = 'itrblueboost';
         $this->tab = 'administration';
-        $this->version = '1.7.0';
+        $this->version = '1.8.0';
         $this->author = 'ITROOM';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
@@ -106,12 +111,7 @@ class Itrblueboost extends Module
     {
         $apiKey = Configuration::get(self::CONFIG_API_KEY);
 
-        // Debug logging
-        error_log('[ITRBLUEBOOST] hookActionAdminControllerSetMedia called');
-        error_log('[ITRBLUEBOOST] API Key configured: ' . (!empty($apiKey) ? 'YES' : 'NO'));
-
         if (empty($apiKey)) {
-            error_log('[ITRBLUEBOOST] No API key, returning');
             return;
         }
 
@@ -120,15 +120,11 @@ class Itrblueboost extends Module
         $categoryFaqServiceActive = (bool) Configuration::get(self::CONFIG_SERVICE_CATEGORY_FAQ);
         $contentServiceActive = (bool) Configuration::get(self::CONFIG_SERVICE_CONTENT);
 
-        error_log('[ITRBLUEBOOST] Services - FAQ: ' . ($faqServiceActive ? 'ON' : 'OFF') . ', Image: ' . ($imageServiceActive ? 'ON' : 'OFF') . ', CatFAQ: ' . ($categoryFaqServiceActive ? 'ON' : 'OFF') . ', Content: ' . ($contentServiceActive ? 'ON' : 'OFF'));
-
         if (!$faqServiceActive && !$imageServiceActive && !$categoryFaqServiceActive && !$contentServiceActive) {
-            error_log('[ITRBLUEBOOST] No services active, returning');
             return;
         }
 
         $requestUri = $_SERVER['REQUEST_URI'] ?? '';
-        error_log('[ITRBLUEBOOST] Request URI: ' . $requestUri);
 
         // Check if we're on product list page
         $isProductListPage = (strpos($requestUri, '/sell/catalog/products-v2') !== false
@@ -137,8 +133,8 @@ class Itrblueboost extends Module
             && !preg_match('/\/products-v2\/\d+/', $requestUri)
             && !preg_match('/\/products\/\d+/', $requestUri);
 
-        if ($isProductListPage && $faqServiceActive) {
-            $this->loadProductListAssets();
+        if ($isProductListPage && ($faqServiceActive || $imageServiceActive)) {
+            $this->loadProductListAssets($faqServiceActive, $imageServiceActive);
             return;
         }
 
@@ -184,18 +180,13 @@ class Itrblueboost extends Module
         $isLegacyProductPage = strpos($requestUri, 'controller=AdminProducts') !== false
             && (strpos($requestUri, 'updateproduct') !== false || strpos($requestUri, 'addproduct') !== false);
 
-        error_log('[ITRBLUEBOOST] isProductPage: ' . ($isProductPage ? 'YES' : 'NO') . ', isLegacyProductPage: ' . ($isLegacyProductPage ? 'YES' : 'NO'));
-
         if (!$isProductPage && !$isLegacyProductPage) {
-            error_log('[ITRBLUEBOOST] Not a product page, returning');
             return;
         }
 
         $idProduct = $this->getProductIdFromUrl($requestUri);
-        error_log('[ITRBLUEBOOST] Product ID extracted: ' . $idProduct);
 
         if ($idProduct <= 0) {
-            error_log('[ITRBLUEBOOST] Invalid product ID, returning');
             return;
         }
 
@@ -261,19 +252,37 @@ class Itrblueboost extends Module
 
     /**
      * Load assets for product list page (bulk actions).
+     *
+     * @param bool $faqActive Whether FAQ service is active
+     * @param bool $imageActive Whether Image service is active
      */
-    private function loadProductListAssets(): void
+    private function loadProductListAssets(bool $faqActive, bool $imageActive): void
     {
         /** @var \Symfony\Component\Routing\RouterInterface $router */
         $router = $this->get('router');
 
-        Media::addJsDef([
-            'itrblueboostBulkFaqPromptsUrl' => $router->generate('itrblueboost_admin_product_faq_prompts'),
-            'itrblueboostBulkFaqGenerateUrl' => $router->generate('itrblueboost_admin_product_faq_bulk_generate'),
-            'itrblueboostBulkFaqLabel' => $this->trans('Generate FAQ (AI)', [], 'Modules.Itrblueboost.Admin'),
-        ]);
+        if ($faqActive) {
+            Media::addJsDef([
+                'itrblueboostBulkFaqPromptsUrl' => $router->generate('itrblueboost_admin_product_faq_prompts'),
+                'itrblueboostBulkFaqGenerateUrl' => $router->generate('itrblueboost_admin_product_faq_bulk_generate'),
+                'itrblueboostBulkFaqLabel' => $this->trans('Generate FAQ (AI)', [], 'Modules.Itrblueboost.Admin'),
+            ]);
 
-        $this->context->controller->addJS($this->_path . 'views/js/admin-product-list-bulk.js?v=' . $this->version);
+            $this->context->controller->addJS($this->_path . 'views/js/admin-product-list-bulk.js?v=' . $this->version);
+        }
+
+        if ($imageActive) {
+            Media::addJsDef([
+                'itrblueboostBulkImagePromptsUrl' => $router->generate('itrblueboost_admin_product_image_prompts'),
+                'itrblueboostBulkImageGenerateUrl' => $router->generate('itrblueboost_admin_product_image_bulk_generate'),
+                'itrblueboostBulkImageJobStatusUrl' => $router->generate('itrblueboost_admin_product_image_job_status', ['jobId' => 0]),
+                'itrblueboostBulkImageProcessUrl' => $router->generate('itrblueboost_admin_product_image_bulk_process', ['jobId' => 0]),
+                'itrblueboostBulkImageLabel' => $this->trans('Generate Images (AI)', [], 'Modules.Itrblueboost.Admin'),
+            ]);
+
+            $this->context->controller->addJS($this->_path . 'views/js/admin-product-list-bulk-images.js?v=' . $this->version);
+        }
+
         $this->context->controller->addCSS($this->_path . 'views/css/admin-product-list-bulk.css?v=' . $this->version);
     }
 
@@ -377,6 +386,7 @@ class Itrblueboost extends Module
 
         $this->smarty->assign([
             'faqs' => $faqs,
+            'bootstrap_version' => Configuration::get(self::CONFIG_BOOTSTRAP_VERSION) ?: 'bootstrap5',
         ]);
 
         $extraContent = new ProductExtraContent();
@@ -485,6 +495,7 @@ class Itrblueboost extends Module
 
         $this->smarty->assign([
             'faqs' => $faqs,
+            'bootstrap_version' => Configuration::get(self::CONFIG_BOOTSTRAP_VERSION) ?: 'bootstrap5',
         ]);
 
         return $this->fetch('module:itrblueboost/views/templates/hook/category_faq.tpl');

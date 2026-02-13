@@ -12,7 +12,19 @@ use Itrblueboost;
  */
 class ApiService
 {
-    private const API_BASE_URL = 'https://apitr-sf.itroom.fr/api';
+    /**
+     * Get the API base URL based on configured mode.
+     */
+    private function getBaseUrl(): string
+    {
+        $mode = Configuration::get(Itrblueboost::CONFIG_API_MODE);
+
+        if ($mode === 'test') {
+            return Itrblueboost::API_BASE_URL_TEST . '/api';
+        }
+
+        return Itrblueboost::API_BASE_URL_PROD . '/api';
+    }
 
     /**
      * Get account information from API.
@@ -69,7 +81,7 @@ class ApiService
     ): ?array {
         $ch = curl_init();
 
-        $url = self::API_BASE_URL . ($endpoint ? '/' . ltrim($endpoint, '/') : '');
+        $url = $this->getBaseUrl() . ($endpoint ? '/' . ltrim($endpoint, '/') : '');
 
         $headers = [
             'X-API-Key: ' . $apiKey,

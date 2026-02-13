@@ -568,6 +568,10 @@ class ProductFaqController extends FrameworkBundleAdminController
         $totalCreditsUsed = 0;
         $creditsRemaining = 0;
         $errors = [];
+        $processedItems = [];
+
+        /** @var \Symfony\Component\Routing\RouterInterface $router */
+        $router = $this->get('router');
 
         foreach ($productIdsArray as $idProduct) {
             $product = new Product($idProduct, false, $idLang);
@@ -618,6 +622,15 @@ class ProductFaqController extends FrameworkBundleAdminController
             $totalCreated += $createdCount;
             $totalCreditsUsed += $response['credits_used'] ?? 0;
             $creditsRemaining = $response['credits_remaining'] ?? 0;
+
+            $processedItems[] = [
+                'id' => $idProduct,
+                'name' => $product->name,
+                'faq_count' => $createdCount,
+                'faq_url' => $router->generate('itrblueboost_admin_product_faq_index', [
+                    'id_product' => $idProduct,
+                ]),
+            ];
         }
 
         $message = sprintf('%d FAQs generated for %d products.', $totalCreated, count($productIdsArray) - count($errors));
@@ -633,7 +646,8 @@ class ProductFaqController extends FrameworkBundleAdminController
             'credits_used' => $totalCreditsUsed,
             'credits_remaining' => $creditsRemaining,
             'errors' => $errors,
-            'products_processed' => count($productIdsArray) - count($errors),
+            'processed_items' => $processedItems,
+            'products_processed' => count($processedItems),
             'products_failed' => count($errors),
         ]);
     }

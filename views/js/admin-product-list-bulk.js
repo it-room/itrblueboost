@@ -13,7 +13,7 @@
         }
 
         // Wait for the bulk actions dropdown to be available
-        waitForElement('.js-bulk-actions-btn, .bulk-actions-btn, [data-bulk-actions]', function() {
+        waitForElement('.bulk-catalog, .js-bulk-actions-btn, .bulk-actions-btn, [data-bulk-actions]', function() {
             addBulkAction();
         });
 
@@ -52,23 +52,22 @@
             return;
         }
 
-        // Multiple selectors for different PrestaShop 8 versions
+        // Multiple selectors for different PrestaShop versions
         var selectors = [
+            // PS 1.7.x product catalog bulk actions
+            '.bulk-catalog > .dropdown-menu',
+            '#product_bulk_menu + .dropdown-menu',
             // PS 8.1+ product list v2
             '#product_catalog_list .js-bulk-actions-btn + .dropdown-menu',
-            '#product_catalog_list .dropdown-menu',
             // PS 8.0 product list
             '.js-bulk-actions-btn + .dropdown-menu',
             '.bulk-actions-btn + .dropdown-menu',
             // Generic bulk actions
             '.dropdown-menu[aria-labelledby*="bulk"]',
-            '[id*="bulk"] .dropdown-menu',
             // Card header dropdowns
             '.card-header .btn-group .dropdown-menu',
-            '.table-responsive-row .btn-group .dropdown-menu',
             // Vue.js based (PS 8.1+)
-            '.products-list-table-actions .dropdown-menu',
-            '.btn-group-action .dropdown-menu'
+            '.products-list-table-actions .dropdown-menu'
         ];
 
         var dropdownMenu = null;
@@ -244,9 +243,10 @@
     function getSelectedProductIds() {
         var ids = [];
 
-        // PrestaShop 8 uses different checkbox selectors depending on version
+        // PrestaShop uses different checkbox selectors depending on version
         var checkboxSelectors = [
-            // PS 8.1+ product list v2
+            // PS 1.7.x product catalog
+            'input[name="bulk_action_selected_products[]"]:checked',
             '#product_catalog_list input[type="checkbox"]:checked:not([id*="select_all"])',
             'input[name="product_catalog_id[]"]:checked',
             // Bulk checkboxes
@@ -255,7 +255,7 @@
             'input.js-bulk-action-checkbox:checked',
             // Generic product checkboxes
             'table input[type="checkbox"][value]:checked:not([name*="select_all"]):not([id*="select_all"])',
-            // Vue-based grid
+            // Vue-based grid (PS 8.1+)
             '.product-row input[type="checkbox"]:checked',
             'tr[class*="product"] input[type="checkbox"]:checked'
         ];
@@ -393,6 +393,18 @@
                     data.message + '<br>' +
                     '<small>Credits used: ' + data.credits_used + ' | Credits remaining: ' + data.credits_remaining + '</small>' +
                     '</div>';
+
+                if (data.processed_items && data.processed_items.length > 0) {
+                    html += '<div class="list-group mb-3">';
+                    data.processed_items.forEach(function(item) {
+                        html += '<a href="' + item.faq_url + '" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">' +
+                            '<span><i class="material-icons" style="vertical-align: middle; font-size: 18px;">quiz</i> ' +
+                            item.name + '</span>' +
+                            '<span class="badge badge-primary badge-pill">' + item.faq_count + ' FAQ</span>' +
+                            '</a>';
+                    });
+                    html += '</div>';
+                }
 
                 if (data.errors && data.errors.length > 0) {
                     html += '<div class="alert alert-warning"><strong>Errors:</strong><ul class="mb-0">';

@@ -446,6 +446,17 @@ class Installer
                 'wording_domain' => 'Modules.Itrblueboost.Admin',
                 'name' => 'All Contenus produits',
             ],
+            // Sous-menu: Compatibility
+            [
+                'class_name' => 'AdminItrblueboostCompatibility',
+                'route_name' => 'itrblueboost_compatibility',
+                'visible' => true,
+                'parent_class_name' => 'AdminItrblueboostParent',
+                'wording' => 'Compatibility',
+                'wording_domain' => 'Modules.Itrblueboost.Admin',
+                'name' => 'Compatibilité',
+                'icon' => 'settings_suggest',
+            ],
             // Ancien menu FAQs générées (caché)
             [
                 'class_name' => 'AdminItrblueboostGeneratedFaqs',
@@ -516,7 +527,9 @@ class Installer
             && Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_IMAGE, 0)
             && Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CATEGORY_FAQ, 0)
             && Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CONTENT, 0)
-            && Configuration::updateValue(Itrblueboost::CONFIG_CREDITS_REMAINING, '');
+            && Configuration::updateValue(Itrblueboost::CONFIG_CREDITS_REMAINING, '')
+            && Configuration::updateValue(Itrblueboost::CONFIG_BOOTSTRAP_VERSION, 'bootstrap5')
+            && Configuration::updateValue(Itrblueboost::CONFIG_API_MODE, 'prod');
     }
 
     /**
@@ -529,6 +542,8 @@ class Installer
             && Configuration::deleteByName(Itrblueboost::CONFIG_SERVICE_IMAGE)
             && Configuration::deleteByName(Itrblueboost::CONFIG_SERVICE_CATEGORY_FAQ)
             && Configuration::deleteByName(Itrblueboost::CONFIG_SERVICE_CONTENT)
-            && Configuration::deleteByName(Itrblueboost::CONFIG_CREDITS_REMAINING);
+            && Configuration::deleteByName(Itrblueboost::CONFIG_CREDITS_REMAINING)
+            && Configuration::deleteByName(Itrblueboost::CONFIG_BOOTSTRAP_VERSION)
+            && Configuration::deleteByName(Itrblueboost::CONFIG_API_MODE);
     }
 }

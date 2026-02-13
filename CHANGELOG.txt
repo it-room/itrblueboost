@@ -2,6 +2,41 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.0] - 2026-02-13
+
+### Added
+- Nouvelle fonctionnalité : onglet "Compatibilité" dans le back-office pour sélectionner la version de Bootstrap (Bootstrap 4, Bootstrap 4 Alpha, Bootstrap 5)
+- Nouveau contrôleur Symfony moderne `CompatibilityController` pour la gestion de la compatibilité
+- Nouveau type de formulaire `CompatibilityFormType` pour les sélections de version Bootstrap
+- Nouvelle classe `CompatibilityDataConfiguration` pour la gestion des données de configuration
+- Nouveau fournisseur de données `CompatibilityFormDataProvider` pour le chargement/sauvegarde des données
+- Nouvel onglet admin "Compatibilité" sous le menu "ITR Blue Boost"
+- Nouvelle table de base de données `ps_itrblueboost_compatibility` pour le stockage des configurations Bootstrap par boutique
+- Nouvelle fonctionnalité : sélecteur de mode API (Production / Test) dans les paramètres de compatibilité
+- Mode Production utilise l'API apitr-sf.itroom.fr (par défaut)
+- Mode Test utilise l'API blueboost.itroom.fr
+- Les services `ApiService` et `ApiLogger` résolvent maintenant dynamiquement l'URL de base à partir de la configuration `ITRBLUEBOOST_API_MODE`
+- Nouvelle fonctionnalité : génération en masse d'images IA depuis la liste produits avec action groupée "Générer les images (IA)"
+- Workflow asynchrone pour la génération en masse : création d'un batch GenerationJob, traitement séquentiel des produits avec suivi de progression
+- Nouveau fichier JavaScript `views/js/admin-product-list-bulk-images.js` avec modale de sélection de prompt, sondage de barre de progression et affichage des résultats
+- Nouvelles routes : `itrblueboost_admin_product_image_bulk_generate`, `itrblueboost_admin_product_image_bulk_process` pour le workflow de génération en masse
+- Nouvelles méthodes contrôleur : `bulkGenerateAction`, `bulkProcessJobAction`, `processBulkJobInline`, `buildApiDataFromProduct` dans `ProductImageController`
+- Chargement des assets JavaScript de génération d'images en masse dans `itrblueboost.php` lorsque le service image est actif
+
+### Changed
+- Version Bootstrap par défaut définie à Bootstrap 5
+- Installation du module initialise la version Bootstrap à Bootstrap 5 pour toutes les boutiques
+- Script d'upgrade `upgrade/upgrade-1.8.0.php` pour les installations existantes (création de la table et migration des données)
+- Méthode `enrichCompletedJobData` adaptée pour supporter les jobs de batch (id_product=0) générés par la génération en masse d'images
+
+### Improved
+- Architecture de configuration extensible pour supporter les futures options de compatibilité
+
+### Fixed
+- Adaptation des templates de FAQ produit et catégorie au front-office pour utiliser la version de Bootstrap sélectionnée
+- Les templates affichent maintenant le balisage basé sur Bootstrap 4 (data-toggle/data-target) ou Bootstrap 5 (data-bs-toggle/data-bs-target) en fonction du paramètre "Compatibilité"
+- Les templates product_faq.tpl et category_faq.tpl sont maintenant compatibles avec Bootstrap 4, Bootstrap 4 Alpha et Bootstrap 5
+
 ## [1.7.0] - 2026-02-12
 
 ### Added
