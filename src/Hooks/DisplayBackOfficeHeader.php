@@ -46,9 +46,13 @@ class DisplayBackOfficeHeader
 
         $credits = (int) $credits;
 
-        /** @var \Symfony\Component\Routing\RouterInterface $router */
-        $router = $this->module->get('router');
-        $configUrl = $router->generate('itrblueboost_configuration');
+        try {
+            /** @var \Symfony\Component\Routing\RouterInterface $router */
+            $router = $this->module->get('router');
+            $configUrl = $router->generate('itrblueboost_configuration');
+        } catch (\Exception $e) {
+            return '';
+        }
 
         return $this->renderBadge($credits, $configUrl);
     }
