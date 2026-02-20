@@ -387,6 +387,10 @@
                             </select>
                             <small class="form-text text-muted" id="prompt-description"></small>
                         </div>
+                        <div id="credits-warning" class="alert alert-warning d-none">
+                            <i class="material-icons" style="vertical-align: middle;">warning</i>
+                            {{ 'Insufficient credits. Please recharge your credits to use AI generation.'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                        </div>
 
                         {% if existing_images|length > 0 %}
                         <div class="form-group mt-3">
@@ -509,6 +513,7 @@
             var promptsList = document.getElementById('prompts-list');
             var generateProgress = document.getElementById('generate-progress');
             var generateResult = document.getElementById('generate-result');
+            var creditsWarning = document.getElementById('credits-warning');
             var progressBarFill = document.getElementById('progress-bar-fill');
             var progressPercent = document.getElementById('progress-percent');
             var progressLabel = document.getElementById('progress-label');
@@ -516,6 +521,7 @@
 
             var pollingInterval = null;
             var isGenerating = false;
+            var hasInsufficientCredits = false;
 
             function updateProgressBar(progress, label) {
                 progressBarFill.style.width = progress + '%';
@@ -700,6 +706,8 @@
                     promptsList.classList.add('d-none');
                     generateProgress.classList.add('d-none');
                     generateResult.classList.add('d-none');
+                    creditsWarning.classList.add('d-none');
+                    hasInsufficientCredits = false;
                     btnConfirm.disabled = true;
                     btnConfirm.classList.remove('d-none');
                     promptSelect.innerHTML = '<option value="">-- Choose a style --</option>';
@@ -731,11 +739,17 @@
                             var option = document.createElement('option');
                             option.value = prompt.id;
                             option.textContent = prompt.title;
-                            option.dataset.description = prompt.short_description || '';
+                            option.dataset.description = prompt.description || '';
                             promptSelect.appendChild(option);
                         });
 
                         promptsList.classList.remove('d-none');
+
+                        if (typeof data.credits_remaining === 'number' && data.credits_remaining <= 0) {
+                            creditsWarning.classList.remove('d-none');
+                            hasInsufficientCredits = true;
+                            btnConfirm.disabled = true;
+                        }
                     })
                     .catch(function() {
                         promptsLoading.classList.add('d-none');
@@ -749,7 +763,7 @@
                 promptSelect.addEventListener('change', function() {
                     var selectedOption = this.options[this.selectedIndex];
                     promptDescription.textContent = selectedOption.dataset.description || '';
-                    btnConfirm.disabled = !this.value;
+                    btnConfirm.disabled = !this.value || hasInsufficientCredits;
                 });
             }
 

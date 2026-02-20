@@ -133,6 +133,10 @@
                             <p class="mt-2">Loading prompts...</p>
                         </div>
                         <div id="itrblueboost-bulk-error" class="alert alert-danger d-none"></div>
+                        <div id="itrblueboost-bulk-credits-warning" class="alert alert-warning d-none">
+                            <i class="material-icons" style="vertical-align: middle;">warning</i>
+                            Insufficient credits. Please recharge your credits to use AI generation.
+                        </div>
                         <div id="itrblueboost-bulk-form" class="d-none">
                             <div class="alert alert-info">
                                 <i class="material-icons" style="vertical-align: middle;">info</i>
@@ -178,11 +182,12 @@
         var promptSelect = document.getElementById('itrblueboost-bulk-prompt');
         var generateBtn = document.getElementById('itrblueboost-bulk-generate-btn');
         var promptDesc = document.getElementById('itrblueboost-bulk-prompt-desc');
+        var bulkHasInsufficientCredits = false;
 
         promptSelect.addEventListener('change', function() {
             var selectedOption = this.options[this.selectedIndex];
             promptDesc.textContent = selectedOption.dataset.description || '';
-            generateBtn.disabled = !this.value;
+            generateBtn.disabled = !this.value || bulkHasInsufficientCredits;
         });
 
         generateBtn.addEventListener('click', handleGenerate);
@@ -222,11 +227,15 @@
         var generateBtn = document.getElementById('itrblueboost-bulk-generate-btn');
         var promptSelect = document.getElementById('itrblueboost-bulk-prompt');
 
+        var creditsWarningEl = document.getElementById('itrblueboost-bulk-credits-warning');
+
         if (loadingEl) loadingEl.classList.remove('d-none');
         if (errorEl) errorEl.classList.add('d-none');
         if (formEl) formEl.classList.add('d-none');
         if (progressEl) progressEl.classList.add('d-none');
         if (resultEl) resultEl.classList.add('d-none');
+        if (creditsWarningEl) creditsWarningEl.classList.add('d-none');
+        bulkHasInsufficientCredits = false;
         if (generateBtn) {
             generateBtn.disabled = true;
             generateBtn.classList.remove('d-none');
@@ -339,11 +348,19 @@
                 var option = document.createElement('option');
                 option.value = prompt.id;
                 option.textContent = prompt.title;
-                option.dataset.description = prompt.short_description || '';
+                option.dataset.description = prompt.description || '';
                 select.appendChild(option);
             });
 
             document.getElementById('itrblueboost-bulk-form').classList.remove('d-none');
+
+            if (typeof data.credits_remaining === 'number' && data.credits_remaining <= 0) {
+                var creditsWarn = document.getElementById('itrblueboost-bulk-credits-warning');
+                if (creditsWarn) creditsWarn.classList.remove('d-none');
+                bulkHasInsufficientCredits = true;
+                var genBtn = document.getElementById('itrblueboost-bulk-generate-btn');
+                if (genBtn) genBtn.disabled = true;
+            }
         })
         .catch(function() {
             document.getElementById('itrblueboost-bulk-loading').classList.add('d-none');

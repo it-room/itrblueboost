@@ -684,6 +684,13 @@ class CategoryFaqController extends FrameworkBundleAdminController
             ]);
         }
 
+        if (!isset($response['credits_remaining'])) {
+            $creditsValue = Configuration::get('ITRBLUEBOOST_CREDITS_REMAINING');
+            if ($creditsValue !== false && $creditsValue !== '') {
+                $response['credits_remaining'] = (int) $creditsValue;
+            }
+        }
+
         return new JsonResponse($response);
     }
 

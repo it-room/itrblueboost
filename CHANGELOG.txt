@@ -2,6 +2,23 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.1] - 2026-02-20
+
+### Added
+- Vérification des crédits insuffisants dans toutes les modales de génération IA : FAQ produit, FAQ catégorie, contenu produit, image produit
+- Vérification également appliquée aux modales de génération en masse : FAQ produit en masse, FAQ catégorie en masse, images produits en masse
+- Message d'avertissement "Crédits insuffisants. Veuillez recharger vos crédits pour utiliser la génération IA." affiché lors de l'ouverture d'une modale si les crédits sont <= 0
+- Bouton "Générer" désactivé lorsque les crédits sont insuffisants dans toutes les modales (individuelles et en masse)
+
+### Changed
+- Méthode `getPromptsAction` dans `ProductFaqController`, `CategoryFaqController`, `ProductContentController` et `ProductImageController` : ajout de `credits_remaining` dans la réponse JSON
+- Tous les templates Twig (product_faq, category_faq, product_content, product_image) enrichis avec un div `credits-warning` pour l'affichage du message d'avertissement
+- Logique JavaScript mise à jour dans tous les templates et fichiers bulk (admin-category-list-bulk.js, admin-product-list-bulk.js, admin-product-list-bulk-images.js) pour vérifier les crédits restants après le chargement des prompts
+- Les crédits restants sont lus depuis la configuration (ITRBLUEBOOST_CREDITS_REMAINING) qui est mise à jour après chaque appel API
+
+### Fixed
+- Correction de l'affichage de la description du prompt dans la modale de génération de contenu produit : utilisation de `prompt.short_description` au lieu de `prompt.description` pour correspondre aux données retournées par l'API
+
 ## [1.8.0] - 2026-02-13
 
 ### Added

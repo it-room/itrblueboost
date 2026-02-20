@@ -362,6 +362,27 @@ The credits badge displayed in the back office header is now highly optimized:
 
 The credit value is retrieved from the database configuration table on every page load, eliminating unnecessary API requests while keeping the badge always up-to-date after each operation.
 
+### Credit Balance Validation
+
+Starting with version 1.8.1, the module performs automatic credit balance checks in all AI generation modals. This prevents users from attempting generations that would fail due to insufficient credits.
+
+**How It Works:**
+- When any AI generation modal opens (FAQ, content, or images), a credit balance check is performed immediately
+- The remaining credits are read from the PrestaShop Configuration table (`ITRBLUEBOOST_CREDITS_REMAINING`)
+- If remaining credits are 0 or less, a warning message is displayed: "Insufficient credits. Please recharge your credits to use AI generation."
+- The Generate button is automatically disabled when credits are insufficient
+
+**Applies To:**
+- Product FAQ generation modal
+- Category FAQ generation modal
+- Product Content generation modal
+- Product Image generation modal
+- Bulk FAQ generation on product list
+- Bulk FAQ generation on category list
+- Bulk Image generation on product list
+
+This feature ensures a better user experience by preventing failed API calls and providing clear feedback about credit status before attempting generation.
+
 ## API Logging
 
 Starting with version 1.7.0, all API interactions with the ITROOM API are comprehensively logged and visible in the API logs section.
@@ -415,6 +436,15 @@ The module registers the following PrestaShop hooks:
 - **Multisite**: Fully supported
 
 ## Changelog
+
+### Version 1.8.1
+- **New Feature**: Credit balance validation in all AI generation modals
+- **Credit Check**: Automatic credit balance check when opening FAQ, content, and image generation modals
+- **User Feedback**: Warning message displayed when remaining credits are 0 or less
+- **Disabled Generation**: Generate button is disabled if insufficient credits to prevent failed API calls
+- **Applies To**: Product FAQ, Category FAQ, Product Content, and Product Image generation (individual and bulk)
+- **Configuration-based**: Credit balance read from `ITRBLUEBOOST_CREDITS_REMAINING` in Configuration table
+- **Database Enhancement**: New `api_image_id` column added to `itrblueboost_product_image` table for better image tracking
 
 ### Version 1.8.0
 - **New Feature**: Compatibility tab for theme Bootstrap version configuration

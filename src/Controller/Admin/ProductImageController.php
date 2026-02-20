@@ -78,6 +78,13 @@ class ProductImageController extends FrameworkBundleAdminController
             $result['success'] = isset($result['prompts']);
         }
 
+        if (!isset($result['credits_remaining'])) {
+            $creditsValue = Configuration::get('ITRBLUEBOOST_CREDITS_REMAINING');
+            if ($creditsValue !== false && $creditsValue !== '') {
+                $result['credits_remaining'] = (int) $creditsValue;
+            }
+        }
+
         return new JsonResponse($result);
     }
 
