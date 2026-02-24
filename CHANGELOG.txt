@@ -2,6 +2,12 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.2] - 2026-02-24
+
+### Fixed
+- Wrapping des appels au routeur Symfony dans des blocs try/catch pour éviter les erreurs lorsque les routes ne sont pas encore en cache (ex. lors de l'installation du module)
+- Déplacement des variables de vérification de crédits insuffisants (bulkImgHasInsufficientCredits, bulkHasInsufficientCredits) dans la portée IIFE pour assurer la persistance correcte de l'état dans les fichiers JavaScript
+
 ## [1.8.1] - 2026-02-20
 
 ### Added

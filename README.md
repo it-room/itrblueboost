@@ -437,6 +437,11 @@ The module registers the following PrestaShop hooks:
 
 ## Changelog
 
+### Version 1.8.2
+- **Bugfix**: Wrap Symfony router calls in try/catch to handle missing routes during module installation
+- **Bugfix**: Move credit check variables to IIFE scope for proper state persistence in bulk action JavaScript files
+- **Stability**: Improved error handling when Symfony routes are not yet cached (e.g. during fresh module installation)
+
 ### Version 1.8.1
 - **New Feature**: Credit balance validation in all AI generation modals
 - **Credit Check**: Automatic credit balance check when opening FAQ, content, and image generation modals
