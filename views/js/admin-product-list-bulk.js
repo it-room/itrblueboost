@@ -6,6 +6,7 @@
 
     var bulkActionAdded = false;
     var modalCreated = false;
+    var bulkHasInsufficientCredits = false;
 
     function init() {
         if (typeof itrblueboostBulkFaqLabel === 'undefined') {
@@ -182,7 +183,6 @@
         var promptSelect = document.getElementById('itrblueboost-bulk-prompt');
         var generateBtn = document.getElementById('itrblueboost-bulk-generate-btn');
         var promptDesc = document.getElementById('itrblueboost-bulk-prompt-desc');
-        var bulkHasInsufficientCredits = false;
 
         promptSelect.addEventListener('change', function() {
             var selectedOption = this.options[this.selectedIndex];

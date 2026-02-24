@@ -7,6 +7,7 @@
     var bulkActionAdded = false;
     var modalCreated = false;
     var pollingTimer = null;
+    var bulkImgHasInsufficientCredits = false;
 
     function init() {
         if (typeof itrblueboostBulkImageLabel === 'undefined') {
@@ -167,7 +168,6 @@
         var promptSelect = document.getElementById('itrblueboost-bulk-img-prompt');
         var generateBtn = document.getElementById('itrblueboost-bulk-img-generate-btn');
         var promptDesc = document.getElementById('itrblueboost-bulk-img-prompt-desc');
-        var bulkImgHasInsufficientCredits = false;
 
         promptSelect.addEventListener('change', function() {
             var selectedOption = this.options[this.selectedIndex];

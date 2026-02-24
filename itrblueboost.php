@@ -159,19 +159,24 @@ class Itrblueboost extends Module
             $idCategory = $this->getCategoryIdFromUrl($requestUri);
 
             if ($idCategory > 0) {
-                /** @var \Symfony\Component\Routing\RouterInterface $router */
-                $router = $this->get('router');
+                try {
+                    /** @var \Symfony\Component\Routing\RouterInterface $router */
+                    $router = $this->get('router');
 
-                $faqCount = CategoryFaq::countByCategory($idCategory);
+                    $faqCount = CategoryFaq::countByCategory($idCategory);
 
-                Media::addJsDef([
-                    'itrblueboostCategoryFaqCount' => (int) $faqCount,
-                    'itrblueboostCategoryFaqUrl' => $router->generate('itrblueboost_admin_category_faq_index', [
-                        'id_category' => $idCategory,
-                    ]),
-                ]);
+                    Media::addJsDef([
+                        'itrblueboostCategoryFaqCount' => (int) $faqCount,
+                        'itrblueboostCategoryFaqUrl' => $router->generate('itrblueboost_admin_category_faq_index', [
+                            'id_category' => $idCategory,
+                        ]),
+                    ]);
 
-                $this->context->controller->addJS($this->_path . 'views/js/admin-category-toolbar.js?v=' . $this->version);
+                    $this->context->controller->addJS($this->_path . 'views/js/admin-category-toolbar.js?v=' . $this->version);
+                } catch (\Exception $e) {
+                    // Route not yet cached, skip category toolbar assets
+                }
+
                 return;
             }
         }
@@ -194,45 +199,63 @@ class Itrblueboost extends Module
             return;
         }
 
-        /** @var \Symfony\Component\Routing\RouterInterface $router */
-        $router = $this->get('router');
+        try {
+            /** @var \Symfony\Component\Routing\RouterInterface $router */
+            $router = $this->get('router');
+        } catch (\Exception $e) {
+            return;
+        }
 
         $jsDef = [];
 
         if ($faqServiceActive) {
-            $faqCount = ProductFaq::countByProduct($idProduct);
-            $jsDef['itrblueboostFaqCount'] = (int) $faqCount;
-            $jsDef['itrblueboostFaqUrl'] = $router->generate('itrblueboost_admin_product_faq_index', [
-                'id_product' => $idProduct,
-            ]);
+            try {
+                $faqCount = ProductFaq::countByProduct($idProduct);
+                $jsDef['itrblueboostFaqCount'] = (int) $faqCount;
+                $jsDef['itrblueboostFaqUrl'] = $router->generate('itrblueboost_admin_product_faq_index', [
+                    'id_product' => $idProduct,
+                ]);
+            } catch (\Exception $e) {
+                // Route not yet cached
+            }
         }
 
         if ($imageServiceActive) {
-            $jsDef['itrblueboostImageUrl'] = $router->generate('itrblueboost_admin_product_image_index', [
-                'id_product' => $idProduct,
-            ]);
+            try {
+                $jsDef['itrblueboostImageUrl'] = $router->generate('itrblueboost_admin_product_image_index', [
+                    'id_product' => $idProduct,
+                ]);
+            } catch (\Exception $e) {
+                // Route not yet cached
+            }
         }
 
         if ($contentServiceActive) {
-            $jsDef['itrblueboostProductId'] = $idProduct;
-            $jsDef['itrblueboostContentPromptsUrl'] = $router->generate('itrblueboost_admin_product_content_prompts');
-            $jsDef['itrblueboostContentGenerateUrl'] = $router->generate('itrblueboost_admin_product_content_generate', [
-                'id_product' => $idProduct,
-            ]);
-            $jsDef['itrblueboostContentAcceptUrl'] = $router->generate('itrblueboost_admin_product_content_accept', [
-                'id_product' => $idProduct,
-                'contentId' => 0,
-            ]);
-            $jsDef['itrblueboostContentUrl'] = $router->generate('itrblueboost_admin_product_content_index', [
-                'id_product' => $idProduct,
-            ]);
+            try {
+                $jsDef['itrblueboostProductId'] = $idProduct;
+                $jsDef['itrblueboostContentPromptsUrl'] = $router->generate('itrblueboost_admin_product_content_prompts');
+                $jsDef['itrblueboostContentGenerateUrl'] = $router->generate('itrblueboost_admin_product_content_generate', [
+                    'id_product' => $idProduct,
+                ]);
+                $jsDef['itrblueboostContentAcceptUrl'] = $router->generate('itrblueboost_admin_product_content_accept', [
+                    'id_product' => $idProduct,
+                    'contentId' => 0,
+                ]);
+                $jsDef['itrblueboostContentUrl'] = $router->generate('itrblueboost_admin_product_content_index', [
+                    'id_product' => $idProduct,
+                ]);
+            } catch (\Exception $e) {
+                // Route not yet cached
+            }
         }
 
-        Media::addJsDef($jsDef);
+        if (!empty($jsDef)) {
+            Media::addJsDef($jsDef);
+        }
 
         $this->context->controller->addJS($this->_path . 'views/js/admin-product-toolbar.js?v=' . $this->version);
 
-        if ($contentServiceActive) {
+        if ($contentServiceActive && isset($jsDef['itrblueboostContentPromptsUrl'])) {
             $this->context->controller->addJS($this->_path . 'views/js/admin-content-inline.js?v=' . $this->version);
         }
 
@@ -262,29 +285,41 @@ class Itrblueboost extends Module
      */
     private function loadProductListAssets(bool $faqActive, bool $imageActive): void
     {
-        /** @var \Symfony\Component\Routing\RouterInterface $router */
-        $router = $this->get('router');
+        try {
+            /** @var \Symfony\Component\Routing\RouterInterface $router */
+            $router = $this->get('router');
+        } catch (\Exception $e) {
+            return;
+        }
 
         if ($faqActive) {
-            Media::addJsDef([
-                'itrblueboostBulkFaqPromptsUrl' => $router->generate('itrblueboost_admin_product_faq_prompts'),
-                'itrblueboostBulkFaqGenerateUrl' => $router->generate('itrblueboost_admin_product_faq_bulk_generate'),
-                'itrblueboostBulkFaqLabel' => $this->trans('Generate FAQ (AI)', [], 'Modules.Itrblueboost.Admin'),
-            ]);
+            try {
+                Media::addJsDef([
+                    'itrblueboostBulkFaqPromptsUrl' => $router->generate('itrblueboost_admin_product_faq_prompts'),
+                    'itrblueboostBulkFaqGenerateUrl' => $router->generate('itrblueboost_admin_product_faq_bulk_generate'),
+                    'itrblueboostBulkFaqLabel' => $this->trans('Generate FAQ (AI)', [], 'Modules.Itrblueboost.Admin'),
+                ]);
 
-            $this->context->controller->addJS($this->_path . 'views/js/admin-product-list-bulk.js?v=' . $this->version);
+                $this->context->controller->addJS($this->_path . 'views/js/admin-product-list-bulk.js?v=' . $this->version);
+            } catch (\Exception $e) {
+                // Route not yet cached, skip FAQ bulk assets
+            }
         }
 
         if ($imageActive) {
-            Media::addJsDef([
-                'itrblueboostBulkImagePromptsUrl' => $router->generate('itrblueboost_admin_product_image_prompts'),
-                'itrblueboostBulkImageGenerateUrl' => $router->generate('itrblueboost_admin_product_image_bulk_generate'),
-                'itrblueboostBulkImageJobStatusUrl' => $router->generate('itrblueboost_admin_product_image_job_status', ['jobId' => 0]),
-                'itrblueboostBulkImageProcessUrl' => $router->generate('itrblueboost_admin_product_image_bulk_process', ['jobId' => 0]),
-                'itrblueboostBulkImageLabel' => $this->trans('Generate Images (AI)', [], 'Modules.Itrblueboost.Admin'),
-            ]);
+            try {
+                Media::addJsDef([
+                    'itrblueboostBulkImagePromptsUrl' => $router->generate('itrblueboost_admin_product_image_prompts'),
+                    'itrblueboostBulkImageGenerateUrl' => $router->generate('itrblueboost_admin_product_image_bulk_generate'),
+                    'itrblueboostBulkImageJobStatusUrl' => $router->generate('itrblueboost_admin_product_image_job_status', ['jobId' => 0]),
+                    'itrblueboostBulkImageProcessUrl' => $router->generate('itrblueboost_admin_product_image_bulk_process', ['jobId' => 0]),
+                    'itrblueboostBulkImageLabel' => $this->trans('Generate Images (AI)', [], 'Modules.Itrblueboost.Admin'),
+                ]);
 
-            $this->context->controller->addJS($this->_path . 'views/js/admin-product-list-bulk-images.js?v=' . $this->version);
+                $this->context->controller->addJS($this->_path . 'views/js/admin-product-list-bulk-images.js?v=' . $this->version);
+            } catch (\Exception $e) {
+                // Route not yet cached, skip Image bulk assets
+            }
         }
 
         $this->context->controller->addCSS($this->_path . 'views/css/admin-product-list-bulk.css?v=' . $this->version);
@@ -295,17 +330,21 @@ class Itrblueboost extends Module
      */
     private function loadCategoryListAssets(): void
     {
-        /** @var \Symfony\Component\Routing\RouterInterface $router */
-        $router = $this->get('router');
+        try {
+            /** @var \Symfony\Component\Routing\RouterInterface $router */
+            $router = $this->get('router');
 
-        Media::addJsDef([
-            'itrblueboostBulkCategoryFaqPromptsUrl' => $router->generate('itrblueboost_admin_category_faq_prompts'),
-            'itrblueboostBulkCategoryFaqGenerateUrl' => $router->generate('itrblueboost_admin_category_faq_bulk_generate'),
-            'itrblueboostBulkCategoryFaqLabel' => $this->trans('Generate FAQ (AI)', [], 'Modules.Itrblueboost.Admin'),
-        ]);
+            Media::addJsDef([
+                'itrblueboostBulkCategoryFaqPromptsUrl' => $router->generate('itrblueboost_admin_category_faq_prompts'),
+                'itrblueboostBulkCategoryFaqGenerateUrl' => $router->generate('itrblueboost_admin_category_faq_bulk_generate'),
+                'itrblueboostBulkCategoryFaqLabel' => $this->trans('Generate FAQ (AI)', [], 'Modules.Itrblueboost.Admin'),
+            ]);
 
-        $this->context->controller->addJS($this->_path . 'views/js/admin-category-list-bulk.js?v=' . $this->version);
-        $this->context->controller->addCSS($this->_path . 'views/css/admin-product-list-bulk.css?v=' . $this->version);
+            $this->context->controller->addJS($this->_path . 'views/js/admin-category-list-bulk.js?v=' . $this->version);
+            $this->context->controller->addCSS($this->_path . 'views/css/admin-product-list-bulk.css?v=' . $this->version);
+        } catch (\Exception $e) {
+            // Route not yet cached, skip category bulk assets
+        }
     }
 
     /**
