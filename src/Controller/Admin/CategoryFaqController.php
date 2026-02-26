@@ -823,6 +823,11 @@ class CategoryFaqController extends FrameworkBundleAdminController
         $data = [
             'name' => $category->name,
             'description' => strip_tags($category->description ?? ''),
+            'additional_description' => strip_tags($category->additional_description ?? ''),
+            'meta_title' => $category->meta_title ?? '',
+            'meta_description' => $category->meta_description ?? '',
+            'meta_keywords' => $category->meta_keywords ?? '',
+            'link_rewrite' => $category->link_rewrite ?? '',
             'parent' => $parentName,
             'subcategories' => $subcategories,
             'product_count' => (int) $productCount,
