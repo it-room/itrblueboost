@@ -2,6 +2,11 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.3] - 2026-02-26
+
+### Changed
+- Abaissement de la version minimale PrestaShop de 1.7.8.11 à 1.7.8.2 pour une compatibilité élargie
+
 ## [1.8.2] - 2026-02-24
 
 ### Fixed
