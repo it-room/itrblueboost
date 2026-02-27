@@ -59,158 +59,8 @@
             margin-bottom: 15px;
             opacity: 0.5;
         }
-        .base-image-option {
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            cursor: pointer;
-            overflow: hidden;
-            transition: all 0.2s;
-            position: relative;
-            height: 80px;
-        }
-        .base-image-option:hover {
-            border-color: #007bff;
-        }
-        .base-image-option.selected {
-            border-color: #28a745;
-            box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3);
-        }
-        .base-image-option img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .base-image-option .cover-badge {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            font-size: 10px;
-        }
-        .no-image-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: #666;
-            background: #f8f9fa;
-        }
-        .no-image-placeholder i {
-            font-size: 24px;
-        }
-        .no-image-placeholder span {
-            font-size: 11px;
-        }
         .image-card img {
             cursor: zoom-in;
-        }
-        .image-lightbox {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: zoom-out;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
-        }
-        .image-lightbox.active {
-            opacity: 1;
-            visibility: visible;
-        }
-        .image-lightbox img {
-            max-width: 90%;
-            max-height: 90%;
-            object-fit: contain;
-            border-radius: 4px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        }
-        .image-lightbox-close {
-            position: absolute;
-            top: 20px;
-            right: 30px;
-            color: #fff;
-            font-size: 40px;
-            cursor: pointer;
-            opacity: 0.8;
-            transition: opacity 0.2s;
-        }
-        .image-lightbox-close:hover {
-            opacity: 1;
-        }
-
-        /* Progress bar styles */
-        .generation-progress-wrapper {
-            padding: 20px 10px;
-        }
-        .generation-progress-bar-track {
-            width: 100%;
-            height: 24px;
-            background: #e9ecef;
-            border-radius: 12px;
-            overflow: hidden;
-            position: relative;
-        }
-        .generation-progress-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #28a745, #20c997);
-            border-radius: 12px;
-            transition: width 0.5s ease;
-            position: relative;
-            min-width: 0;
-        }
-        .generation-progress-bar-fill.animated {
-            background: linear-gradient(90deg, #28a745, #20c997, #28a745);
-            background-size: 200% 100%;
-            animation: progressShimmer 2s ease infinite;
-        }
-        @keyframes progressShimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-        .generation-progress-percent {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-            text-align: center;
-            margin-top: 12px;
-        }
-        .generation-progress-label {
-            font-size: 14px;
-            color: #666;
-            text-align: center;
-            margin-top: 6px;
-        }
-        .generation-progress-steps {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 16px;
-            padding: 0 4px;
-        }
-        .generation-step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-size: 11px;
-            color: #aaa;
-            transition: color 0.3s;
-        }
-        .generation-step.active {
-            color: #28a745;
-            font-weight: 600;
-        }
-        .generation-step.done {
-            color: #28a745;
-        }
-        .generation-step i {
-            font-size: 20px;
-            margin-bottom: 4px;
         }
     </style>
 
@@ -328,145 +178,19 @@
         <img src="" alt="Zoom" id="lightboxImage">
     </div>
 
-    {# Modal for rejection reason #}
-    <div class="modal fade" id="rejectImageModal" tabindex="-1" role="dialog" aria-labelledby="rejectImageModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="rejectImageModalLabel">
-                        <i class="material-icons" style="vertical-align: middle;">close</i>
-                        {{ 'Reject Image'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                    </h5>
-                    <button type="button" class="close" id="btn-reject-modal-close" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="rejectionReason">{{ 'Rejection reason'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
-                        <textarea class="form-control" id="rejectionReason" rows="3" placeholder="{{ 'Enter the reason for rejection...'|trans({}, 'Modules.Itrblueboost.Admin') }}"></textarea>
-                        <small class="form-text text-muted">{{ 'This reason will be sent to the API.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" id="btn-reject-cancel">{{ 'Cancel'|trans({}, 'Admin.Actions') }}</button>
-                    <button type="button" class="btn btn-danger" id="btn-reject-confirm">
-                        <i class="material-icons" style="vertical-align: middle;">close</i>
-                        {{ 'Reject'|trans({}, 'Admin.Actions') }}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include '@Modules/itrblueboost/views/templates/admin/_partials/_reject_modal.html.twig' with {
+        rejectTitle: 'Reject Image'|trans({}, 'Modules.Itrblueboost.Admin'),
+    } only %}
 
-    <div class="modal fade" id="generateImageModal" tabindex="-1" role="dialog" aria-labelledby="generateImageModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="generateImageModalLabel">
-                        <i class="material-icons">auto_awesome</i>
-                        {{ 'Generate an image with AI'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="btn-modal-close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div id="prompts-loading" class="text-center py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="sr-only">{{ 'Loading...'|trans({}, 'Admin.Global') }}</span>
-                        </div>
-                        <p class="mt-2">{{ 'Loading available prompts...'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
-                    </div>
-                    <div id="prompts-error" class="alert alert-danger d-none"></div>
-                    <div id="prompts-list" class="d-none">
-                        <div class="form-group">
-                            <label>{{ 'Generation style:'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
-                            <select class="form-control" id="prompt-select">
-                                <option value="">-- {{ 'Choose a style'|trans({}, 'Modules.Itrblueboost.Admin') }} --</option>
-                            </select>
-                            <small class="form-text text-muted" id="prompt-description"></small>
-                        </div>
-                        <div id="credits-warning" class="alert alert-warning d-none">
-                            <i class="material-icons" style="vertical-align: middle;">warning</i>
-                            {{ 'Insufficient credits. Please recharge your credits to use AI generation.'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                        </div>
-
-                        {% if existing_images|length > 0 %}
-                        <div class="form-group mt-3">
-                            <label>{{ 'Base image (optional):'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
-                            <div class="image-selector">
-                                <div class="row">
-                                    <div class="col-3 mb-2">
-                                        <div class="base-image-option selected" data-image-id="">
-                                            <div class="no-image-placeholder">
-                                                <i class="material-icons">add_photo_alternate</i>
-                                                <span>{{ 'None'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% for img in existing_images %}
-                                    <div class="col-3 mb-2">
-                                        <div class="base-image-option" data-image-id="{{ img.id_image }}">
-                                            <img src="{{ img.url }}" alt="Image {{ img.id_image }}">
-                                            {% if img.cover %}<span class="badge badge-primary cover-badge">Cover</span>{% endif %}
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <small class="form-text text-muted">{{ 'Select an existing image for the AI to use as inspiration.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    {# Progress bar section #}
-                    <div id="generate-progress" class="d-none">
-                        <div class="generation-progress-wrapper">
-                            <div class="generation-progress-bar-track">
-                                <div class="generation-progress-bar-fill animated" id="progress-bar-fill" style="width: 0%"></div>
-                            </div>
-                            <div class="generation-progress-percent" id="progress-percent">0%</div>
-                            <div class="generation-progress-label" id="progress-label">{{ 'Initializing...'|trans({}, 'Modules.Itrblueboost.Admin') }}</div>
-                            <div class="generation-progress-steps">
-                                <div class="generation-step" id="step-init">
-                                    <i class="material-icons">play_circle</i>
-                                    <span>{{ 'Start'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
-                                </div>
-                                <div class="generation-step" id="step-api">
-                                    <i class="material-icons">cloud_upload</i>
-                                    <span>{{ 'API call'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
-                                </div>
-                                <div class="generation-step" id="step-generate">
-                                    <i class="material-icons">auto_awesome</i>
-                                    <span>{{ 'Generation'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
-                                </div>
-                                <div class="generation-step" id="step-save">
-                                    <i class="material-icons">save</i>
-                                    <span>{{ 'Save'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
-                                </div>
-                                <div class="generation-step" id="step-done">
-                                    <i class="material-icons">check_circle</i>
-                                    <span>{{ 'Done'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="generate-result" class="d-none"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                        {{ 'Close'|trans({}, 'Admin.Actions') }}
-                    </button>
-                    <button type="button" class="btn btn-success" id="btn-confirm-generate" disabled>
-                        <i class="material-icons">auto_awesome</i>
-                        {{ 'Generate'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include '@Modules/itrblueboost/views/templates/admin/_partials/_generate_modal.html.twig' with {
+        generateModalId: 'generateImageModal',
+        generateTitle: 'Generate an image with AI'|trans({}, 'Modules.Itrblueboost.Admin'),
+        promptSelectLabel: 'Generation style:'|trans({}, 'Modules.Itrblueboost.Admin'),
+        promptSelectPlaceholder: 'Choose a style'|trans({}, 'Modules.Itrblueboost.Admin'),
+        showBaseImageSelector: true,
+        existingImages: existing_images,
+        showStepProgress: true,
+    } only %}
 {% endblock %}
 
 {% block javascripts %}
@@ -505,7 +229,6 @@
 
             var btnGenerate = document.getElementById('btn-generate-image');
             var btnConfirm = document.getElementById('btn-confirm-generate');
-            var btnModalClose = document.getElementById('btn-modal-close');
             var promptSelect = document.getElementById('prompt-select');
             var promptDescription = document.getElementById('prompt-description');
             var promptsLoading = document.getElementById('prompts-loading');
@@ -866,61 +589,25 @@
                 });
             });
 
-            // Reject modal logic
-            var rejectModalEl = document.getElementById('rejectImageModal');
-            var rejectModalBackdrop = null;
+            // Reject modal logic (Bootstrap)
             var currentRejectButton = null;
-
-            function showRejectModal() {
-                rejectModalEl.style.display = 'block';
-                rejectModalEl.classList.add('show');
-                document.body.classList.add('modal-open');
-
-                rejectModalBackdrop = document.createElement('div');
-                rejectModalBackdrop.className = 'modal-backdrop fade show';
-                document.body.appendChild(rejectModalBackdrop);
-
-                rejectModalBackdrop.addEventListener('click', hideRejectModal);
-                document.addEventListener('keydown', handleRejectEscape);
-            }
-
-            function hideRejectModal() {
-                rejectModalEl.style.display = 'none';
-                rejectModalEl.classList.remove('show');
-                document.body.classList.remove('modal-open');
-
-                if (rejectModalBackdrop && rejectModalBackdrop.parentNode) {
-                    rejectModalBackdrop.parentNode.removeChild(rejectModalBackdrop);
-                    rejectModalBackdrop = null;
-                }
-
-                document.removeEventListener('keydown', handleRejectEscape);
-
-                var confirmBtn = document.getElementById('btn-reject-confirm');
-                confirmBtn.disabled = false;
-                confirmBtn.innerHTML = '<i class="material-icons" style="vertical-align: middle;">close</i> {{ 'Reject'|trans({}, 'Admin.Actions') }}';
-
-                currentRejectButton = null;
-            }
-
-            function handleRejectEscape(e) {
-                if (e.key === 'Escape' || e.keyCode === 27) {
-                    hideRejectModal();
-                }
-            }
-
-            document.getElementById('btn-reject-modal-close').addEventListener('click', hideRejectModal);
-            document.getElementById('btn-reject-cancel').addEventListener('click', hideRejectModal);
 
             document.querySelectorAll('.btn-reject').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     currentRejectButton = this;
                     document.getElementById('rejectionReason').value = '';
-                    showRejectModal();
+                    $('#rejectModal').modal('show');
                 });
             });
 
-            document.getElementById('btn-reject-confirm').addEventListener('click', function() {
+            $('#rejectModal').on('hidden.bs.modal', function() {
+                var confirmBtn = document.getElementById('confirmReject');
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="material-icons">cancel</i> {{ 'Reject'|trans({}, 'Admin.Actions') }}';
+                currentRejectButton = null;
+            });
+
+            document.getElementById('confirmReject').addEventListener('click', function() {
                 if (!currentRejectButton) {
                     return;
                 }
@@ -934,7 +621,7 @@
                 var formData = new FormData();
                 formData.append('rejection_reason', rejectionReason);
 
-                hideRejectModal();
+                $('#rejectModal').modal('hide');
                 handleImageAction(currentRejectButton, formData);
             });
 

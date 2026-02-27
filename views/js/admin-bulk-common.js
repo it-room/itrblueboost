@@ -143,7 +143,6 @@ var ITRBulkCommon = (function() {
      * @param {string} config.prefix ID prefix for inner elements (e.g. 'itrblueboost-bulk-')
      * @param {string} config.title Modal title
      * @param {string} config.icon Material icon name
-     * @param {string} config.headerGradient CSS gradient for header background
      * @param {string} config.entityLabel e.g. 'product(s)' or 'category(ies)'
      * @param {string} config.promptLabel Label for prompt select
      * @param {string} config.progressLabel Default progress text
@@ -153,40 +152,42 @@ var ITRBulkCommon = (function() {
      */
     function createBulkModal(config) {
         var p = config.prefix;
+        var t = window.itrblueboostModalTranslations || {};
         var modalHtml =
-        '<div class="modal fade" id="' + config.modalId + '" tabindex="-1" role="dialog" aria-hidden="true">' +
+        '<div class="modal fade itrblueboost-modal" id="' + config.modalId + '" tabindex="-1" role="dialog" aria-hidden="true">' +
             '<div class="modal-dialog modal-lg" role="document">' +
                 '<div class="modal-content">' +
-                    '<div class="modal-header" style="background: ' + config.headerGradient + '; color: #fff;">' +
+                    '<div class="modal-header">' +
                         '<h5 class="modal-title">' +
-                            '<i class="material-icons" style="vertical-align: middle;">' + config.icon + '</i> ' +
+                            '<i class="material-icons">' + config.icon + '</i> ' +
                             escapeHtml(config.title) +
                         '</h5>' +
-                        '<button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #fff;">' +
+                        '<button type="button" class="close" data-dismiss="modal" aria-label="Close">' +
                             '<span aria-hidden="true">&times;</span>' +
                         '</button>' +
                     '</div>' +
                     '<div class="modal-body">' +
                         '<div id="' + p + 'loading" class="text-center py-4">' +
                             '<div class="spinner-border text-primary" role="status">' +
-                                '<span class="sr-only">Loading...</span>' +
+                                '<span class="sr-only">' + escapeHtml(t.loading || 'Loading available prompts...') + '</span>' +
                             '</div>' +
-                            '<p class="mt-2">Loading prompts...</p>' +
+                            '<p class="mt-2">' + escapeHtml(t.loading || 'Loading available prompts...') + '</p>' +
                         '</div>' +
                         '<div id="' + p + 'error" class="alert alert-danger d-none"></div>' +
                         '<div id="' + p + 'credits-warning" class="alert alert-warning d-none">' +
-                            '<i class="material-icons" style="vertical-align: middle;">warning</i> ' +
-                            'Insufficient credits. Please recharge your credits to use AI generation.' +
+                            '<i class="material-icons">warning</i> ' +
+                            escapeHtml(t.insufficientCredits || 'Insufficient credits. Please recharge your credits to use AI generation.') +
                         '</div>' +
                         '<div id="' + p + 'form" class="d-none">' +
                             '<div class="alert alert-info">' +
-                                '<i class="material-icons" style="vertical-align: middle;">info</i> ' +
-                                '<strong id="' + p + 'count">0</strong> ' + escapeHtml(config.entityLabel) + ' selected' +
+                                '<i class="material-icons">info</i> ' +
+                                '<strong id="' + p + 'count">0</strong> ' + escapeHtml(config.entityLabel) + ' ' + escapeHtml(t.selected || 'selected') +
+                                ' <span id="' + p + 'existing-count" class="d-none"></span>' +
                             '</div>' +
                             '<div class="form-group">' +
                                 '<label for="' + p + 'prompt">' + escapeHtml(config.promptLabel) + '</label>' +
                                 '<select class="form-control" id="' + p + 'prompt">' +
-                                    '<option value="">-- Choose a prompt --</option>' +
+                                    '<option value="">-- ' + escapeHtml(t.choosePrompt || 'Choose a prompt') + ' --</option>' +
                                 '</select>' +
                                 '<small class="form-text text-muted" id="' + p + 'prompt-desc"></small>' +
                             '</div>' +
@@ -194,7 +195,7 @@ var ITRBulkCommon = (function() {
                         '<div id="' + p + 'progress" class="d-none">' +
                             '<div class="text-center py-3">' +
                                 '<div class="spinner-border text-success" role="status">' +
-                                    '<span class="sr-only">Generating...</span>' +
+                                    '<span class="sr-only">' + escapeHtml(t.generating || 'Generating...') + '</span>' +
                                 '</div>' +
                                 '<p class="mt-2" id="' + p + 'progress-text">' + escapeHtml(config.progressLabel) + '</p>' +
                             '</div>' +
@@ -206,10 +207,10 @@ var ITRBulkCommon = (function() {
                         '<div id="' + p + 'result" class="d-none"></div>' +
                     '</div>' +
                     '<div class="modal-footer">' +
-                        '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>' +
+                        '<button type="button" class="btn btn-secondary" data-dismiss="modal">' + escapeHtml(t.close || 'Close') + '</button>' +
                         '<button type="button" class="btn ' + config.btnClass + '" id="' + p + 'generate-btn" disabled>' +
-                            '<i class="material-icons" style="vertical-align: middle;">' + config.icon + '</i> ' +
-                            'Generate' +
+                            '<i class="material-icons">' + config.icon + '</i> ' +
+                            escapeHtml(t.generate || 'Generate') +
                         '</button>' +
                     '</div>' +
                 '</div>' +
@@ -266,6 +267,12 @@ var ITRBulkCommon = (function() {
             resultEl.innerHTML = '';
         }
         if (creditsWarningEl) creditsWarningEl.classList.add('d-none');
+
+        var existingCountEl = document.getElementById(p + 'existing-count');
+        if (existingCountEl) {
+            existingCountEl.classList.add('d-none');
+            existingCountEl.textContent = '';
+        }
 
         refs.setInsufficientCredits(false);
 
@@ -432,6 +439,56 @@ var ITRBulkCommon = (function() {
     }
 
     /**
+     * Fetch existing generation counts for selected entities and display summary.
+     *
+     * @param {Object} config
+     * @param {string} config.url URL to fetch counts
+     * @param {number[]} config.ids Array of selected entity IDs
+     * @param {string} config.prefix Modal prefix
+     * @param {string} config.countKey Key in counts object (e.g. 'faq', 'images')
+     * @param {string} config.label Translated label with %count% placeholder
+     * @param {string} config.idParam Request parameter name (e.g. 'product_ids')
+     */
+    function loadExistingCounts(config) {
+        var el = document.getElementById(config.prefix + 'existing-count');
+        if (el) {
+            el.classList.add('d-none');
+            el.textContent = '';
+        }
+
+        var formData = new FormData();
+        formData.append(config.idParam, config.ids.join(','));
+
+        fetch(config.url, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (!data.success || !data.counts) {
+                return;
+            }
+
+            var existingCount = 0;
+
+            for (var id in data.counts) {
+                if (data.counts.hasOwnProperty(id) && data.counts[id][config.countKey] > 0) {
+                    existingCount++;
+                }
+            }
+
+            if (el && existingCount > 0) {
+                el.textContent = config.label.replace('%count%', existingCount);
+                el.classList.remove('d-none');
+            }
+        })
+        .catch(function() {
+            // Silent fail, non-critical info
+        });
+    }
+
+    /**
      * Escape HTML entities.
      *
      * @param {string} text
@@ -547,6 +604,7 @@ var ITRBulkCommon = (function() {
         updateProgressBar: updateProgressBar,
         showGenerateError: showGenerateError,
         buildResultHtml: buildResultHtml,
+        loadExistingCounts: loadExistingCounts,
         escapeHtml: escapeHtml,
         observeForBulkAction: observeForBulkAction,
         initBulk: initBulk,

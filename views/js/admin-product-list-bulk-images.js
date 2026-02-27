@@ -43,7 +43,6 @@
             prefix: PREFIX,
             title: 'Generate Images (AI) - Bulk',
             icon: 'image',
-            headerGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             entityLabel: 'product(s)',
             promptLabel: 'Select an image prompt:',
             progressLabel: 'Generating images... Please wait.',
@@ -83,6 +82,18 @@
 
         $('#itrblueboostBulkImageModal').modal('show');
         B.loadPrompts(itrblueboostBulkImagePromptsUrl, PREFIX, modalRefs);
+
+        if (typeof itrblueboostListCountsUrl !== 'undefined') {
+            var t = window.itrblueboostModalTranslations || {};
+            B.loadExistingCounts({
+                url: itrblueboostListCountsUrl,
+                ids: selectedIds,
+                prefix: PREFIX,
+                countKey: 'images',
+                label: t.includingWithImages || 'including %count% with generated images',
+                idParam: 'product_ids'
+            });
+        }
     }
 
     function handleGenerate() {

@@ -227,44 +227,13 @@
         </div>
     </div>
 
-    {# Reject Content Modal #}
     {% if content is defined and content.id %}
-    <div class="modal fade" id="rejectContentModal" tabindex="-1" role="dialog" aria-labelledby="rejectContentModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="rejectContentModalLabel">
-                        <i class="material-icons">cancel</i>
-                        {{ 'Reject Content'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="alert alert-warning">
-                        <i class="material-icons mr-1">warning</i>
-                        {{ 'This action will permanently delete this content.'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                    </div>
-                    <div class="form-group">
-                        <label for="rejection-reason">{{ 'Rejection reason'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
-                        <textarea class="form-control" id="rejection-reason" rows="3" placeholder="{{ 'Explain why this content is being rejected (optional)'|trans({}, 'Modules.Itrblueboost.Admin') }}"></textarea>
-                        <small class="form-text text-muted">{{ 'This information will be sent to the API for traceability.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
-                    </div>
-                    <input type="hidden" id="reject-content-url" value="">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                        {{ 'Cancel'|trans({}, 'Admin.Actions') }}
-                    </button>
-                    <button type="button" class="btn btn-danger" id="btn-confirm-reject">
-                        <i class="material-icons">cancel</i>
-                        {{ 'Reject'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+        {% include '@Modules/itrblueboost/views/templates/admin/_partials/_reject_modal.html.twig' with {
+            rejectTitle: 'Reject Content'|trans({}, 'Modules.Itrblueboost.Admin'),
+            warningMessage: 'This action will permanently delete this content.'|trans({}, 'Modules.Itrblueboost.Admin'),
+            showHiddenUrl: true,
+            hiddenUrlId: 'reject-url',
+        } only %}
     {% endif %}
 {% endblock %}
 
@@ -276,12 +245,12 @@
 
         // Reject button handler
         var btnReject = document.getElementById('btn-reject-content');
-        var rejectModal = document.getElementById('rejectContentModal');
+        var rejectModal = document.getElementById('rejectModal');
 
         if (btnReject && rejectModal) {
-            var rejectReasonInput = document.getElementById('rejection-reason');
-            var rejectContentUrl = document.getElementById('reject-content-url');
-            var btnConfirmReject = document.getElementById('btn-confirm-reject');
+            var rejectReasonInput = document.getElementById('rejectionReason');
+            var rejectContentUrl = document.getElementById('reject-url');
+            var btnConfirmReject = document.getElementById('confirmReject');
 
             btnReject.addEventListener('click', function() {
                 rejectContentUrl.value = this.dataset.rejectUrl;

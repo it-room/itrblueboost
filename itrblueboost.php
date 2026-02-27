@@ -41,7 +41,7 @@ class Itrblueboost extends Module
     {
         $this->name = 'itrblueboost';
         $this->tab = 'administration';
-        $this->version = '1.8.5';
+        $this->version = '1.8.6';
         $this->author = 'ITROOM';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
@@ -256,6 +256,17 @@ class Itrblueboost extends Module
         $this->context->controller->addJS($this->_path . 'views/js/admin-product-toolbar.js?v=' . $this->version);
 
         if ($contentServiceActive && isset($jsDef['itrblueboostContentPromptsUrl'])) {
+            Media::addJsDef([
+                'itrblueboostContentTranslations' => [
+                    'modalTitle' => $this->trans('Generate content with AI', [], 'Modules.Itrblueboost.Admin'),
+                    'loadingPrompts' => $this->trans('Loading available prompts...', [], 'Modules.Itrblueboost.Admin'),
+                    'selectPrompt' => $this->trans('Select a prompt to generate content:', [], 'Modules.Itrblueboost.Admin'),
+                    'choosePrompt' => $this->trans('Choose a prompt', [], 'Modules.Itrblueboost.Admin'),
+                    'close' => $this->trans('Close', [], 'Admin.Actions'),
+                    'generate' => $this->trans('Generate', [], 'Modules.Itrblueboost.Admin'),
+                    'generating' => $this->trans('Generating... This may take a few seconds.', [], 'Modules.Itrblueboost.Admin'),
+                ],
+            ]);
             $this->context->controller->addJS($this->_path . 'views/js/admin-content-inline.js?v=' . $this->version);
         }
 
@@ -292,6 +303,19 @@ class Itrblueboost extends Module
 
         // Load common bulk utilities (must be loaded before specific bulk scripts)
         if ($faqActive || $imageActive) {
+            Media::addJsDef([
+                'itrblueboostModalTranslations' => [
+                    'loading' => $this->trans('Loading available prompts...', [], 'Modules.Itrblueboost.Admin'),
+                    'close' => $this->trans('Close', [], 'Admin.Actions'),
+                    'generate' => $this->trans('Generate', [], 'Modules.Itrblueboost.Admin'),
+                    'choosePrompt' => $this->trans('Choose a prompt', [], 'Modules.Itrblueboost.Admin'),
+                    'insufficientCredits' => $this->trans('Insufficient credits. Please recharge your credits to use AI generation.', [], 'Modules.Itrblueboost.Admin'),
+                    'generating' => $this->trans('Generating...', [], 'Admin.Global'),
+                    'selected' => $this->trans('selected', [], 'Modules.Itrblueboost.Admin'),
+                    'includingWithFaqs' => $this->trans('including %count% with generated FAQs', [], 'Modules.Itrblueboost.Admin'),
+                    'includingWithImages' => $this->trans('including %count% with generated images', [], 'Modules.Itrblueboost.Admin'),
+                ],
+            ]);
             $this->context->controller->addJS($this->_path . 'views/js/admin-bulk-common.js?v=' . $this->version);
         }
 
@@ -341,6 +365,17 @@ class Itrblueboost extends Module
                 'itrblueboostBulkCategoryFaqPromptsUrl' => $router->generate('itrblueboost_admin_category_faq_prompts'),
                 'itrblueboostBulkCategoryFaqGenerateUrl' => $router->generate('itrblueboost_admin_category_faq_bulk_generate'),
                 'itrblueboostBulkCategoryFaqLabel' => $this->trans('Generate FAQ (AI)', [], 'Modules.Itrblueboost.Admin'),
+                'itrblueboostCategoryListCountsUrl' => $router->generate('itrblueboost_admin_category_list_counts'),
+                'itrblueboostModalTranslations' => [
+                    'loading' => $this->trans('Loading available prompts...', [], 'Modules.Itrblueboost.Admin'),
+                    'close' => $this->trans('Close', [], 'Admin.Actions'),
+                    'generate' => $this->trans('Generate', [], 'Modules.Itrblueboost.Admin'),
+                    'choosePrompt' => $this->trans('Choose a prompt', [], 'Modules.Itrblueboost.Admin'),
+                    'insufficientCredits' => $this->trans('Insufficient credits. Please recharge your credits to use AI generation.', [], 'Modules.Itrblueboost.Admin'),
+                    'generating' => $this->trans('Generating...', [], 'Admin.Global'),
+                    'selected' => $this->trans('selected', [], 'Modules.Itrblueboost.Admin'),
+                    'includingWithFaqs' => $this->trans('including %count% with generated FAQs', [], 'Modules.Itrblueboost.Admin'),
+                ],
             ]);
 
             $this->context->controller->addJS($this->_path . 'views/js/admin-bulk-common.js?v=' . $this->version);

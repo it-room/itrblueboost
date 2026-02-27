@@ -107,101 +107,17 @@
         </div>
     </div>
 
-    {# Generate Content Modal #}
-    <div class="modal fade" id="generateContentModal" tabindex="-1" role="dialog" aria-labelledby="generateContentModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="generateContentModalLabel">
-                        <i class="material-icons">auto_awesome</i>
-                        {{ 'Generate Content with AI'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div id="prompts-loading" class="text-center py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="sr-only">{{ 'Loading...'|trans({}, 'Admin.Global') }}</span>
-                        </div>
-                        <p class="mt-2">{{ 'Loading available prompts...'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
-                    </div>
-                    <div id="prompts-error" class="alert alert-danger d-none"></div>
-                    <div id="prompts-list" class="d-none">
-                        <div class="form-group">
-                            <label for="content-type-select">{{ 'Content type:'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
-                            <select class="form-control" id="content-type-select">
-                                <option value="description">{{ 'Description'|trans({}, 'Modules.Itrblueboost.Admin') }}</option>
-                                <option value="description_short">{{ 'Short description'|trans({}, 'Modules.Itrblueboost.Admin') }}</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="prompt-select">{{ 'Select a prompt:'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
-                            <select class="form-control" id="prompt-select">
-                                <option value="">-- {{ 'Choose a prompt'|trans({}, 'Modules.Itrblueboost.Admin') }} --</option>
-                            </select>
-                            <small class="form-text text-muted mt-2" id="prompt-description"></small>
-                        </div>
-                    </div>
-                    <div id="credits-warning" class="alert alert-warning d-none mt-3">
-                        <i class="material-icons" style="vertical-align: middle;">warning</i>
-                        {{ 'Insufficient credits. Please recharge your credits to use AI generation.'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                    </div>
-                    <div id="generate-progress" class="d-none text-center py-4">
-                        <div class="spinner-border text-success" role="status">
-                            <span class="sr-only">{{ 'Generating...'|trans({}, 'Admin.Global') }}</span>
-                        </div>
-                        <p class="mt-2">{{ 'Generating content... This may take a few seconds.'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
-                    </div>
-                    <div id="generate-result" class="d-none"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                        {{ 'Close'|trans({}, 'Admin.Actions') }}
-                    </button>
-                    <button type="button" class="btn btn-success" id="btn-confirm-generate" disabled>
-                        <i class="material-icons">auto_awesome</i>
-                        {{ 'Generate'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include '@Modules/itrblueboost/views/templates/admin/_partials/_generate_modal.html.twig' with {
+        generateModalId: 'generateContentModal',
+        generateTitle: 'Generate Content with AI'|trans({}, 'Modules.Itrblueboost.Admin'),
+        showContentTypeSelect: true,
+    } only %}
 
-    {# Reject Content Modal #}
-    <div class="modal fade" id="rejectContentModal" tabindex="-1" role="dialog" aria-labelledby="rejectContentModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="rejectContentModalLabel">
-                        <i class="material-icons">cancel</i>
-                        {{ 'Reject Content'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="rejection-reason">{{ 'Rejection reason'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
-                        <textarea class="form-control" id="rejection-reason" rows="3" placeholder="{{ 'Explain why this content is being rejected (optional)'|trans({}, 'Modules.Itrblueboost.Admin') }}"></textarea>
-                        <small class="form-text text-muted">{{ 'This information will be sent to the API for traceability.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
-                    </div>
-                    <input type="hidden" id="reject-content-url" value="">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                        {{ 'Cancel'|trans({}, 'Admin.Actions') }}
-                    </button>
-                    <button type="button" class="btn btn-danger" id="btn-confirm-reject">
-                        <i class="material-icons">cancel</i>
-                        {{ 'Reject'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include '@Modules/itrblueboost/views/templates/admin/_partials/_reject_modal.html.twig' with {
+        rejectTitle: 'Reject Content'|trans({}, 'Modules.Itrblueboost.Admin'),
+        showHiddenUrl: true,
+        hiddenUrlId: 'reject-url',
+    } only %}
 {% endblock %}
 
 {% block javascripts %}
@@ -251,10 +167,10 @@
             });
 
             // Reject Content modal
-            var rejectModal = $('#rejectContentModal');
-            var rejectReasonInput = document.getElementById('rejection-reason');
-            var rejectContentUrl = document.getElementById('reject-content-url');
-            var btnConfirmReject = document.getElementById('btn-confirm-reject');
+            var rejectModal = $('#rejectModal');
+            var rejectReasonInput = document.getElementById('rejectionReason');
+            var rejectContentUrl = document.getElementById('reject-url');
+            var btnConfirmReject = document.getElementById('confirmReject');
 
             document.querySelectorAll('.btn-reject-content').forEach(function(btn) {
                 btn.addEventListener('click', function() {

@@ -455,6 +455,37 @@ The module registers the following PrestaShop hooks:
 
 ## Changelog
 
+### Version 1.8.5
+- **Major Refactoring**: Unified all 16+ modal dialogs across the module with consistent architectural patterns
+- **Modal Unification**: Created reusable Twig partials for modals:
+  - `_reject_modal.html.twig`: Configurable rejection reason modal with optional warning messages and hidden form fields
+  - `_generate_modal.html.twig`: Configurable generation modal supporting content type selection, prompt selection, base image selection, and progress display
+- **Bootstrap 4 Native API**: All modals now use Bootstrap 4 native modal API (data-dismiss, data-toggle) instead of custom vanilla JS show/hide
+- **Consistent Modal IDs**: Standardized modal element IDs across entire module with configurable options
+- **Modal Styling**: Added `.itrblueboost-modal` CSS marker class for unified styling in `admin-common.css`
+- **Translation Keys**: All hardcoded text in modals and JavaScript files replaced with translation keys via `Media::addJsDef()`
+- **Consistent Headers**: All modal headers now use consistent styling with icon and title (no more gradient vs plain inconsistency)
+- **Centralized CSS**: All modal styling and utilities moved to `admin-common.css` (no more inline styles in templates)
+- **Code Deduplication**: Eliminated approximately 2,300 lines of duplicated code through trait extraction and partial reuse
+- **FAQ Text Truncation**: Removed all FAQ text truncation (slice + ellipsis) in admin views to display full content
+- **Controller Traits**: Created 5 traits for shared admin controller functionality:
+  - `ResolveLimitTrait`: Pagination limit validation (10, 20, 50, 100 items)
+  - `MultilangHelperTrait`: Multilingual text handling for entity fields
+  - `FaqApiSyncTrait`: FAQ API synchronization (accept, reject, toggle)
+  - `ContentApiSyncTrait`: Product content API synchronization
+  - `ProductDataBuilderTrait`: Product data building for bulk operations
+- **Entity Traits**: Created 2 traits for shared entity functionality:
+  - `FaqStatusTrait`: Common status checking methods (isPending, isAccepted)
+  - `FaqEntityTrait`: Shared FAQ methods including position management
+- **Shared Query Builder**: Created `AbstractFaqQueryBuilder` base class providing unified grid query logic for FAQ entities
+- **CSS Consolidation**: Merged separate PS17/PS8 CSS button files into single `admin-product-buttons.css`
+- **JavaScript Utilities**: Created `admin-bulk-common.js` with shared utility functions for bulk actions and AJAX operations
+- **Twig Partials**: Extended partial reuse across all admin templates:
+  - `_filter_status.html.twig`: Status filter component
+  - `_pagination.html.twig`: Pagination component
+  - `_lightbox.html.twig`: Image lightbox component
+- **DRY Architecture**: All reject and generate modals are now defined once in Twig partials and included with configurable variables, eliminating inline duplication
+
 ### Version 1.8.4
 - **New Feature**: Product listing badges showing FAQ, image, and content counts next to product names
 - **New Controller**: `ProductListCountsController` with batch SQL queries for efficient count retrieval
@@ -644,21 +675,39 @@ Subclasses define their table specifics via abstract methods (`getTableName()`, 
 ### Shared Assets
 
 **Stylesheets** (in `views/css/`):
-- `admin-common.css`: Common admin styling shared across all admin pages
-- `admin-product-buttons.css`: Unified button styling compatible with both PS 1.7 and PS 8
-- `admin-product-buttons-ps17.css`: PrestaShop 1.7-specific button styles
-- `admin-product-buttons-ps8.css`: PrestaShop 8-specific button styles
+- `admin-common.css`: Centralized admin styling including:
+  - Modal styling with `.itrblueboost-modal` class
+  - Base image selector styles
+  - Progress bar and step indicator styles
+  - Form control and button styles shared across all pages
+  - Badge and status indicator styling
+- `admin-product-buttons.css`: Unified button styling compatible with both PrestaShop 1.7 and 8 (consolidated from separate PS17/PS8 files)
 - `admin-product-list-bulk.css`: Product list bulk operation UI styling
 
 **JavaScript** (in `views/js/`):
-- `admin-bulk-common.js`: Shared utility functions for bulk actions, progress tracking, and AJAX operations
+- `admin-bulk-common.js`: Shared utility functions including:
+  - Bulk action checkbox management and synchronization
+  - Progress tracking and status polling
+  - AJAX operation handlers
+  - Modal state management
+  - Credit balance checking
 - Multiple feature-specific files import and use these shared utilities
+- All hardcoded text replaced with translation keys injected via `Media::addJsDef()`
 
 **Twig Partials** (in `views/templates/admin/_partials/`):
-- `_filter_status.html.twig`: Reusable status filter component
+- `_filter_status.html.twig`: Reusable status filter component with configurable label and class
 - `_pagination.html.twig`: Reusable pagination component
-- `_reject_modal.html.twig`: Reusable rejection reason modal
+- `_reject_modal.html.twig`: Reusable rejection reason modal (configurable title, modal ID, optional warning message, and hidden form fields)
+- `_generate_modal.html.twig`: Reusable generation modal (configurable title, prompt selection, content type selection, base image selector, and progress display options)
 - `_lightbox.html.twig`: Reusable lightbox for image display
+
+**Modal Architecture**:
+- All modals inherit consistent Bootstrap 4 structure with native API support
+- Modal CSS class `.itrblueboost-modal` enables unified styling in `admin-common.css`
+- Modal headers feature consistent icons (cancel for reject, auto_awesome for generate)
+- All hardcoded text replaced with translation keys via `Media::addJsDef()` for better maintainability
+- Modals use Bootstrap 4 native attributes (`data-toggle="modal"`, `data-dismiss="modal"`) instead of custom JavaScript
+- Previously 16+ modal implementations across templates unified into 2 reusable partials included with configurable variables
 
 ### Hook Handler Architecture
 

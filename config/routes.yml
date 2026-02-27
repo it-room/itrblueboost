@@ -655,3 +655,14 @@ itrblueboost_admin_product_list_counts:
   defaults:
     _controller: Itrblueboost\Controller\Admin\ProductListCountsController::countsAction
     _legacy_controller: AdminProducts
+
+# ==========================================
+# Category List Counts
+# ==========================================
+
+itrblueboost_admin_category_list_counts:
+  path: itrblueboost/category-list-counts
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\CategoryListCountsController::countsAction
+    _legacy_controller: AdminCategories

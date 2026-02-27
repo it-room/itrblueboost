@@ -42,7 +42,6 @@
             prefix: PREFIX,
             title: 'Generate FAQ (AI) - Bulk',
             icon: 'auto_awesome',
-            headerGradient: 'linear-gradient(135deg, #25b9d7 0%, #1e9bb5 100%)',
             entityLabel: 'product(s)',
             promptLabel: 'Select a prompt:',
             progressLabel: 'Generating FAQs... Please wait.',
@@ -76,6 +75,18 @@
         B.resetModal(PREFIX, modalRefs);
         $('#itrblueboostBulkFaqModal').modal('show');
         B.loadPrompts(itrblueboostBulkFaqPromptsUrl, PREFIX, modalRefs);
+
+        if (typeof itrblueboostListCountsUrl !== 'undefined') {
+            var t = window.itrblueboostModalTranslations || {};
+            B.loadExistingCounts({
+                url: itrblueboostListCountsUrl,
+                ids: selectedIds,
+                prefix: PREFIX,
+                countKey: 'faq',
+                label: t.includingWithFaqs || 'including %count% with generated FAQs',
+                idParam: 'product_ids'
+            });
+        }
     }
 
     function handleGenerate() {

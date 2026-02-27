@@ -104,8 +104,6 @@
 
             var rejectUrl = '';
             var rejectImageId = 0;
-            var rejectModalEl = document.getElementById('rejectModal');
-            var rejectModalBackdrop = null;
             var toastContainer = document.getElementById('toastContainer');
 
             function showToast(message, type) {
@@ -122,47 +120,17 @@
             }
 
             function showModal() {
-                rejectModalEl.style.display = 'block';
-                rejectModalEl.classList.add('show');
-                document.body.classList.add('modal-open');
-
-                rejectModalBackdrop = document.createElement('div');
-                rejectModalBackdrop.className = 'modal-backdrop fade show';
-                document.body.appendChild(rejectModalBackdrop);
-
-                rejectModalBackdrop.addEventListener('click', hideModal);
-                document.addEventListener('keydown', handleEscapeKey);
+                $('#rejectModal').modal('show');
             }
 
             function hideModal() {
-                rejectModalEl.style.display = 'none';
-                rejectModalEl.classList.remove('show');
-                document.body.classList.remove('modal-open');
+                $('#rejectModal').modal('hide');
+            }
 
-                if (rejectModalBackdrop && rejectModalBackdrop.parentNode) {
-                    rejectModalBackdrop.parentNode.removeChild(rejectModalBackdrop);
-                    rejectModalBackdrop = null;
-                }
-
-                document.removeEventListener('keydown', handleEscapeKey);
-
+            $('#rejectModal').on('hidden.bs.modal', function() {
                 var confirmBtn = document.getElementById('confirmReject');
                 confirmBtn.disabled = false;
-                confirmBtn.innerHTML = '{{ 'Reject'|trans({}, 'Admin.Actions') }}';
-            }
-
-            function handleEscapeKey(e) {
-                if (e.key === 'Escape' || e.keyCode === 27) {
-                    hideModal();
-                }
-            }
-
-            var closeButtons = rejectModalEl.querySelectorAll('[data-dismiss="modal"], .close');
-            closeButtons.forEach(function(btn) {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    hideModal();
-                });
+                confirmBtn.innerHTML = '<i class="material-icons">cancel</i> {{ 'Reject'|trans({}, 'Admin.Actions') }}';
             });
 
             // Filter

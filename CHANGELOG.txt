@@ -2,6 +2,32 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.6] - 2026-02-27
+
+### Changed
+- Refactorisation majeure des modales : unification de 16+ dialogues modales à travers le module
+- Migration de tous les modales vers une architecture cohérente avec patterns réutilisables
+- Conversion de tous les appels JavaScript vanilla `display:block` + backdrop manuel vers l'API Bootstrap 4 native (`$.modal('show'/'hide')`)
+- Standardisation des ID d'éléments modales pour cohérence : `rejectModal`, `rejectionReason`, `confirmReject`, `prompt-select`, `btn-confirm-generate`
+- Ajout d'une classe CSS marker `.itrblueboost-modal` pour le styling unifié des modales
+
+### Added
+- Création du partial Twig réutilisable `_generate_modal.html.twig` pour les modales de génération IA
+- Extension du partial `_reject_modal.html.twig` pour améliorer la réutilisabilité
+- Affichage du nombre de produits/catégories ayant déjà du contenu généré dans les modales bulk ("dont X avec des FAQs générées")
+- Nouveau contrôleur `CategoryListCountsController` et route `itrblueboost_admin_category_list_counts` pour les compteurs FAQ catégorie
+- Fichiers de traduction XLIFF français (`translations/fr-FR/`) pour les domaines Admin (192 clés) et Shop (2 clés)
+
+### Improved
+- Remplacement du texte français en dur dans `admin-content-inline.js` par des clés de traduction via `Media::addJsDef()`
+- Remplacement du texte anglais en dur dans `admin-bulk-common.js` par des clés de traduction via `Media::addJsDef()`
+- Suppression des en-têtes dégradés des modales en masse pour une cohérence avec les en-têtes Bootstrap standard
+- Déplacement du CSS inline de `product_image/index.html.twig` vers `admin-common.css`
+
+### Removed
+- Suppression du HTML de modale rejet dupliqué dans 7 templates (product_faq, category_faq, product_content index+form, product_image)
+- Suppression du HTML de modale génération dupliqué dans 4 templates (product_faq, category_faq, product_content, product_image)
+
 ## [1.8.5] - 2026-02-27
 
 ### Changed

@@ -438,36 +438,37 @@
      * Inject modal for content generation
      */
     function injectModal() {
-        var modalHtml = '<div class="modal fade" id="itrblueboost-content-modal" tabindex="-1" role="dialog" aria-hidden="true">' +
+        var t = window.itrblueboostContentTranslations || {};
+        var modalHtml = '<div class="modal fade itrblueboost-modal" id="itrblueboost-content-modal" tabindex="-1" role="dialog" aria-hidden="true">' +
             '<div class="modal-dialog" role="document">' +
             '<div class="modal-content">' +
             '<div class="modal-header">' +
-            '<h5 class="modal-title"><i class="material-icons">auto_awesome</i> G\u00e9n\u00e9rer du contenu avec l\'IA</h5>' +
+            '<h5 class="modal-title"><i class="material-icons">auto_awesome</i> ' + (t.modalTitle || 'Generate content with AI') + '</h5>' +
             '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
             '</div>' +
             '<div class="modal-body">' +
             '<div id="itrblueboost-content-loading" class="text-center py-4">' +
             '<div class="spinner-border text-primary" role="status"></div>' +
-            '<p class="mt-2">Chargement des prompts...</p>' +
+            '<p class="mt-2">' + (t.loadingPrompts || 'Loading available prompts...') + '</p>' +
             '</div>' +
             '<div id="itrblueboost-content-error" class="alert alert-danger d-none"></div>' +
             '<div id="itrblueboost-content-prompts" class="d-none">' +
-            '<p class="mb-3">S\u00e9lectionnez un prompt pour g\u00e9n\u00e9rer le contenu:</p>' +
+            '<p class="mb-3">' + (t.selectPrompt || 'Select a prompt to generate content:') + '</p>' +
             '<select class="form-control" id="itrblueboost-content-prompt-select">' +
-            '<option value="">-- Choisir un prompt --</option>' +
+            '<option value="">-- ' + (t.choosePrompt || 'Choose a prompt') + ' --</option>' +
             '</select>' +
             '<small class="form-text text-muted mt-2" id="itrblueboost-content-prompt-description"></small>' +
             '</div>' +
             '<div id="itrblueboost-content-progress" class="d-none text-center py-4">' +
             '<div class="spinner-border text-success" role="status"></div>' +
-            '<p class="mt-2">G\u00e9n\u00e9ration en cours... Cela peut prendre quelques secondes.</p>' +
+            '<p class="mt-2">' + (t.generating || 'Generating... This may take a few seconds.') + '</p>' +
             '</div>' +
             '<div id="itrblueboost-content-result" class="d-none"></div>' +
             '</div>' +
             '<div class="modal-footer">' +
-            '<button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>' +
+            '<button type="button" class="btn btn-secondary" data-dismiss="modal">' + (t.close || 'Close') + '</button>' +
             '<button type="button" class="btn btn-success" id="itrblueboost-content-confirm" disabled>' +
-            '<i class="material-icons">auto_awesome</i> G\u00e9n\u00e9rer' +
+            '<i class="material-icons">auto_awesome</i> ' + (t.generate || 'Generate') +
             '</button>' +
             '</div>' +
             '</div>' +
@@ -489,15 +490,6 @@
 
         confirmBtn.addEventListener('click', function() {
             generateContent();
-        });
-
-        // Close modal handlers
-        var modal = document.getElementById('itrblueboost-content-modal');
-        var closeButtons = modal.querySelectorAll('[data-dismiss="modal"]');
-        closeButtons.forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                hideModal();
-            });
         });
     }
 
@@ -776,32 +768,14 @@
      * Show modal
      */
     function showModal() {
-        var modal = document.getElementById('itrblueboost-content-modal');
-        modal.style.display = 'block';
-        modal.classList.add('show');
-        document.body.classList.add('modal-open');
-
-        var backdrop = document.createElement('div');
-        backdrop.className = 'modal-backdrop fade show';
-        backdrop.id = 'itrblueboost-modal-backdrop';
-        document.body.appendChild(backdrop);
-
-        backdrop.addEventListener('click', hideModal);
+        $('#itrblueboost-content-modal').modal('show');
     }
 
     /**
      * Hide modal
      */
     function hideModal() {
-        var modal = document.getElementById('itrblueboost-content-modal');
-        modal.style.display = 'none';
-        modal.classList.remove('show');
-        document.body.classList.remove('modal-open');
-
-        var backdrop = document.getElementById('itrblueboost-modal-backdrop');
-        if (backdrop) {
-            backdrop.remove();
-        }
+        $('#itrblueboost-content-modal').modal('hide');
     }
 
 })();

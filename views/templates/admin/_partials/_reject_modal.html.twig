@@ -1,28 +1,62 @@
 {#
- # Reject modal partial.
+ # Unified reject modal partial.
  #
  # Required variables:
  #   - rejectTitle: string - Modal title (e.g., "Reject FAQ", "Reject Image")
+ #
+ # Optional variables:
+ #   - rejectModalId: string (default: 'rejectModal')
+ #   - showHiddenUrl: bool (default: false) - Show a hidden input for reject URL
+ #   - hiddenUrlId: string (default: 'reject-url')
+ #   - showHiddenIds: bool (default: false) - Show a hidden input for reject IDs
+ #   - hiddenIdsId: string (default: 'reject-ids')
+ #   - warningMessage: string (default: null) - Optional warning alert before the form
  #}
-<div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
+{% set modalId = rejectModalId|default('rejectModal') %}
+
+<div class="modal fade itrblueboost-modal" id="{{ modalId }}" tabindex="-1" role="dialog"
+     aria-labelledby="{{ modalId }}Label" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="rejectModalLabel">{{ rejectTitle }}</h5>
+                <h5 class="modal-title" id="{{ modalId }}Label">
+                    <i class="material-icons">cancel</i>
+                    {{ rejectTitle }}
+                </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
+                {% if warningMessage|default(null) %}
+                    <div class="alert alert-warning">
+                        <i class="material-icons mr-1">warning</i>
+                        {{ warningMessage }}
+                    </div>
+                {% endif %}
                 <div class="form-group">
                     <label for="rejectionReason">{{ 'Rejection reason'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
-                    <textarea class="form-control" id="rejectionReason" rows="3" placeholder="{{ 'Enter the reason for rejection...'|trans({}, 'Modules.Itrblueboost.Admin') }}"></textarea>
-                    <small class="form-text text-muted">{{ 'This reason will be sent to the API.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
+                    <textarea class="form-control" id="rejectionReason" rows="3"
+                        placeholder="{{ 'Enter the reason for rejection...'|trans({}, 'Modules.Itrblueboost.Admin') }}"></textarea>
+                    <small class="form-text text-muted">
+                        {{ 'This reason will be sent to the API.'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                    </small>
                 </div>
+                {% if showHiddenUrl|default(false) %}
+                    <input type="hidden" id="{{ hiddenUrlId|default('reject-url') }}" value="">
+                {% endif %}
+                {% if showHiddenIds|default(false) %}
+                    <input type="hidden" id="{{ hiddenIdsId|default('reject-ids') }}" value="">
+                {% endif %}
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ 'Cancel'|trans({}, 'Admin.Actions') }}</button>
-                <button type="button" class="btn btn-danger" id="confirmReject">{{ 'Reject'|trans({}, 'Admin.Actions') }}</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    {{ 'Cancel'|trans({}, 'Admin.Actions') }}
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmReject">
+                    <i class="material-icons">cancel</i>
+                    {{ 'Reject'|trans({}, 'Admin.Actions') }}
+                </button>
             </div>
         </div>
     </div>

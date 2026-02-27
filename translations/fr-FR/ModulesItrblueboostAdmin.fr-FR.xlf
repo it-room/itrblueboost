@@ -1,0 +1,974 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en" target-language="fr-FR" datatype="plaintext" original="modules/itrblueboost">
+    <body>
+      <!-- Module identity -->
+      <trans-unit id="mod.itrblueboost.itroomApiIntegration">
+        <source>ITROOM API Integration</source>
+        <target>Intégration API ITROOM</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.integrationModuleDescription">
+        <source>Integration module with ITROOM API for data synchronization.</source>
+        <target>Module d'intégration avec l'API ITROOM pour la synchronisation des données.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.confirmUninstall">
+        <source>Are you sure you want to uninstall this module?</source>
+        <target>Êtes-vous sûr de vouloir désinstaller ce module ?</target>
+      </trans-unit>
+
+      <!-- Configuration -->
+      <trans-unit id="mod.itrblueboost.itroomApiConfiguration">
+        <source>ITROOM API Configuration</source>
+        <target>Configuration API ITROOM</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.configSaved">
+        <source>Configuration saved successfully.</source>
+        <target>Configuration enregistrée avec succès.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.configurationApiItroom">
+        <source>Configuration API ITROOM</source>
+        <target>Configuration API ITROOM</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.configRequired">
+        <source>Configuration requise</source>
+        <target>Configuration requise</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.enterApiKeyToStart">
+        <source>Entrez votre clé API ITROOM pour commencer à utiliser les services.</source>
+        <target>Entrez votre clé API ITROOM pour commencer à utiliser les services.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.enterApiKeyToActivate">
+        <source>Entrez votre clé API ITROOM pour activer la synchronisation.</source>
+        <target>Entrez votre clé API ITROOM pour activer la synchronisation.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.apiKey">
+        <source>Clé API</source>
+        <target>Clé API</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.apiKeyPlaceholder">
+        <source>Votre clé API...</source>
+        <target>Votre clé API...</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.apiConnectionError">
+        <source>Erreur de connexion API</source>
+        <target>Erreur de connexion API</target>
+      </trans-unit>
+
+      <!-- Compatibility -->
+      <trans-unit id="mod.itrblueboost.compatibility">
+        <source>Compatibility</source>
+        <target>Compatibilité</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.compatibilitySettings">
+        <source>Compatibility Settings</source>
+        <target>Paramètres de compatibilité</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.bootstrapVersion">
+        <source>Bootstrap version</source>
+        <target>Version de Bootstrap</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.selectBootstrapVersion">
+        <source>Select the Bootstrap version used on your theme.</source>
+        <target>Sélectionnez la version de Bootstrap utilisée par votre thème.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.apiMode">
+        <source>API mode</source>
+        <target>Mode API</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.selectApiEnvironment">
+        <source>Select the API environment. Use Production by default.</source>
+        <target>Sélectionnez l'environnement API. Utilisez Production par défaut.</target>
+      </trans-unit>
+
+      <!-- Credits -->
+      <trans-unit id="mod.itrblueboost.credits">
+        <source>Crédits</source>
+        <target>Crédits</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.creditsUsed">
+        <source>Crédits utilisés</source>
+        <target>Crédits utilisés</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.availableCredits">
+        <source>Disponibles</source>
+        <target>Disponibles</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.remainingBalance">
+        <source>Solde restant</source>
+        <target>Solde restant</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.totalConsumed">
+        <source>Total consommé</source>
+        <target>Total consommé</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.consumptionHistory">
+        <source>Historique des consommations</source>
+        <target>Historique des consommations</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.noConsumption">
+        <source>Aucune consommation enregistrée pour le moment.</source>
+        <target>Aucune consommation enregistrée pour le moment.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.last30days">
+        <source>30 derniers jours</source>
+        <target>30 derniers jours</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.services">
+        <source>Services</source>
+        <target>Services</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.service">
+        <source>Service</source>
+        <target>Service</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.details">
+        <source>Détails</source>
+        <target>Détails</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.tips">
+        <source>Tips</source>
+        <target>Conseils</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.tipsFr">
+        <source>Conseils</source>
+        <target>Conseils</target>
+      </trans-unit>
+
+      <!-- Layout titles -->
+      <trans-unit id="mod.itrblueboost.productFaq">
+        <source>Product FAQ</source>
+        <target>FAQ Produit</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.categoryFaq">
+        <source>Category FAQ</source>
+        <target>FAQ Catégorie</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.productContent">
+        <source>Product Content</source>
+        <target>Contenu Produit</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.aiProductImages">
+        <source>AI Product Images</source>
+        <target>Images IA Produit</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generatedFaqs">
+        <source>Generated FAQs</source>
+        <target>FAQ générées</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generatedImages">
+        <source>Generated Images</source>
+        <target>Images générées</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.allProductFaqs">
+        <source>All Product FAQs</source>
+        <target>Toutes les FAQ Produit</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.allCategoryFaqs">
+        <source>All Category FAQs</source>
+        <target>Toutes les FAQ Catégorie</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.allProductContents">
+        <source>All Product Contents</source>
+        <target>Tous les contenus Produit</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.apiLogs">
+        <source>API Logs</source>
+        <target>Logs API</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.apiLogDetails">
+        <source>API Log Details</source>
+        <target>Détails du log API</target>
+      </trans-unit>
+
+      <!-- FAQ CRUD -->
+      <trans-unit id="mod.itrblueboost.addFaq">
+        <source>Add FAQ</source>
+        <target>Ajouter une FAQ</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.editFaq">
+        <source>Edit FAQ</source>
+        <target>Modifier la FAQ</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.faqCreated">
+        <source>FAQ created successfully.</source>
+        <target>FAQ créée avec succès.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.faqUpdated">
+        <source>FAQ updated.</source>
+        <target>FAQ mise à jour.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.faqDeleted">
+        <source>FAQ deleted.</source>
+        <target>FAQ supprimée.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.faqNotFound">
+        <source>FAQ not found.</source>
+        <target>FAQ introuvable.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.noFaqSelected">
+        <source>No FAQ selected.</source>
+        <target>Aucune FAQ sélectionnée.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.errorCreatingFaq">
+        <source>Error creating FAQ.</source>
+        <target>Erreur lors de la création de la FAQ.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.errorUpdatingFaq">
+        <source>Error updating FAQ.</source>
+        <target>Erreur lors de la mise à jour de la FAQ.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.errorDeletingFaq">
+        <source>Error deleting FAQ.</source>
+        <target>Erreur lors de la suppression de la FAQ.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.faqsAccepted">
+        <source>%d FAQs accepted.</source>
+        <target>%d FAQ acceptées.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.faqsRejected">
+        <source>%d FAQs rejected.</source>
+        <target>%d FAQ rejetées.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.deleteFaqConfirm">
+        <source>Delete this FAQ?</source>
+        <target>Supprimer cette FAQ ?</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.deleteFaqConfirmFr">
+        <source>Supprimer cette FAQ ?</source>
+        <target>Supprimer cette FAQ ?</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.deleteFaqAction">
+        <source>Are you sure you want to delete this FAQ?</source>
+        <target>Êtes-vous sûr de vouloir supprimer cette FAQ ?</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.permanentlyDeleteFaq">
+        <source>This action will permanently delete this FAQ.</source>
+        <target>Cette action supprimera définitivement cette FAQ.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.deleteSelectedFaqs">
+        <source>Delete selected FAQs?</source>
+        <target>Supprimer les FAQ sélectionnées ?</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.deleteSelectedFaqsFr">
+        <source>Supprimer les FAQ sélectionnées ?</source>
+        <target>Supprimer les FAQ sélectionnées ?</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.noFaqForProduct">
+        <source>No FAQ for this product.</source>
+        <target>Aucune FAQ pour ce produit.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.noFaqForCategory">
+        <source>No FAQ for this category.</source>
+        <target>Aucune FAQ pour cette catégorie.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.noFaqsGenerated">
+        <source>No FAQs generated yet</source>
+        <target>Aucune FAQ générée pour le moment</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.noProductFaqsGenerated">
+        <source>No product FAQs generated yet</source>
+        <target>Aucune FAQ produit générée pour le moment</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.noCategoryFaqsGenerated">
+        <source>No category FAQs generated yet</source>
+        <target>Aucune FAQ catégorie générée pour le moment</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generatedFaqsAppear">
+        <source>Generated FAQs will appear here.</source>
+        <target>Les FAQ générées apparaîtront ici.</target>
+      </trans-unit>
+
+      <!-- FAQ form fields (already French source) -->
+      <trans-unit id="mod.itrblueboost.question">
+        <source>Question</source>
+        <target>Question</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.answer">
+        <source>Answer</source>
+        <target>Réponse</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.reponseFr">
+        <source>Réponse</source>
+        <target>Réponse</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.questionAnswer">
+        <source>Question / Answer</source>
+        <target>Question / Réponse</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.noAnswer">
+        <source>No answer</source>
+        <target>Pas de réponse</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.actif">
+        <source>Actif</source>
+        <target>Actif</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.active">
+        <source>Active</source>
+        <target>Actif</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.inactif">
+        <source>Inactif</source>
+        <target>Inactif</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.questionRequired">
+        <source>La question est obligatoire.</source>
+        <target>La question est obligatoire.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.modificationReason">
+        <source>Modification reason</source>
+        <target>Raison de la modification</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.modificationReasonFr">
+        <source>Raison de la modification</source>
+        <target>Raison de la modification</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.modificationReasonRequired">
+        <source>Modification reason is required when content is changed.</source>
+        <target>La raison de la modification est obligatoire car vous avez modifié le contenu.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.modificationReasonRequiredFaq">
+        <source>La raison de la modification est obligatoire car vous avez modifié la question ou la réponse.</source>
+        <target>La raison de la modification est obligatoire car vous avez modifié la question ou la réponse.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.modificationReasonRequiredNotice">
+        <source>Obligatoire car vous avez modifié la question ou la réponse.</source>
+        <target>Obligatoire car vous avez modifié la question ou la réponse.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.modificationReasonNotice">
+        <source>Veuillez indiquer la raison de la modification.</source>
+        <target>Veuillez indiquer la raison de la modification.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.explainModificationFaq">
+        <source>Expliquez pourquoi vous modifiez cette FAQ (optionnel)</source>
+        <target>Expliquez pourquoi vous modifiez cette FAQ (optionnel)</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.explainModificationFaqDots">
+        <source>Expliquez pourquoi vous modifiez cette FAQ...</source>
+        <target>Expliquez pourquoi vous modifiez cette FAQ...</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.explainModificationContent">
+        <source>Explain why you are modifying this content (optional)</source>
+        <target>Expliquez pourquoi vous modifiez ce contenu (optionnel)</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.explainModificationContentDots">
+        <source>Explain why you are modifying this content...</source>
+        <target>Expliquez pourquoi vous modifiez ce contenu...</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.infoSentToApi">
+        <source>This information will be sent to the API for traceability.</source>
+        <target>Cette information sera envoyée à l'API pour traçabilité.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.infoSentToApiFr">
+        <source>Cette information sera envoyée à l'API pour traçabilité.</source>
+        <target>Cette information sera envoyée à l'API pour traçabilité.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.requiredIfModified">
+        <source>Required if you modify the content. This information will be sent to the API.</source>
+        <target>Obligatoire si vous modifiez le contenu. Cette information sera envoyée à l'API.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.thisReasonSentToApi">
+        <source>This reason will be sent to the API.</source>
+        <target>Cette raison sera envoyée à l'API.</target>
+      </trans-unit>
+
+      <!-- FAQ display hints -->
+      <trans-unit id="mod.itrblueboost.showFaqOnProduct">
+        <source>Afficher cette FAQ sur la fiche produit</source>
+        <target>Afficher cette FAQ sur la fiche produit</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.showFaqOnCategory">
+        <source>Afficher cette FAQ sur la page catégorie</source>
+        <target>Afficher cette FAQ sur la page catégorie</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.faqMustBeAcceptedProduct">
+        <source>Cette FAQ doit être acceptée pour être affichée sur la fiche produit, même si elle est activée.</source>
+        <target>Cette FAQ doit être acceptée pour être affichée sur la fiche produit, même si elle est activée.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.faqMustBeAcceptedCategory">
+        <source>Cette FAQ doit être acceptée pour être affichée sur la page catégorie, même si elle est activée.</source>
+        <target>Cette FAQ doit être acceptée pour être affichée sur la page catégorie, même si elle est activée.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.faqSeoProduct">
+        <source>Les FAQ améliorent le référencement SEO de vos produits.</source>
+        <target>Les FAQ améliorent le référencement SEO de vos produits.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.faqSeoCategory">
+        <source>Les FAQ améliorent le référencement SEO de vos catégories.</source>
+        <target>Les FAQ améliorent le référencement SEO de vos catégories.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.tipClearQuestion">
+        <source>Formulez une question claire et concise que vos clients pourraient se poser.</source>
+        <target>Formulez une question claire et concise que vos clients pourraient se poser.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.tipClearQuestionCategory">
+        <source>Formulez une question claire et concise que vos clients pourraient se poser sur cette catégorie.</source>
+        <target>Formulez une question claire et concise que vos clients pourraient se poser sur cette catégorie.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.tipFrequentQuestions">
+        <source>Utilisez des questions que vos clients posent fréquemment.</source>
+        <target>Utilisez des questions que vos clients posent fréquemment.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.tipFrequentQuestionsCategory">
+        <source>Utilisez des questions que vos clients posent fréquemment sur cette catégorie.</source>
+        <target>Utilisez des questions que vos clients posent fréquemment sur cette catégorie.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.tipNoJargon">
+        <source>Soyez précis et évitez le jargon technique.</source>
+        <target>Soyez précis et évitez le jargon technique.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.tipDetailedAnswer">
+        <source>Rédigez une réponse détaillée et utile. Vous pouvez utiliser la mise en forme HTML.</source>
+        <target>Rédigez une réponse détaillée et utile. Vous pouvez utiliser la mise en forme HTML.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.questionPlaceholder">
+        <source>Votre question apparaîtra ici...</source>
+        <target>Votre question apparaîtra ici...</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.answerPlaceholder">
+        <source>Votre réponse apparaîtra ici...</source>
+        <target>Votre réponse apparaîtra ici...</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.preview">
+        <source>Aperçu</source>
+        <target>Aperçu</target>
+      </trans-unit>
+
+      <!-- Content CRUD -->
+      <trans-unit id="mod.itrblueboost.editContent">
+        <source>Edit Content</source>
+        <target>Modifier le contenu</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.contentUpdated">
+        <source>Content updated.</source>
+        <target>Contenu mis à jour.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.contentDeleted">
+        <source>Content deleted.</source>
+        <target>Contenu supprimé.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.contentNotFound">
+        <source>Content not found.</source>
+        <target>Contenu introuvable.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.errorUpdatingContent">
+        <source>Error updating content.</source>
+        <target>Erreur lors de la mise à jour du contenu.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.errorDeletingContent">
+        <source>Error deleting content.</source>
+        <target>Erreur lors de la suppression du contenu.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.contentRequired">
+        <source>Content is required.</source>
+        <target>Le contenu est obligatoire.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.deleteContentConfirm">
+        <source>Delete this content?</source>
+        <target>Supprimer ce contenu ?</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.permanentlyDeleteContent">
+        <source>This action will permanently delete this content.</source>
+        <target>Cette action supprimera définitivement ce contenu.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.deleteContentAction">
+        <source>Are you sure you want to delete this content?</source>
+        <target>Êtes-vous sûr de vouloir supprimer ce contenu ?</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.deleteSelectedContents">
+        <source>Delete selected contents?</source>
+        <target>Supprimer les contenus sélectionnés ?</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.noContentForProduct">
+        <source>No generated content for this product.</source>
+        <target>Aucun contenu généré pour ce produit.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.noProductContentsGenerated">
+        <source>No product contents generated yet</source>
+        <target>Aucun contenu produit généré pour le moment</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generatedContentsAppear">
+        <source>Generated contents will appear here.</source>
+        <target>Les contenus générés apparaîtront ici.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.contentPendingApproval">
+        <source>Content pending approval</source>
+        <target>Contenu en attente d'approbation</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.contentMustBeAccepted">
+        <source>This content must be accepted to be applied to the product.</source>
+        <target>Ce contenu doit être accepté pour être appliqué au produit.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.reviewContent">
+        <source>Review the generated content before accepting.</source>
+        <target>Vérifiez le contenu généré avant de l'accepter.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.editContentHtml">
+        <source>Edit the AI-generated content. You can use HTML formatting.</source>
+        <target>Modifiez le contenu généré par l'IA. Vous pouvez utiliser la mise en forme HTML.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.canEditBeforeAccepting">
+        <source>You can edit the content before accepting.</source>
+        <target>Vous pouvez modifier le contenu avant de l'accepter.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.acceptingWillUpdateDesc">
+        <source>Accepting will update the product description.</source>
+        <target>L'acceptation mettra à jour la description du produit.</target>
+      </trans-unit>
+
+      <!-- Content form fields -->
+      <trans-unit id="mod.itrblueboost.content">
+        <source>Content</source>
+        <target>Contenu</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generatedContent">
+        <source>Generated content</source>
+        <target>Contenu généré</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.contentType">
+        <source>Content type</source>
+        <target>Type de contenu</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.contentTypeColon">
+        <source>Content type:</source>
+        <target>Type de contenu :</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.description">
+        <source>Description</source>
+        <target>Description</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.shortDescription">
+        <source>Short description</source>
+        <target>Description courte</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.shortDesc">
+        <source>Short desc.</source>
+        <target>Desc. courte</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.selectContentType">
+        <source>Select whether this is for the main description or short description.</source>
+        <target>Sélectionnez s'il s'agit de la description principale ou de la description courte.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.markActive">
+        <source>Mark this content as active</source>
+        <target>Marquer ce contenu comme actif</target>
+      </trans-unit>
+
+      <!-- Images -->
+      <trans-unit id="mod.itrblueboost.aiImagesPrefix">
+        <source>AI Images - </source>
+        <target>Images IA - </target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.productNotFound">
+        <source>Product not found.</source>
+        <target>Produit introuvable.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.noImagesGenerated">
+        <source>No images generated yet</source>
+        <target>Aucune image générée pour le moment</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generatedImagesAppear">
+        <source>Generated images will appear here.</source>
+        <target>Les images générées apparaîtront ici.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.pendingImages">
+        <source>Pending images</source>
+        <target>Images en attente</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.acceptedImages">
+        <source>Accepted images</source>
+        <target>Images acceptées</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.noPendingImages">
+        <source>No pending images.</source>
+        <target>Aucune image en attente.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.noAcceptedImages">
+        <source>No accepted images.</source>
+        <target>Aucune image acceptée.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.acceptedImagesInfo">
+        <source>Accepted images will appear here and in the product gallery.</source>
+        <target>Les images acceptées apparaîtront ici et dans la galerie du produit.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.clickGenerateImage">
+        <source>Click "Generate Image (AI)" to create a new image.</source>
+        <target>Cliquez sur « Générer une image (IA) » pour créer une nouvelle image.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.permanentlyDeleteImage">
+        <source>Permanently delete this image?</source>
+        <target>Supprimer définitivement cette image ?</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.baseImageOptional">
+        <source>Base image (optional):</source>
+        <target>Image de base (optionnel) :</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.selectBaseImage">
+        <source>Select an existing image for the AI to use as inspiration.</source>
+        <target>Sélectionnez une image existante comme source d'inspiration pour l'IA.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.none">
+        <source>None</source>
+        <target>Aucune</target>
+      </trans-unit>
+
+      <!-- Generate actions -->
+      <trans-unit id="mod.itrblueboost.generate">
+        <source>Generate</source>
+        <target>Générer</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generateFaqAi">
+        <source>Generate FAQ (AI)</source>
+        <target>Générer FAQ (IA)</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generateFaqWithAi">
+        <source>Generate FAQ with AI</source>
+        <target>Générer FAQ avec l'IA</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generateContentAi">
+        <source>Generate Content (AI)</source>
+        <target>Générer contenu (IA)</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generateContentWithAi">
+        <source>Generate Content with AI</source>
+        <target>Générer du contenu avec l'IA</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generateContentWithAiLower">
+        <source>Generate content with AI</source>
+        <target>Générer du contenu avec l'IA</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generateImageAi">
+        <source>Generate Image (AI)</source>
+        <target>Générer image (IA)</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generateImagesAi">
+        <source>Generate Images (AI)</source>
+        <target>Générer images (IA)</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generateImageWithAi">
+        <source>Generate an image with AI</source>
+        <target>Générer une image avec l'IA</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generation">
+        <source>Generation</source>
+        <target>Génération</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generationStyle">
+        <source>Generation style:</source>
+        <target>Style de génération :</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.chooseStyle">
+        <source>Choose a style</source>
+        <target>Choisir un style</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.initializing">
+        <source>Initializing...</source>
+        <target>Initialisation...</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.done">
+        <source>Done</source>
+        <target>Terminé</target>
+      </trans-unit>
+
+      <!-- Prompts -->
+      <trans-unit id="mod.itrblueboost.selectPromptFaq">
+        <source>Select a prompt to generate FAQs:</source>
+        <target>Sélectionnez un prompt pour générer les FAQ :</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.selectPromptContent">
+        <source>Select a prompt to generate content:</source>
+        <target>Sélectionnez un prompt pour générer le contenu :</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.selectPrompt">
+        <source>Select a prompt:</source>
+        <target>Sélectionnez un prompt :</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.choosePrompt">
+        <source>Choose a prompt</source>
+        <target>Choisir un prompt</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.loadingPrompts">
+        <source>Loading available prompts...</source>
+        <target>Chargement des prompts disponibles...</target>
+      </trans-unit>
+
+      <!-- Bulk / Modal translations -->
+      <trans-unit id="mod.itrblueboost.selected">
+        <source>selected</source>
+        <target>sélectionné(s)</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.includingWithFaqs">
+        <source>including %count% with generated FAQs</source>
+        <target>dont %count% avec des FAQs générées</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.includingWithImages">
+        <source>including %count% with generated images</source>
+        <target>dont %count% avec des images générées</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.insufficientCredits">
+        <source>Insufficient credits. Please recharge your credits to use AI generation.</source>
+        <target>Crédits insuffisants. Veuillez recharger vos crédits pour utiliser la génération IA.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.generatingWait">
+        <source>Generating... This may take a few seconds.</source>
+        <target>Génération en cours... Cela peut prendre quelques secondes.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.connectionError">
+        <source>Connection error.</source>
+        <target>Erreur de connexion.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.anErrorOccurred">
+        <source>An error occurred.</source>
+        <target>Une erreur est survenue.</target>
+      </trans-unit>
+
+      <!-- Statuses -->
+      <trans-unit id="mod.itrblueboost.pending">
+        <source>Pending</source>
+        <target>En attente</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.accepted">
+        <source>Accepted</source>
+        <target>Accepté</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.rejected">
+        <source>Rejected</source>
+        <target>Rejeté</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.approval">
+        <source>approbation</source>
+        <target>approbation</target>
+      </trans-unit>
+
+      <!-- Reject -->
+      <trans-unit id="mod.itrblueboost.rejectFaq">
+        <source>Reject FAQ</source>
+        <target>Rejeter la FAQ</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.rejectContent">
+        <source>Reject Content</source>
+        <target>Rejeter le contenu</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.rejectImage">
+        <source>Reject Image</source>
+        <target>Rejeter l'image</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.rejectionReason">
+        <source>Rejection reason</source>
+        <target>Raison du rejet</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.enterReasonForRejection">
+        <source>Enter the reason for rejection...</source>
+        <target>Indiquez la raison du rejet...</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.rejectionReasonSent">
+        <source>Rejection reason sent successfully.</source>
+        <target>Raison du rejet envoyée avec succès.</target>
+      </trans-unit>
+
+      <!-- Accept / Reject bulk -->
+      <trans-unit id="mod.itrblueboost.accept">
+        <source>Accept</source>
+        <target>Accepter</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.acceptFr">
+        <source>Accepter</source>
+        <target>Accepter</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.rejectFr">
+        <source>Rejeter</source>
+        <target>Rejeter</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.acceptAll">
+        <source>Accept all</source>
+        <target>Tout accepter</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.rejectAll">
+        <source>Reject all</source>
+        <target>Tout rejeter</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.deleteAll">
+        <source>Delete all</source>
+        <target>Tout supprimer</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.acceptSelection">
+        <source>Accept selection</source>
+        <target>Accepter la sélection</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.rejectSelection">
+        <source>Reject selection</source>
+        <target>Rejeter la sélection</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.acceptSelectionFr">
+        <source>Accepter la sélection</source>
+        <target>Accepter la sélection</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.rejectSelectionFr">
+        <source>Rejeter la sélection</source>
+        <target>Rejeter la sélection</target>
+      </trans-unit>
+
+      <!-- Grid columns -->
+      <trans-unit id="mod.itrblueboost.faqProduit">
+        <source>FAQ Produit</source>
+        <target>FAQ Produit</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.faqCategorie">
+        <source>FAQ Catégorie</source>
+        <target>FAQ Catégorie</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.modifierFr">
+        <source>Modifier</source>
+        <target>Modifier</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.supprimerFr">
+        <source>Supprimer</source>
+        <target>Supprimer</target>
+      </trans-unit>
+
+      <!-- Filters -->
+      <trans-unit id="mod.itrblueboost.filterByStatus">
+        <source>Filter by status:</source>
+        <target>Filtrer par statut :</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.typeFilter">
+        <source>Type:</source>
+        <target>Type :</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.itemsPerPage">
+        <source>Items per page:</source>
+        <target>Éléments par page :</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.pagination">
+        <source>Page %current% of %total%</source>
+        <target>Page %current% sur %total%</target>
+      </trans-unit>
+
+      <!-- Views -->
+      <trans-unit id="mod.itrblueboost.gridView">
+        <source>Grid view</source>
+        <target>Vue grille</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.listView">
+        <source>List view</source>
+        <target>Vue liste</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.viewDetails">
+        <source>View details</source>
+        <target>Voir les détails</target>
+      </trans-unit>
+
+      <!-- Logs -->
+      <trans-unit id="mod.itrblueboost.logNotFound">
+        <source>Log not found.</source>
+        <target>Log introuvable.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.allLogsCleared">
+        <source>All logs cleared.</source>
+        <target>Tous les logs supprimés.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.errorClearingLogs">
+        <source>Error clearing logs.</source>
+        <target>Erreur lors de la suppression des logs.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.logsOlderDeleted">
+        <source>Logs older than %d days deleted.</source>
+        <target>Logs de plus de %d jours supprimés.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.errorDeletingOldLogs">
+        <source>Error deleting old logs.</source>
+        <target>Erreur lors de la suppression des anciens logs.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.noApiLogs">
+        <source>No API logs found.</source>
+        <target>Aucun log API trouvé.</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.clearAll">
+        <source>Clear all</source>
+        <target>Tout supprimer</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.deleteOldLogs">
+        <source>Delete old logs</source>
+        <target>Supprimer les anciens logs</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.deleteLogsConfirm">
+        <source>Are you sure you want to delete ALL logs?</source>
+        <target>Êtes-vous sûr de vouloir supprimer TOUS les logs ?</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.deleteLogsOlderThan">
+        <source>Delete logs older than how many days?</source>
+        <target>Supprimer les logs de plus de combien de jours ?</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.apiCall">
+        <source>API call</source>
+        <target>Appel API</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.endpoint">
+        <source>Endpoint</source>
+        <target>Endpoint</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.method">
+        <source>Method</source>
+        <target>Méthode</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.duration">
+        <source>Duration</source>
+        <target>Durée</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.context">
+        <source>Context</source>
+        <target>Contexte</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.allContexts">
+        <source>All contexts</source>
+        <target>Tous les contextes</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.start">
+        <source>Start</source>
+        <target>Début</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.requestInfo">
+        <source>Request Info</source>
+        <target>Infos de la requête</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.requestBody">
+        <source>Request Body</source>
+        <target>Corps de la requête</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.requestHeaders">
+        <source>Request Headers</source>
+        <target>En-têtes de la requête</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.responseBody">
+        <source>Response Body</source>
+        <target>Corps de la réponse</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.noResponseBody">
+        <source>No response body</source>
+        <target>Pas de corps de réponse</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.backToLogs">
+        <source>Back to logs</source>
+        <target>Retour aux logs</target>
+      </trans-unit>
+
+      <!-- Navigation -->
+      <trans-unit id="mod.itrblueboost.backToProduct">
+        <source>Back to product</source>
+        <target>Retour au produit</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.backToCategory">
+        <source>Back to category</source>
+        <target>Retour à la catégorie</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.save">
+        <source>Save</source>
+        <target>Enregistrer</target>
+      </trans-unit>
+      <trans-unit id="mod.itrblueboost.manual">
+        <source>Manual</source>
+        <target>Manuel</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

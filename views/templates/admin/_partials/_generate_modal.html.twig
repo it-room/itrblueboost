@@ -1,0 +1,139 @@
+{#
+ # Unified generate modal partial.
+ #
+ # Required variables:
+ #   - generateModalId: string - Modal DOM ID (e.g., 'generateFaqModal', 'generateContentModal')
+ #   - generateTitle: string - Modal title
+ #
+ # Optional variables:
+ #   - showContentTypeSelect: bool (default: false) - Show content type dropdown
+ #   - promptSelectLabel: string (default: trans 'Select a prompt:')
+ #   - promptSelectPlaceholder: string (default: trans 'Choose a prompt')
+ #   - progressText: string (default: trans 'Generating... This may take a few seconds.')
+ #   - showBaseImageSelector: bool (default: false) - Show base image grid
+ #   - existingImages: array (default: []) - Images for base image selector
+ #   - showStepProgress: bool (default: false) - Use step progress instead of spinner
+ #}
+<div class="modal fade itrblueboost-modal" id="{{ generateModalId }}" tabindex="-1" role="dialog"
+     aria-labelledby="{{ generateModalId }}Label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="{{ generateModalId }}Label">
+                    <i class="material-icons">auto_awesome</i>
+                    {{ generateTitle }}
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="prompts-loading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">{{ 'Loading...'|trans({}, 'Admin.Global') }}</span>
+                    </div>
+                    <p class="mt-2">{{ 'Loading available prompts...'|trans({}, 'Modules.Itrblueboost.Admin') }}</p>
+                </div>
+                <div id="prompts-error" class="alert alert-danger d-none"></div>
+                <div id="prompts-list" class="d-none">
+                    {% if showContentTypeSelect|default(false) %}
+                    <div class="form-group">
+                        <label for="content-type-select">{{ 'Content type:'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                        <select class="form-control" id="content-type-select">
+                            <option value="description">{{ 'Description'|trans({}, 'Modules.Itrblueboost.Admin') }}</option>
+                            <option value="description_short">{{ 'Short description'|trans({}, 'Modules.Itrblueboost.Admin') }}</option>
+                        </select>
+                    </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <label for="prompt-select">{{ promptSelectLabel|default('Select a prompt:'|trans({}, 'Modules.Itrblueboost.Admin')) }}</label>
+                        <select class="form-control" id="prompt-select">
+                            <option value="">-- {{ promptSelectPlaceholder|default('Choose a prompt'|trans({}, 'Modules.Itrblueboost.Admin')) }} --</option>
+                        </select>
+                        <small class="form-text text-muted mt-2" id="prompt-description"></small>
+                    </div>
+                    {% if showBaseImageSelector|default(false) and existingImages|default([])|length > 0 %}
+                    <div class="form-group mt-3">
+                        <label>{{ 'Base image (optional):'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                        <div class="image-selector">
+                            <div class="row">
+                                <div class="col-3 mb-2">
+                                    <div class="base-image-option selected" data-image-id="">
+                                        <div class="no-image-placeholder">
+                                            <i class="material-icons">add_photo_alternate</i>
+                                            <span>{{ 'None'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% for img in existingImages %}
+                                <div class="col-3 mb-2">
+                                    <div class="base-image-option" data-image-id="{{ img.id_image }}">
+                                        <img src="{{ img.url }}" alt="Image {{ img.id_image }}">
+                                        {% if img.cover %}<span class="badge badge-primary cover-badge">Cover</span>{% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">{{ 'Select an existing image for the AI to use as inspiration.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
+                    </div>
+                    {% endif %}
+                </div>
+                <div id="credits-warning" class="alert alert-warning d-none mt-3">
+                    <i class="material-icons">warning</i>
+                    {{ 'Insufficient credits. Please recharge your credits to use AI generation.'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                </div>
+                {% if showStepProgress|default(false) %}
+                <div id="generate-progress" class="d-none">
+                    <div class="generation-progress-wrapper">
+                        <div class="generation-progress-bar-track">
+                            <div class="generation-progress-bar-fill animated" id="progress-bar-fill" style="width: 0%"></div>
+                        </div>
+                        <div class="generation-progress-percent" id="progress-percent">0%</div>
+                        <div class="generation-progress-label" id="progress-label">{{ 'Initializing...'|trans({}, 'Modules.Itrblueboost.Admin') }}</div>
+                        <div class="generation-progress-steps">
+                            <div class="generation-step" id="step-init">
+                                <i class="material-icons">play_circle</i>
+                                <span>{{ 'Start'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                            </div>
+                            <div class="generation-step" id="step-api">
+                                <i class="material-icons">cloud_upload</i>
+                                <span>{{ 'API call'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                            </div>
+                            <div class="generation-step" id="step-generate">
+                                <i class="material-icons">auto_awesome</i>
+                                <span>{{ 'Generation'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                            </div>
+                            <div class="generation-step" id="step-save">
+                                <i class="material-icons">save</i>
+                                <span>{{ 'Save'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                            </div>
+                            <div class="generation-step" id="step-done">
+                                <i class="material-icons">check_circle</i>
+                                <span>{{ 'Done'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div id="generate-progress" class="d-none text-center py-4">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="sr-only">{{ 'Generating...'|trans({}, 'Admin.Global') }}</span>
+                    </div>
+                    <p class="mt-2">{{ progressText|default('Generating... This may take a few seconds.'|trans({}, 'Modules.Itrblueboost.Admin')) }}</p>
+                </div>
+                {% endif %}
+                <div id="generate-result" class="d-none"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    {{ 'Close'|trans({}, 'Admin.Actions') }}
+                </button>
+                <button type="button" class="btn btn-success" id="btn-confirm-generate" disabled>
+                    <i class="material-icons">auto_awesome</i>
+                    {{ 'Generate'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
