@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Itrblueboost\Entity;
 
+use Itrblueboost\Entity\Traits\FaqStatusTrait;
 use ObjectModel;
 use Shop;
 
@@ -14,6 +15,8 @@ use Shop;
  */
 class ProductContent extends ObjectModel
 {
+    use FaqStatusTrait;
+
     public const STATUS_PENDING = 'pending';
     public const STATUS_ACCEPTED = 'accepted';
     public const STATUS_REJECTED = 'rejected';
@@ -284,26 +287,6 @@ class ProductContent extends ObjectModel
     public function hasApiContentId(): bool
     {
         return !empty($this->api_content_id) && $this->api_content_id > 0;
-    }
-
-    /**
-     * Check if this content is pending.
-     *
-     * @return bool
-     */
-    public function isPending(): bool
-    {
-        return $this->status === self::STATUS_PENDING;
-    }
-
-    /**
-     * Check if this content is accepted.
-     *
-     * @return bool
-     */
-    public function isAccepted(): bool
-    {
-        return $this->status === self::STATUS_ACCEPTED;
     }
 
     /**

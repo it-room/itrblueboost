@@ -6,6 +6,9 @@ namespace Itrblueboost\Controller\Admin;
 
 use Configuration;
 use Context;
+use Itrblueboost\Controller\Admin\Traits\ContentApiSyncTrait;
+use Itrblueboost\Controller\Admin\Traits\MultilangHelperTrait;
+use Itrblueboost\Controller\Admin\Traits\ProductDataBuilderTrait;
 use Itrblueboost\Entity\ProductContent;
 use Itrblueboost\Form\ProductContentType;
 use Itrblueboost\Grid\Definition\Factory\ProductContentGridDefinitionFactory;
@@ -24,6 +27,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ProductContentController extends FrameworkBundleAdminController
 {
+    use ContentApiSyncTrait;
+    use MultilangHelperTrait;
+    use ProductDataBuilderTrait;
     /**
      * @var ApiLogger
      */
@@ -266,12 +272,9 @@ class ProductContentController extends FrameworkBundleAdminController
                     }
 
                     $idLang = (int) Configuration::get('PS_LANG_DEFAULT');
-                    $contentText = is_array($data['generated_content'])
-                        ? ($data['generated_content'][$idLang] ?? reset($data['generated_content']))
-                        : $data['generated_content'];
 
                     $this->updateContentOnApi((int) $content->api_content_id, [
-                        'content' => $contentText,
+                        'content' => $this->resolveMultilangText($data['generated_content'], $idLang),
                         'is_enabled' => (bool) $content->active,
                         'modification_reason' => $modificationReason,
                     ]);
@@ -331,14 +334,11 @@ class ProductContentController extends FrameworkBundleAdminController
 
         if ($content->hasApiContentId()) {
             $idLang = (int) Configuration::get('PS_LANG_DEFAULT');
-            $contentText = is_array($content->generated_content)
-                ? ($content->generated_content[$idLang] ?? reset($content->generated_content))
-                : $content->generated_content;
 
             $apiResult = $this->updateContentOnApi((int) $content->api_content_id, [
                 'status' => 'accepted',
                 'is_enabled' => true,
-                'content' => $contentText,
+                'content' => $this->resolveMultilangText($content->generated_content, $idLang),
             ]);
 
             if (!$apiResult['success']) {
@@ -662,48 +662,6 @@ class ProductContentController extends FrameworkBundleAdminController
     }
 
     /**
-     * Check if multilang field has changed.
-     *
-     * @param mixed $old
-     * @param mixed $new
-     *
-     * @return bool
-     */
-    private function hasMultilangChanged($old, $new): bool
-    {
-        if (!is_array($old) || !is_array($new)) {
-            return $old !== $new;
-        }
-
-        foreach ($new as $langId => $value) {
-            if (!isset($old[$langId]) || $old[$langId] !== $value) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Update content on API.
-     *
-     * @param int $apiContentId API Content ID
-     * @param array<string, mixed> $data Data to send
-     *
-     * @return array{success: bool, message?: string}
-     */
-    private function updateContentOnApi(int $apiContentId, array $data): array
-    {
-        $response = $this->apiLogger->updateContent($apiContentId, $data);
-
-        if (!isset($response['success']) || !$response['success']) {
-            return ['success' => false, 'message' => $response['message'] ?? 'Unknown error'];
-        }
-
-        return ['success' => true];
-    }
-
-    /**
      * Get last save error from error log.
      *
      * @return string
@@ -713,82 +671,4 @@ class ProductContentController extends FrameworkBundleAdminController
         return \Db::getInstance()->getMsgError() ?: 'Unknown error';
     }
 
-    /**
-     * Build structured product data for API.
-     *
-     * @param Product $product Product instance
-     * @param int $idLang Language ID
-     *
-     * @return array<string, mixed>
-     */
-    private function buildProductData(Product $product, int $idLang): array
-    {
-        $brandName = '';
-        if ($product->id_manufacturer > 0) {
-            $manufacturer = new \Manufacturer($product->id_manufacturer, $idLang);
-            if ($manufacturer->id) {
-                $brandName = $manufacturer->name;
-            }
-        }
-
-        $categoryName = '';
-        if ($product->id_category_default > 0) {
-            $category = new \Category($product->id_category_default, $idLang);
-            if ($category->id) {
-                $categoryName = $category->name;
-            }
-        }
-
-        $features = [];
-        $productFeatures = $product->getFrontFeatures($idLang);
-        if (!empty($productFeatures)) {
-            foreach ($productFeatures as $feature) {
-                $features[] = [
-                    'name' => $feature['name'],
-                    'value' => $feature['value'],
-                ];
-            }
-        }
-
-        $combinations = [];
-        if ($product->hasAttributes()) {
-            $rawCombinations = $product->getAttributeCombinations($idLang);
-            $groupedCombinations = [];
-
-            foreach ($rawCombinations as $combination) {
-                $idCombination = (int) $combination['id_product_attribute'];
-
-                if (!isset($groupedCombinations[$idCombination])) {
-                    $groupedCombinations[$idCombination] = [
-                        'reference' => $combination['reference'] ?? '',
-                        'price_impact' => (float) ($combination['price'] ?? 0),
-                        'attributes' => [],
-                    ];
-                }
-
-                $groupedCombinations[$idCombination]['attributes'][] = [
-                    'group' => $combination['group_name'],
-                    'value' => $combination['attribute_name'],
-                ];
-            }
-
-            $combinations = array_values($groupedCombinations);
-        }
-
-        $productPrice = $product->getPrice(true, null, 2);
-        $productUrl = $product->getLink();
-
-        return [
-            'name' => $product->name,
-            'description' => strip_tags($product->description ?? ''),
-            'description_short' => strip_tags($product->description_short ?? ''),
-            'brand' => $brandName,
-            'category' => $categoryName,
-            'reference' => $product->reference ?? '',
-            'features' => $features,
-            'combinations' => $combinations,
-            'price' => (float) $productPrice,
-            'url' => $productUrl,
-        ];
-    }
 }

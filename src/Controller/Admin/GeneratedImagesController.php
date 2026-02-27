@@ -9,6 +9,7 @@ use Db;
 use Image;
 use ImageManager;
 use ImageType;
+use Itrblueboost\Controller\Admin\Traits\ResolveLimitTrait;
 use Itrblueboost\Entity\ProductImage;
 use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
 use PrestaShopBundle\Security\Annotation\AdminSecurity;
@@ -22,13 +23,14 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class GeneratedImagesController extends FrameworkBundleAdminController
 {
+    use ResolveLimitTrait;
     /**
      * @AdminSecurity("is_granted('read', request.get('_legacy_controller'))")
      */
     public function indexAction(Request $request): Response
     {
         $page = max(1, (int) $request->query->get('page', 1));
-        $limit = 20;
+        $limit = $this->resolveLimit((int) $request->query->get('limit', 20));
         $offset = ($page - 1) * $limit;
 
         $statusFilter = $request->query->get('status', '');
@@ -75,6 +77,7 @@ class GeneratedImagesController extends FrameworkBundleAdminController
             'totalPages' => $totalPages,
             'totalImages' => $totalImages,
             'statusFilter' => $statusFilter,
+            'currentLimit' => $limit,
             'layoutTitle' => $this->trans('Generated Images', 'Modules.Itrblueboost.Admin'),
         ]);
     }

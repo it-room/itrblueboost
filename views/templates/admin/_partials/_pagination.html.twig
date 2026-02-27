@@ -1,0 +1,41 @@
+{#
+ # Pagination partial.
+ #
+ # Required variables:
+ #   - routeName: string - The route name for pagination links
+ #   - routeParams: object - Additional route params (status, limit, type, etc.)
+ #   - currentPage: int
+ #   - totalPages: int
+ #   - currentLimit: int
+ #}
+{% if totalPages > 1 %}
+    <div class="pagination-wrapper">
+        <nav>
+            <ul class="pagination">
+                {% if currentPage > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path(routeName, routeParams|merge({page: currentPage - 1, limit: currentLimit})) }}">
+                            <i class="material-icons">chevron_left</i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for p in 1..totalPages %}
+                    {% if p >= currentPage - 2 and p <= currentPage + 2 %}
+                        <li class="page-item {{ p == currentPage ? 'active' : '' }}">
+                            <a class="page-link" href="{{ path(routeName, routeParams|merge({page: p, limit: currentLimit})) }}">{{ p }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if currentPage < totalPages %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path(routeName, routeParams|merge({page: currentPage + 1, limit: currentLimit})) }}">
+                            <i class="material-icons">chevron_right</i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+{% endif %}

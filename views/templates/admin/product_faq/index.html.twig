@@ -75,7 +75,7 @@
                                         </td>
                                         <td>{{ record.id_itrblueboost_product_faq }}</td>
                                         <td>{{ record.position }}</td>
-                                        <td>{{ record.question|striptags|slice(0, 100) }}{% if record.question|length > 100 %}...{% endif %}</td>
+                                        <td>{{ record.question|striptags }}</td>
                                         <td>
                                             {% if record.answer %}
                                                 {{ record.answer|striptags }}

@@ -1,5 +1,5 @@
 /**
- * ITRBlueBoost - Display FAQ/Image counts on product listing
+ * ITRBlueBoost - Display FAQ/Image/Content counts on product listing
  */
 (function() {
     'use strict';
@@ -76,7 +76,6 @@
         // Method 1: row with data-product-id
         var row = document.querySelector('tr[data-product-id="' + productId + '"]');
         if (row) {
-            // Name is typically in 4th td (after checkbox, id, image)
             var cells = row.querySelectorAll('td');
             for (var i = 2; i < cells.length && i < 6; i++) {
                 var link = cells[i].querySelector('a');
@@ -104,6 +103,13 @@
         }
 
         return null;
+    }
+
+    function createBadge(className, text) {
+        var badge = document.createElement('span');
+        badge.className = 'badge ' + className + ' itrblueboost-count-badge';
+        badge.textContent = text;
+        return badge;
     }
 
     function injectCounts() {
@@ -142,8 +148,9 @@
 
                 var faqCount = productCounts.faq || 0;
                 var imageCount = productCounts.images || 0;
+                var contentCount = productCounts.content || 0;
 
-                if (faqCount === 0 && imageCount === 0) {
+                if (faqCount === 0 && imageCount === 0 && contentCount === 0) {
                     return;
                 }
 
@@ -156,17 +163,21 @@
                 container.className = 'itrblueboost-list-counts';
 
                 if (faqCount > 0) {
-                    var faqBadge = document.createElement('span');
-                    faqBadge.className = 'badge badge-info itrblueboost-count-badge';
-                    faqBadge.textContent = faqCount + ' FAQ';
-                    container.appendChild(faqBadge);
+                    container.appendChild(
+                        createBadge('badge-info', faqCount + ' FAQ')
+                    );
                 }
 
                 if (imageCount > 0) {
-                    var imgBadge = document.createElement('span');
-                    imgBadge.className = 'badge badge-secondary itrblueboost-count-badge';
-                    imgBadge.textContent = imageCount + ' Image' + (imageCount > 1 ? 's' : '');
-                    container.appendChild(imgBadge);
+                    container.appendChild(
+                        createBadge('badge-secondary', imageCount + ' Image' + (imageCount > 1 ? 's' : ''))
+                    );
+                }
+
+                if (contentCount > 0) {
+                    container.appendChild(
+                        createBadge('badge-success', contentCount + ' Contenu' + (contentCount > 1 ? 's' : ''))
+                    );
                 }
 
                 cell.appendChild(container);
@@ -187,7 +198,6 @@
         var debounceTimer = null;
 
         var observer = new MutationObserver(function() {
-            // Debounce: wait for DOM to stabilize after AJAX reload
             if (debounceTimer) {
                 clearTimeout(debounceTimer);
             }

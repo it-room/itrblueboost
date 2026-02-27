@@ -75,10 +75,10 @@
                                         </td>
                                         <td>{{ record.id_itrblueboost_category_faq }}</td>
                                         <td>{{ record.position }}</td>
-                                        <td>{{ record.question|striptags|slice(0, 100) }}{% if record.question|length > 100 %}...{% endif %}</td>
+                                        <td>{{ record.question|striptags }}</td>
                                         <td>
                                             {% if record.answer %}
-                                                {{ record.answer|striptags|slice(0, 150) }}{% if record.answer|striptags|length > 150 %}...{% endif %}
+                                                {{ record.answer|striptags }}
                                             {% else %}
                                                 <span class="text-muted font-italic">{{ 'No answer'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
                                             {% endif %}

@@ -33,6 +33,7 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 - **Language Support**: Support for all PrestaShop languages
 - **Modern Admin UI**: Symfony-based modern admin controllers
 - **Front-office Display**: Automatically displays generated FAQs on product and category pages
+- **Product Listing Badges**: Visual badges next to product names in the admin product listing showing FAQ, image, and content counts at a glance
 - **Complete API Logging**: All API calls (FAQ generation, image generation, content generation, account info) are logged with full request/response details, context, and error messages
 
 ## Requirements
@@ -281,6 +282,23 @@ The front-office FAQ templates automatically adapt their HTML markup and styling
 
 The `bootstrap_version` variable is automatically passed from the hooks (`hookDisplayProductExtraContent` and `hookDisplayFooterCategory`) to the Smarty templates, ensuring FAQs display with correct styling and functionality regardless of your theme's Bootstrap version. No additional configuration is required beyond selecting the correct Bootstrap version in the Compatibility settings.
 
+### Product Listing Badges
+
+The module automatically displays visual badges next to product names in the admin product listing page, providing a quick overview of AI-generated content for each product.
+
+**Badge Types:**
+- **FAQ** (blue `badge-info`): Shows the count of FAQ entries for the product
+- **Images** (grey `badge-secondary`): Shows the count of generated images
+- **Contenu** (green `badge-success`): Shows the count of generated content items (descriptions)
+
+**How It Works:**
+1. On the product listing page, the module fetches counts for all visible products in a single batch AJAX call
+2. Badges are injected dynamically next to the product name column
+3. Badges update automatically when the listing is reloaded (pagination, filters, sorting)
+4. Badges are only shown for products that have at least one item in any category
+
+This feature requires no configuration — it appears automatically when at least one AI service (FAQ, Images, or Content) is enabled.
+
 ## Database Tables
 
 The module creates the following database tables:
@@ -437,6 +455,12 @@ The module registers the following PrestaShop hooks:
 
 ## Changelog
 
+### Version 1.8.4
+- **New Feature**: Product listing badges showing FAQ, image, and content counts next to product names
+- **New Controller**: `ProductListCountsController` with batch SQL queries for efficient count retrieval
+- **New Route**: `itrblueboost_admin_product_list_counts` for the badge data endpoint
+- **Enhancement**: Content service now included in product list page detection
+
 ### Version 1.8.3
 - **Compatibility**: Lower minimum PrestaShop version from 1.7.8.11 to 1.7.8.2 for broader compatibility
 
@@ -564,18 +588,77 @@ itrblueboost/
 ├── src/
 │   ├── Install/        # Installation and database setup
 │   ├── Controller/     # Admin and API controllers
+│   │   └── Traits/     # Shared controller functionality traits
 │   ├── Entity/         # Entity models (ProductFaq, CategoryFaq, ProductImage)
+│   │   └── Traits/     # Shared entity trait methods
+│   ├── Grid/           # Grid definitions and query builders
+│   │   ├── Definition/ # Grid definition factories
+│   │   ├── Data/       # Grid data factories
+│   │   └── Query/      # Query builders (with AbstractFaqQueryBuilder base)
 │   ├── Hooks/          # Hook handler classes (one class per hook)
 │   ├── Repository/     # Data repository classes
-│   └── Service/        # Business logic services
+│   ├── Service/        # Business logic services
+│   └── Command/        # Symfony console commands
 ├── views/
-│   ├── js/            # JavaScript files
-│   ├── css/           # Stylesheets
-│   └── templates/     # Twig/Smarty templates
+│   ├── js/            # JavaScript files (including shared utilities)
+│   ├── css/           # Stylesheets (including shared styles)
+│   └── templates/
+│       ├── admin/     # Admin templates
+│       │   └── _partials/  # Shared Twig partials
+│       └── front/     # Front-office templates
 ├── upgrade/           # Version upgrade scripts
 ├── config/            # Symfony configuration
 └── itrblueboost.php   # Main module class
 ```
+
+### Controller Traits
+
+Shared functionality across multiple admin controllers is implemented using traits in `src/Controller/Admin/Traits/`:
+
+- **ResolveLimitTrait**: Pagination limit validation and resolution (10, 20, 50, 100 items per page)
+- **MultilangHelperTrait**: Multilingual text handling for entity fields
+- **FaqApiSyncTrait**: FAQ API synchronization (accept, reject, toggle status operations)
+- **ContentApiSyncTrait**: Product content API synchronization for descriptions
+- **ProductDataBuilderTrait**: Product data building for bulk operations and form population
+
+These traits eliminate code duplication across controllers managing different FAQ types and content.
+
+### Entity Traits
+
+Shared methods for entity models are implemented in `src/Entity/Traits/`:
+
+- **FaqStatusTrait**: Common status checking methods (`isPending()`, `isAccepted()`) for FAQ entities
+- **FaqEntityTrait**: Shared FAQ entity methods including `hasApiFaqId()` and `updatePositions()` for position management
+
+### Query Builders
+
+The `src/Grid/Query/AbstractFaqQueryBuilder` base class provides shared grid query logic for FAQ entities:
+
+- Unified table joining and filtering logic
+- Common search criteria application
+- Support for language and shop context filtering
+- Concrete implementations: `ProductFaqQueryBuilder`, `CategoryFaqQueryBuilder`
+
+Subclasses define their table specifics via abstract methods (`getTableName()`, `getPrimaryKey()`, `getSelectColumns()`, `getFilterDefinitions()`).
+
+### Shared Assets
+
+**Stylesheets** (in `views/css/`):
+- `admin-common.css`: Common admin styling shared across all admin pages
+- `admin-product-buttons.css`: Unified button styling compatible with both PS 1.7 and PS 8
+- `admin-product-buttons-ps17.css`: PrestaShop 1.7-specific button styles
+- `admin-product-buttons-ps8.css`: PrestaShop 8-specific button styles
+- `admin-product-list-bulk.css`: Product list bulk operation UI styling
+
+**JavaScript** (in `views/js/`):
+- `admin-bulk-common.js`: Shared utility functions for bulk actions, progress tracking, and AJAX operations
+- Multiple feature-specific files import and use these shared utilities
+
+**Twig Partials** (in `views/templates/admin/_partials/`):
+- `_filter_status.html.twig`: Reusable status filter component
+- `_pagination.html.twig`: Reusable pagination component
+- `_reject_modal.html.twig`: Reusable rejection reason modal
+- `_lightbox.html.twig`: Reusable lightbox for image display
 
 ### Hook Handler Architecture
 
@@ -593,6 +676,8 @@ The module follows:
 - Strict type declarations
 - Early returns and minimal nesting
 - Cyclomatic complexity < 10 per method
+- Trait-based composition for shared functionality
+- DRY (Don't Repeat Yourself) principle enforced through traits and shared components
 
 ## Support
 

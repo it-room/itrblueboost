@@ -1,0 +1,35 @@
+{#
+ # Filter bar partial for status + items per page.
+ #
+ # Required variables:
+ #   - statusFilter: string - current status filter value
+ #   - currentLimit: int - current items per page
+ #
+ # Optional variables:
+ #   - showTypeFilter: bool (default false) - show type filter (product/category)
+ #   - typeFilter: string - current type filter value (used with showTypeFilter)
+ #}
+<div class="filter-bar">
+    {% if showTypeFilter|default(false) %}
+        <label>{{ 'Type:'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+        <select class="form-control" style="width: auto;" id="typeFilter">
+            <option value="" {{ typeFilter|default('') == '' ? 'selected' : '' }}>{{ 'All'|trans({}, 'Admin.Global') }}</option>
+            <option value="product" {{ typeFilter|default('') == 'product' ? 'selected' : '' }}>{{ 'Product'|trans({}, 'Admin.Global') }}</option>
+            <option value="category" {{ typeFilter|default('') == 'category' ? 'selected' : '' }}>{{ 'Category'|trans({}, 'Admin.Global') }}</option>
+        </select>
+    {% else %}
+        <label>{{ 'Filter by status:'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+        <select class="form-control" style="width: auto;" id="statusFilter">
+            <option value="" {{ statusFilter == '' ? 'selected' : '' }}>{{ 'All'|trans({}, 'Admin.Global') }}</option>
+            <option value="pending" {{ statusFilter == 'pending' ? 'selected' : '' }}>{{ 'Pending'|trans({}, 'Admin.Global') }}</option>
+            <option value="accepted" {{ statusFilter == 'accepted' ? 'selected' : '' }}>{{ 'Accepted'|trans({}, 'Admin.Global') }}</option>
+            <option value="rejected" {{ statusFilter == 'rejected' ? 'selected' : '' }}>{{ 'Rejected'|trans({}, 'Admin.Global') }}</option>
+        </select>
+    {% endif %}
+    <label>{{ 'Items per page:'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+    <select class="form-control" style="width: auto;" id="limitFilter">
+        {% for val in [10, 20, 50, 100] %}
+            <option value="{{ val }}" {{ currentLimit == val ? 'selected' : '' }}>{{ val }}</option>
+        {% endfor %}
+    </select>
+</div>

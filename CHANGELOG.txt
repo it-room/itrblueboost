@@ -2,6 +2,45 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.5] - 2026-02-27
+
+### Changed
+- Refactorisation majeure : élimination de ~2300+ lignes de code dupliqué dans les contrôleurs, templates et fichiers statiques
+- Extraction de la logique partagée en traits PHP dans `src/Controller/Admin/Traits/` :
+  - `ResolveLimitTrait` : résolution partagée de la limite de pagination (5 contrôleurs)
+  - `MultilangHelperTrait` : résolution partagée du texte multilingue et détection des changements (6 contrôleurs)
+  - `FaqApiSyncTrait` : logique partagée de synchronisation API FAQ (4 contrôleurs)
+  - `ContentApiSyncTrait` : logique partagée de synchronisation API Contenu (2 contrôleurs)
+  - `ProductDataBuilderTrait` : construction partagée des données produit (2 contrôleurs)
+
+### Improved
+- Création de `src/Grid/Query/AbstractFaqQueryBuilder.php` pour abstractiser la logique de requête partagée entre `ProductFaqQueryBuilder` et `CategoryFaqQueryBuilder` (~120 lignes éliminées)
+- Extraction des traits d'entité dans `src/Entity/Traits/` :
+  - `FaqStatusTrait` : méthodes partagées `isPending()` et `isAccepted()` (ProductFaq, CategoryFaq, ProductContent)
+  - `FaqEntityTrait` : méthodes partagées `hasApiFaqId()` et `updatePositions()` (ProductFaq, CategoryFaq)
+- Consolidation des fichiers CSS : fusion de `admin-product-buttons-ps17.css` et `admin-product-buttons-ps8.css` en un seul `admin-product-buttons.css` utilisant des multi-sélecteurs
+- Création de `views/css/admin-common.css` pour les styles partagés du back-office (~300 lignes mutualisées)
+- Création de 4 partials Twig réutilisables dans `views/templates/admin/_partials/` : `_pagination.html.twig`, `_filter_status.html.twig`, `_reject_modal.html.twig`, `_lightbox.html.twig`
+- Mise à jour de 5 templates admin pour utiliser les partials au lieu du HTML/CSS en ligne
+- Création de `views/js/admin-bulk-common.js` comme bibliothèque d'utilitaires partagés pour les opérations en masse (~440 lignes éliminées)
+- Refactorisation de 3 fichiers JavaScript en masse en wrappers légers réutilisant le code commun
+
+### Fixed
+- Affichage complet des textes FAQ (questions et réponses) sans troncature ni points de suspension dans toutes les vues admin
+
+## [1.8.4] - 2026-02-27
+
+### Added
+- Badges visuels dans le listing produits du back-office indiquant la présence de FAQ (bleu), images IA (gris) et contenu généré (vert) pour chaque produit
+- Nouveau contrôleur Symfony `ProductListCountsController` avec requêtes SQL batch optimisées pour récupérer les compteurs en un seul appel AJAX
+- Nouvelle route `itrblueboost_admin_product_list_counts` pour l'endpoint de compteurs
+- Styles CSS dédiés pour les badges (`.itrblueboost-list-counts`, `.itrblueboost-count-badge`)
+
+### Changed
+- Le service Content est maintenant pris en compte dans la détection de la page listing produit
+- `loadProductListAssets()` injecte désormais l'URL des compteurs et charge le JS `admin-product-list-counts.js`
+- Le fichier JavaScript `admin-product-list-counts.js` supporte désormais trois types de badges (FAQ, Images, Contenu)
+
 ## [1.8.3] - 2026-02-26
 
 ### Changed

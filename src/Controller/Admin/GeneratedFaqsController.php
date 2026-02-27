@@ -6,6 +6,7 @@ namespace Itrblueboost\Controller\Admin;
 
 use Context;
 use Db;
+use Itrblueboost\Controller\Admin\Traits\ResolveLimitTrait;
 use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
 use PrestaShopBundle\Security\Annotation\AdminSecurity;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,13 +17,14 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class GeneratedFaqsController extends FrameworkBundleAdminController
 {
+    use ResolveLimitTrait;
     /**
      * @AdminSecurity("is_granted('read', request.get('_legacy_controller'))")
      */
     public function indexAction(Request $request): Response
     {
         $page = max(1, (int) $request->query->get('page', 1));
-        $limit = 20;
+        $limit = $this->resolveLimit((int) $request->query->get('limit', 20));
         $offset = ($page - 1) * $limit;
 
         $typeFilter = $request->query->get('type', '');
@@ -92,7 +94,9 @@ class GeneratedFaqsController extends FrameworkBundleAdminController
             'totalFaqs' => $totalFaqs,
             'typeFilter' => $typeFilter,
             'statusFilter' => $statusFilter,
+            'currentLimit' => $limit,
             'layoutTitle' => $this->trans('Generated FAQs', 'Modules.Itrblueboost.Admin'),
         ]);
     }
+
 }

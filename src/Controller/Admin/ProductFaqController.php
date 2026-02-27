@@ -6,6 +6,9 @@ namespace Itrblueboost\Controller\Admin;
 
 use Configuration;
 use Context;
+use Itrblueboost\Controller\Admin\Traits\FaqApiSyncTrait;
+use Itrblueboost\Controller\Admin\Traits\MultilangHelperTrait;
+use Itrblueboost\Controller\Admin\Traits\ProductDataBuilderTrait;
 use Itrblueboost\Entity\ProductFaq;
 use Itrblueboost\Form\ProductFaqType;
 use Itrblueboost\Grid\Definition\Factory\ProductFaqGridDefinitionFactory;
@@ -24,6 +27,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ProductFaqController extends FrameworkBundleAdminController
 {
+    use FaqApiSyncTrait;
+    use MultilangHelperTrait;
+    use ProductDataBuilderTrait;
     /**
      * @var ApiLogger
      */
@@ -172,8 +178,8 @@ class ProductFaqController extends FrameworkBundleAdminController
 
                     $idLang = (int) Configuration::get('PS_LANG_DEFAULT');
 
-                    $questionText = is_array($data['question']) ? ($data['question'][$idLang] ?? reset($data['question'])) : $data['question'];
-                    $answerText = is_array($data['answer']) ? ($data['answer'][$idLang] ?? reset($data['answer'])) : $data['answer'];
+                    $questionText = $this->resolveMultilangText($data['question'], $idLang);
+                    $answerText = $this->resolveMultilangText($data['answer'], $idLang);
 
                     $apiData = [
                         'question' => $questionText,
@@ -205,24 +211,6 @@ class ProductFaqController extends FrameworkBundleAdminController
     }
 
     /**
-     * Check if multilang field has changed.
-     */
-    private function hasMultilangChanged($old, $new): bool
-    {
-        if (!is_array($old) || !is_array($new)) {
-            return $old !== $new;
-        }
-
-        foreach ($new as $langId => $value) {
-            if (!isset($old[$langId]) || $old[$langId] !== $value) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * @AdminSecurity("is_granted('update', request.get('_legacy_controller'))")
      */
     public function acceptAction(Request $request, int $id_product, int $faqId): JsonResponse
@@ -250,8 +238,8 @@ class ProductFaqController extends FrameworkBundleAdminController
         // Sync with API if has API ID
         if ($faq->hasApiFaqId()) {
             $idLang = (int) Configuration::get('PS_LANG_DEFAULT');
-            $questionText = is_array($faq->question) ? ($faq->question[$idLang] ?? reset($faq->question)) : $faq->question;
-            $answerText = is_array($faq->answer) ? ($faq->answer[$idLang] ?? reset($faq->answer)) : $faq->answer;
+            $questionText = $this->resolveMultilangText($faq->question, $idLang);
+            $answerText = $this->resolveMultilangText($faq->answer, $idLang);
 
             $apiResult = $this->updateFaqOnApi((int) $faq->api_faq_id, [
                 'status' => 'accepted',
@@ -433,8 +421,8 @@ class ProductFaqController extends FrameworkBundleAdminController
 
                 if ($faq->hasApiFaqId()) {
                     $idLang = (int) Configuration::get('PS_LANG_DEFAULT');
-                    $questionText = is_array($faq->question) ? ($faq->question[$idLang] ?? reset($faq->question)) : $faq->question;
-                    $answerText = is_array($faq->answer) ? ($faq->answer[$idLang] ?? reset($faq->answer)) : $faq->answer;
+                    $questionText = $this->resolveMultilangText($faq->question, $idLang);
+                    $answerText = $this->resolveMultilangText($faq->answer, $idLang);
 
                     $this->updateFaqOnApi((int) $faq->api_faq_id, [
                         'status' => 'accepted',
@@ -765,110 +753,4 @@ class ProductFaqController extends FrameworkBundleAdminController
         ]);
     }
 
-    /**
-     * Update FAQ on API.
-     *
-     * @param int $apiFaqId API FAQ ID
-     * @param array<string, mixed> $data Data to send
-     *
-     * @return array{success: bool, message?: string}
-     */
-    private function updateFaqOnApi(int $apiFaqId, array $data): array
-    {
-        $response = $this->apiLogger->updateFaq($apiFaqId, $data, 'product_faq');
-
-        if (!isset($response['success']) || !$response['success']) {
-            return ['success' => false, 'message' => $response['message'] ?? 'Unknown error'];
-        }
-
-        return ['success' => true];
-    }
-
-    /**
-     * Build structured product data for API.
-     *
-     * @param Product $product Product instance
-     * @param int $idLang Language ID
-     *
-     * @return array<string, mixed>
-     */
-    private function buildProductData(Product $product, int $idLang): array
-    {
-        // Get manufacturer/brand name
-        $brandName = '';
-        if ($product->id_manufacturer > 0) {
-            $manufacturer = new \Manufacturer($product->id_manufacturer, $idLang);
-            if ($manufacturer->id) {
-                $brandName = $manufacturer->name;
-            }
-        }
-
-        // Get default category name
-        $categoryName = '';
-        if ($product->id_category_default > 0) {
-            $category = new \Category($product->id_category_default, $idLang);
-            if ($category->id) {
-                $categoryName = $category->name;
-            }
-        }
-
-        // Get product features
-        $features = [];
-        $productFeatures = $product->getFrontFeatures($idLang);
-        if (!empty($productFeatures)) {
-            foreach ($productFeatures as $feature) {
-                $features[] = [
-                    'name' => $feature['name'],
-                    'value' => $feature['value'],
-                ];
-            }
-        }
-
-        // Get combinations (variants)
-        $combinations = [];
-        if ($product->hasAttributes()) {
-            $rawCombinations = $product->getAttributeCombinations($idLang);
-            $groupedCombinations = [];
-
-            foreach ($rawCombinations as $combination) {
-                $idCombination = (int) $combination['id_product_attribute'];
-
-                if (!isset($groupedCombinations[$idCombination])) {
-                    $groupedCombinations[$idCombination] = [
-                        'reference' => $combination['reference'] ?? '',
-                        'price_impact' => (float) ($combination['price'] ?? 0),
-                        'attributes' => [],
-                    ];
-                }
-
-                $groupedCombinations[$idCombination]['attributes'][] = [
-                    'group' => $combination['group_name'],
-                    'value' => $combination['attribute_name'],
-                ];
-            }
-
-            $combinations = array_values($groupedCombinations);
-        }
-
-        // Get product price
-        $productPrice = $product->getPrice(true, null, 2);
-
-        // Get product URL
-        $productUrl = $product->getLink();
-
-        $data = [
-            'name' => $product->name,
-            'description' => strip_tags($product->description ?? ''),
-            'description_short' => strip_tags($product->description_short ?? ''),
-            'brand' => $brandName,
-            'category' => $categoryName,
-            'reference' => $product->reference ?? '',
-            'features' => $features,
-            'combinations' => $combinations,
-            'price' => (float) $productPrice,
-            'url' => $productUrl,
-        ];
-
-        return $data;
-    }
 }

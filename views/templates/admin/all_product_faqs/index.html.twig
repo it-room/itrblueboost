@@ -1,157 +1,12 @@
 {% extends '@PrestaShop/Admin/layout.html.twig' %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('modules/itrblueboost/views/css/admin-common.css') }}">
+{% endblock %}
+
 {% block content %}
     <style>
-        .faq-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
-            padding: 15px;
-        }
-        .faq-card {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #fff;
-            transition: box-shadow 0.2s, opacity 0.3s;
-        }
-        .faq-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        .faq-card.selected {
-            border-color: #25b9d7;
-            box-shadow: 0 0 0 2px rgba(37,185,215,0.3);
-        }
-        .faq-card-header {
-            padding: 12px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .faq-card-header-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .faq-card-product {
-            font-size: 13px;
-        }
-        .faq-card-product a {
-            color: #25b9d7;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        .faq-card-product a:hover {
-            text-decoration: underline;
-        }
-        .faq-card-product .product-id {
-            color: #666;
-            font-size: 12px;
-            margin-left: 5px;
-        }
-        .faq-card-body {
-            padding: 12px;
-        }
-        .faq-question {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        .faq-answer {
-            color: #666;
-            font-size: 13px;
-            line-height: 1.4;
-        }
-        .faq-card-footer {
-            padding: 12px;
-            border-top: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .faq-card-info {
-            font-size: 12px;
-            color: #666;
-        }
-        .status-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        .status-pending { background: #ffc107; color: #000; }
-        .status-accepted { background: #28a745; color: #fff; }
-        .status-rejected { background: #dc3545; color: #fff; }
-        .status-active { background: #28a745; color: #fff; }
-        .status-inactive { background: #6c757d; color: #fff; }
-        .faq-card-actions {
-            display: flex;
-            gap: 5px;
-        }
-        .btn-action {
-            padding: 5px 10px;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-            transition: opacity 0.2s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            font-size: 12px;
-        }
-        .btn-action:hover {
-            opacity: 0.8;
-            text-decoration: none;
-        }
-        .btn-action .material-icons {
-            font-size: 16px;
-        }
-        .btn-accept {
-            background: #28a745;
-            color: #fff;
-        }
-        .btn-reject {
-            background: #ffc107;
-            color: #000;
-        }
-        .btn-toggle-active {
-            background: #ffc107;
-            color: #000;
-        }
-        .btn-toggle-inactive {
-            background: #28a745;
-            color: #fff;
-        }
-        .btn-edit {
-            background: #17a2b8;
-            color: #fff;
-        }
-        .btn-delete {
-            background: #dc3545;
-            color: #fff;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666;
-        }
-        .empty-state i {
-            font-size: 64px;
-            margin-bottom: 20px;
-            opacity: 0.3;
-        }
-        .filter-bar {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
         .view-toggle {
             margin-left: auto;
             display: flex;
@@ -179,44 +34,6 @@
         .view-toggle-btn .material-icons {
             font-size: 20px;
         }
-        .pagination-wrapper {
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-        }
-        .badge-status-row {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 10000;
-        }
-        .toast-notification {
-            min-width: 280px;
-            padding: 14px 20px;
-            border-radius: 6px;
-            color: #fff;
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            opacity: 0;
-            transform: translateX(40px);
-            transition: opacity 0.3s, transform 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-        .toast-notification.show {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        .toast-notification.toast-success { background: #28a745; }
-        .toast-notification.toast-error { background: #dc3545; }
-
         /* Checkbox styling */
         .faq-checkbox {
             width: 18px;
@@ -261,15 +78,7 @@
         .faq-list-table .col-date { width: 130px; }
         .faq-list-table .col-actions { width: 180px; text-align: right; }
         .faq-list-table .faq-card-actions { justify-content: flex-end; }
-        .faq-list-table .truncate-text {
-            max-width: 250px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: block;
-        }
         .faq-list-table .answer-text {
-            max-width: 450px;
             white-space: normal;
             word-break: break-word;
             line-height: 1.4;
@@ -358,6 +167,12 @@
                     <option value="pending" {{ statusFilter == 'pending' ? 'selected' : '' }}>{{ 'Pending'|trans({}, 'Admin.Global') }}</option>
                     <option value="accepted" {{ statusFilter == 'accepted' ? 'selected' : '' }}>{{ 'Accepted'|trans({}, 'Admin.Global') }}</option>
                     <option value="rejected" {{ statusFilter == 'rejected' ? 'selected' : '' }}>{{ 'Rejected'|trans({}, 'Admin.Global') }}</option>
+                </select>
+                <label>{{ 'Items per page:'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                <select class="form-control" style="width: auto;" id="limitFilter">
+                    {% for val in [10, 20, 50, 100] %}
+                        <option value="{{ val }}" {{ currentLimit == val ? 'selected' : '' }}>{{ val }}</option>
+                    {% endfor %}
                 </select>
                 <div class="view-toggle">
                     <button type="button" class="view-toggle-btn active" id="btnViewGrid" title="{{ 'Grid view'|trans({}, 'Modules.Itrblueboost.Admin') }}">
@@ -477,7 +292,7 @@
                                         </a>
                                         <small class="text-muted d-block">(ID: {{ faq.id_product }})</small>
                                     </td>
-                                    <td><span class="truncate-text" title="{{ faq.question|default('-') }}">{{ faq.question|default('-')|slice(0, 80) }}{% if faq.question|default('')|length > 80 %}...{% endif %}</span></td>
+                                    <td>{{ faq.question|default('-') }}</td>
                                     <td><span class="answer-text">{{ faq.answer|default('-')|striptags }}</span></td>
                                     <td>
                                         <span class="status-badge status-{{ faq.status }}" id="list-status-{{ faq.id_itrblueboost_product_faq }}">
@@ -542,37 +357,13 @@
                     </table>
                 </div>
 
-                {% if totalPages > 1 %}
-                    <div class="pagination-wrapper">
-                        <nav>
-                            <ul class="pagination">
-                                {% if currentPage > 1 %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="{{ path('itrblueboost_admin_all_product_faqs', {page: currentPage - 1, status: statusFilter}) }}">
-                                            <i class="material-icons">chevron_left</i>
-                                        </a>
-                                    </li>
-                                {% endif %}
-
-                                {% for p in 1..totalPages %}
-                                    {% if p >= currentPage - 2 and p <= currentPage + 2 %}
-                                        <li class="page-item {{ p == currentPage ? 'active' : '' }}">
-                                            <a class="page-link" href="{{ path('itrblueboost_admin_all_product_faqs', {page: p, status: statusFilter}) }}">{{ p }}</a>
-                                        </li>
-                                    {% endif %}
-                                {% endfor %}
-
-                                {% if currentPage < totalPages %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="{{ path('itrblueboost_admin_all_product_faqs', {page: currentPage + 1, status: statusFilter}) }}">
-                                            <i class="material-icons">chevron_right</i>
-                                        </a>
-                                    </li>
-                                {% endif %}
-                            </ul>
-                        </nav>
-                    </div>
-                {% endif %}
+                {% include '@Modules/itrblueboost/views/templates/admin/_partials/_pagination.html.twig' with {
+                    routeName: 'itrblueboost_admin_all_product_faqs',
+                    routeParams: {status: statusFilter},
+                    currentPage: currentPage,
+                    totalPages: totalPages,
+                    currentLimit: currentLimit,
+                } only %}
             {% else %}
                 <div class="empty-state">
                     <i class="material-icons">quiz</i>
@@ -602,30 +393,9 @@
 
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Modal for rejection reason -->
-    <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="rejectModalLabel">{{ 'Reject FAQ'|trans({}, 'Modules.Itrblueboost.Admin') }}</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="rejectionReason">{{ 'Rejection reason'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
-                        <textarea class="form-control" id="rejectionReason" rows="3" placeholder="{{ 'Enter the reason for rejection...'|trans({}, 'Modules.Itrblueboost.Admin') }}"></textarea>
-                        <small class="form-text text-muted">{{ 'This reason will be sent to the API.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ 'Cancel'|trans({}, 'Admin.Actions') }}</button>
-                    <button type="button" class="btn btn-danger" id="confirmReject">{{ 'Reject'|trans({}, 'Admin.Actions') }}</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include '@Modules/itrblueboost/views/templates/admin/_partials/_reject_modal.html.twig' with {
+        rejectTitle: 'Reject FAQ'|trans({}, 'Modules.Itrblueboost.Admin'),
+    } only %}
 {% endblock %}
 
 {% block javascripts %}
@@ -970,6 +740,16 @@
                 } else {
                     url.searchParams.delete('status');
                 }
+                url.searchParams.delete('page');
+                window.location.href = url.toString();
+            });
+
+            // ===========================
+            // Items per page
+            // ===========================
+            document.getElementById('limitFilter').addEventListener('change', function() {
+                var url = new URL(window.location.href);
+                url.searchParams.set('limit', this.value);
                 url.searchParams.delete('page');
                 window.location.href = url.toString();
             });

@@ -7,6 +7,8 @@ namespace Itrblueboost\Controller\Admin;
 use Category;
 use Configuration;
 use Context;
+use Itrblueboost\Controller\Admin\Traits\FaqApiSyncTrait;
+use Itrblueboost\Controller\Admin\Traits\MultilangHelperTrait;
 use Itrblueboost\Entity\CategoryFaq;
 use Itrblueboost\Form\CategoryFaqType;
 use Itrblueboost\Grid\Definition\Factory\CategoryFaqGridDefinitionFactory;
@@ -24,6 +26,8 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class CategoryFaqController extends FrameworkBundleAdminController
 {
+    use FaqApiSyncTrait;
+    use MultilangHelperTrait;
     /**
      * @var ApiLogger
      */
@@ -172,8 +176,8 @@ class CategoryFaqController extends FrameworkBundleAdminController
 
                     $idLang = (int) Configuration::get('PS_LANG_DEFAULT');
 
-                    $questionText = is_array($data['question']) ? ($data['question'][$idLang] ?? reset($data['question'])) : $data['question'];
-                    $answerText = is_array($data['answer']) ? ($data['answer'][$idLang] ?? reset($data['answer'])) : $data['answer'];
+                    $questionText = $this->resolveMultilangText($data['question'], $idLang);
+                    $answerText = $this->resolveMultilangText($data['answer'], $idLang);
 
                     $apiData = [
                         'question' => $questionText,
@@ -182,7 +186,7 @@ class CategoryFaqController extends FrameworkBundleAdminController
                         'modification_reason' => $modificationReason,
                     ];
 
-                    $this->updateFaqOnApi((int) $faq->api_faq_id, $apiData);
+                    $this->updateFaqOnApi((int) $faq->api_faq_id, $apiData, 'category_faq');
                 }
 
                 if ($faq->update()) {
@@ -202,24 +206,6 @@ class CategoryFaqController extends FrameworkBundleAdminController
             'faq' => $faq,
             'layoutTitle' => $this->trans('Edit FAQ', 'Modules.Itrblueboost.Admin'),
         ]);
-    }
-
-    /**
-     * Check if multilang field has changed.
-     */
-    private function hasMultilangChanged($old, $new): bool
-    {
-        if (!is_array($old) || !is_array($new)) {
-            return $old !== $new;
-        }
-
-        foreach ($new as $langId => $value) {
-            if (!isset($old[$langId]) || $old[$langId] !== $value) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -250,15 +236,15 @@ class CategoryFaqController extends FrameworkBundleAdminController
         // Sync with API if has API ID
         if ($faq->hasApiFaqId()) {
             $idLang = (int) Configuration::get('PS_LANG_DEFAULT');
-            $questionText = is_array($faq->question) ? ($faq->question[$idLang] ?? reset($faq->question)) : $faq->question;
-            $answerText = is_array($faq->answer) ? ($faq->answer[$idLang] ?? reset($faq->answer)) : $faq->answer;
+            $questionText = $this->resolveMultilangText($faq->question, $idLang);
+            $answerText = $this->resolveMultilangText($faq->answer, $idLang);
 
             $apiResult = $this->updateFaqOnApi((int) $faq->api_faq_id, [
                 'status' => 'accepted',
                 'is_enabled' => true,
                 'question' => $questionText,
                 'answer' => $answerText,
-            ]);
+            ], 'category_faq');
 
             if (!$apiResult['success']) {
                 return new JsonResponse([
@@ -310,7 +296,7 @@ class CategoryFaqController extends FrameworkBundleAdminController
         if ($faq->hasApiFaqId()) {
             $this->updateFaqOnApi((int) $faq->api_faq_id, [
                 'is_enabled' => (bool) $faq->active,
-            ]);
+            ], 'category_faq');
         }
 
         if (!$faq->update()) {
@@ -349,7 +335,7 @@ class CategoryFaqController extends FrameworkBundleAdminController
                 'status' => 'rejected',
                 'rejection_reason' => $rejectionReason,
                 'is_enabled' => false,
-            ]);
+            ], 'category_faq');
 
             if (!$apiResult['success']) {
                 return new JsonResponse([
@@ -392,7 +378,7 @@ class CategoryFaqController extends FrameworkBundleAdminController
                     'status' => 'rejected',
                     'rejection_reason' => 'Deleted by user',
                     'is_enabled' => false,
-                ]);
+                ], 'category_faq');
             }
 
             if ($faq->delete()) {
@@ -433,15 +419,15 @@ class CategoryFaqController extends FrameworkBundleAdminController
 
                 if ($faq->hasApiFaqId()) {
                     $idLang = (int) Configuration::get('PS_LANG_DEFAULT');
-                    $questionText = is_array($faq->question) ? ($faq->question[$idLang] ?? reset($faq->question)) : $faq->question;
-                    $answerText = is_array($faq->answer) ? ($faq->answer[$idLang] ?? reset($faq->answer)) : $faq->answer;
+                    $questionText = $this->resolveMultilangText($faq->question, $idLang);
+                    $answerText = $this->resolveMultilangText($faq->answer, $idLang);
 
                     $this->updateFaqOnApi((int) $faq->api_faq_id, [
                         'status' => 'accepted',
                         'is_enabled' => true,
                         'question' => $questionText,
                         'answer' => $answerText,
-                    ]);
+                    ], 'category_faq');
                 }
 
                 if ($faq->update()) {
@@ -501,7 +487,7 @@ class CategoryFaqController extends FrameworkBundleAdminController
                         'status' => 'rejected',
                         'rejection_reason' => $rejectionReason,
                         'is_enabled' => false,
-                    ]);
+                    ], 'category_faq');
                 }
 
                 if ($faq->delete()) {
@@ -765,25 +751,6 @@ class CategoryFaqController extends FrameworkBundleAdminController
             'credits_used' => $response['credits_used'] ?? 0,
             'credits_remaining' => $response['credits_remaining'] ?? 0,
         ]);
-    }
-
-    /**
-     * Update FAQ on API.
-     *
-     * @param int $apiFaqId API FAQ ID
-     * @param array<string, mixed> $data Data to send
-     *
-     * @return array{success: bool, message?: string}
-     */
-    private function updateFaqOnApi(int $apiFaqId, array $data): array
-    {
-        $response = $this->apiLogger->updateFaq($apiFaqId, $data, 'category_faq');
-
-        if (!isset($response['success']) || !$response['success']) {
-            return ['success' => false, 'message' => $response['message'] ?? 'Unknown error'];
-        }
-
-        return ['success' => true];
     }
 
     /**

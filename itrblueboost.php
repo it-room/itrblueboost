@@ -41,7 +41,7 @@ class Itrblueboost extends Module
     {
         $this->name = 'itrblueboost';
         $this->tab = 'administration';
-        $this->version = '1.8.3';
+        $this->version = '1.8.5';
         $this->author = 'ITROOM';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
@@ -137,8 +137,8 @@ class Itrblueboost extends Module
             && !preg_match('/\/products-v2\/\d+/', $requestUri)
             && !preg_match('/\/products\/\d+/', $requestUri);
 
-        if ($isProductListPage && ($faqServiceActive || $imageServiceActive)) {
-            $this->loadProductListAssets($faqServiceActive, $imageServiceActive);
+        if ($isProductListPage && ($faqServiceActive || $imageServiceActive || $contentServiceActive)) {
+            $this->loadProductListAssets($faqServiceActive, $imageServiceActive, $contentServiceActive);
             return;
         }
 
@@ -259,37 +259,40 @@ class Itrblueboost extends Module
             $this->context->controller->addJS($this->_path . 'views/js/admin-content-inline.js?v=' . $this->version);
         }
 
-        // Load version-specific CSS
-        if ($this->isPrestaShop8()) {
-            $this->context->controller->addCSS($this->_path . 'views/css/admin-product-buttons-ps8.css?v=' . $this->version);
-        } else {
-            $this->context->controller->addCSS($this->_path . 'views/css/admin-product-buttons-ps17.css?v=' . $this->version);
-        }
+        // Load unified product buttons CSS (PS1.7 + PS8)
+        $this->context->controller->addCSS($this->_path . 'views/css/admin-product-buttons.css?v=' . $this->version);
     }
 
     /**
-     * Check if current PrestaShop version is 8.x or higher.
-     *
-     * @return bool
-     */
-    private function isPrestaShop8(): bool
-    {
-        return version_compare(_PS_VERSION_, '8.0.0', '>=');
-    }
-
-    /**
-     * Load assets for product list page (bulk actions).
+     * Load assets for product list page (bulk actions + count badges).
      *
      * @param bool $faqActive Whether FAQ service is active
      * @param bool $imageActive Whether Image service is active
+     * @param bool $contentActive Whether Content service is active
      */
-    private function loadProductListAssets(bool $faqActive, bool $imageActive): void
+    private function loadProductListAssets(bool $faqActive, bool $imageActive, bool $contentActive): void
     {
         try {
             /** @var \Symfony\Component\Routing\RouterInterface $router */
             $router = $this->get('router');
         } catch (\Exception $e) {
             return;
+        }
+
+        // Count badges (FAQ / Images / Content)
+        try {
+            Media::addJsDef([
+                'itrblueboostListCountsUrl' => $router->generate('itrblueboost_admin_product_list_counts'),
+            ]);
+
+            $this->context->controller->addJS($this->_path . 'views/js/admin-product-list-counts.js?v=' . $this->version);
+        } catch (\Exception $e) {
+            // Route not yet cached, skip count badges
+        }
+
+        // Load common bulk utilities (must be loaded before specific bulk scripts)
+        if ($faqActive || $imageActive) {
+            $this->context->controller->addJS($this->_path . 'views/js/admin-bulk-common.js?v=' . $this->version);
         }
 
         if ($faqActive) {
@@ -340,6 +343,7 @@ class Itrblueboost extends Module
                 'itrblueboostBulkCategoryFaqLabel' => $this->trans('Generate FAQ (AI)', [], 'Modules.Itrblueboost.Admin'),
             ]);
 
+            $this->context->controller->addJS($this->_path . 'views/js/admin-bulk-common.js?v=' . $this->version);
             $this->context->controller->addJS($this->_path . 'views/js/admin-category-list-bulk.js?v=' . $this->version);
             $this->context->controller->addCSS($this->_path . 'views/css/admin-product-list-bulk.css?v=' . $this->version);
         } catch (\Exception $e) {

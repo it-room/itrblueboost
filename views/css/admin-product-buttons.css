@@ -1,0 +1,125 @@
+/**
+ * ITROOM API - Admin Product Buttons Styles
+ * Unified styles for PrestaShop 1.7 (.product-footer) and PS8 (#product_footer_actions)
+ */
+
+/* Container positioning */
+.product-footer .itrblueboost-ps17-buttons,
+#product_footer_actions .itrblueboost-ps8-buttons {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.product-footer .itrblueboost-ps17-buttons {
+    margin-right: 15px;
+}
+
+#product_footer_actions .itrblueboost-ps8-buttons {
+    margin-left: 10px;
+}
+
+/* Button base styles */
+.product-footer .itrblueboost-btn,
+#product_footer_actions .itrblueboost-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: all 0.15s ease-in-out;
+    border: 1px solid #25b9d7;
+    color: #25b9d7;
+    background-color: transparent;
+}
+
+.product-footer .itrblueboost-btn:hover,
+#product_footer_actions .itrblueboost-btn:hover {
+    background-color: #25b9d7;
+    color: #fff;
+    text-decoration: none;
+}
+
+.product-footer .itrblueboost-btn:focus,
+#product_footer_actions .itrblueboost-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(37, 185, 215, 0.25);
+}
+
+/* Material icons sizing */
+.product-footer .itrblueboost-btn .material-icons,
+#product_footer_actions .itrblueboost-btn .material-icons {
+    font-size: 18px;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+/* FAQ button specific */
+.product-footer #itrblueboost-faq-btn,
+#product_footer_actions #itrblueboost-faq-btn {
+    border-color: #25b9d7;
+    color: #25b9d7;
+}
+
+.product-footer #itrblueboost-faq-btn:hover,
+#product_footer_actions #itrblueboost-faq-btn:hover {
+    background-color: #25b9d7;
+    color: #fff;
+}
+
+/* AI Images button specific */
+.product-footer #itrblueboost-image-btn,
+#product_footer_actions #itrblueboost-image-btn {
+    border-color: #7b4397;
+    color: #7b4397;
+}
+
+.product-footer #itrblueboost-image-btn:hover,
+#product_footer_actions #itrblueboost-image-btn:hover {
+    background-color: #7b4397;
+    color: #fff;
+}
+
+/* Legacy footer fallback styles (PS1.7) */
+.product-footer-left .itrblueboost-ps17-buttons,
+#product-footer-left .itrblueboost-ps17-buttons {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+    .product-footer .itrblueboost-ps17-buttons {
+        margin-right: 10px;
+        gap: 5px;
+    }
+
+    #product_footer_actions .itrblueboost-ps8-buttons {
+        margin-right: 5px;
+        gap: 5px;
+    }
+
+    .product-footer .itrblueboost-btn,
+    #product_footer_actions .itrblueboost-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+
+    #product_footer_actions .itrblueboost-btn span {
+        display: none;
+    }
+}
+
+@media (max-width: 767px) {
+    .product-footer .itrblueboost-ps17-buttons {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 10px;
+        margin-right: 0;
+    }
+}

@@ -7,6 +7,9 @@ namespace Itrblueboost\Controller\Admin;
 use Configuration;
 use Context;
 use Db;
+use Itrblueboost\Controller\Admin\Traits\FaqApiSyncTrait;
+use Itrblueboost\Controller\Admin\Traits\MultilangHelperTrait;
+use Itrblueboost\Controller\Admin\Traits\ResolveLimitTrait;
 use Itrblueboost\Entity\ProductFaq;
 use Itrblueboost\Service\ApiLogger;
 use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
@@ -20,6 +23,10 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class AllProductFaqsController extends FrameworkBundleAdminController
 {
+    use ResolveLimitTrait;
+    use FaqApiSyncTrait;
+    use MultilangHelperTrait;
+
     /**
      * @var ApiLogger
      */
@@ -36,7 +43,7 @@ class AllProductFaqsController extends FrameworkBundleAdminController
     public function indexAction(Request $request): Response
     {
         $page = max(1, (int) $request->query->get('page', 1));
-        $limit = 20;
+        $limit = $this->resolveLimit((int) $request->query->get('limit', 20));
         $offset = ($page - 1) * $limit;
 
         $statusFilter = $request->query->get('status', '');
@@ -77,6 +84,7 @@ class AllProductFaqsController extends FrameworkBundleAdminController
             'totalPages' => $totalPages,
             'totalFaqs' => $totalFaqs,
             'statusFilter' => $statusFilter,
+            'currentLimit' => $limit,
             'layoutTitle' => $this->trans('All Product FAQs', 'Modules.Itrblueboost.Admin'),
         ]);
     }
@@ -108,19 +116,13 @@ class AllProductFaqsController extends FrameworkBundleAdminController
         // Sync with API if has API ID
         if ($faq->hasApiFaqId()) {
             $idLang = (int) Configuration::get('PS_LANG_DEFAULT');
-            $questionText = is_array($faq->question)
-                ? ($faq->question[$idLang] ?? reset($faq->question))
-                : $faq->question;
-            $answerText = is_array($faq->answer)
-                ? ($faq->answer[$idLang] ?? reset($faq->answer))
-                : $faq->answer;
 
             $apiResult = $this->updateFaqOnApi((int) $faq->api_faq_id, [
                 'status' => 'accepted',
                 'is_enabled' => true,
-                'question' => $questionText,
-                'answer' => $answerText,
-            ]);
+                'question' => $this->resolveMultilangText($faq->question, $idLang),
+                'answer' => $this->resolveMultilangText($faq->answer, $idLang),
+            ], 'product_faq');
 
             if (!$apiResult['success']) {
                 return new JsonResponse([
@@ -165,7 +167,7 @@ class AllProductFaqsController extends FrameworkBundleAdminController
                 'status' => 'rejected',
                 'rejection_reason' => $rejectionReason,
                 'is_enabled' => false,
-            ]);
+            ], 'product_faq');
 
             if (!$apiResult['success']) {
                 return new JsonResponse([
@@ -217,7 +219,7 @@ class AllProductFaqsController extends FrameworkBundleAdminController
         if ($faq->hasApiFaqId()) {
             $this->updateFaqOnApi((int) $faq->api_faq_id, [
                 'is_enabled' => (bool) $faq->active,
-            ]);
+            ], 'product_faq');
         }
 
         if (!$faq->update()) {
@@ -254,7 +256,7 @@ class AllProductFaqsController extends FrameworkBundleAdminController
                 'status' => 'rejected',
                 'rejection_reason' => 'Deleted by user',
                 'is_enabled' => false,
-            ]);
+            ], 'product_faq');
         }
 
         if (!$faq->delete()) {
@@ -424,7 +426,14 @@ class AllProductFaqsController extends FrameworkBundleAdminController
         $faq->active = true;
 
         if ($faq->hasApiFaqId()) {
-            $apiResult = $this->syncAcceptToApi($faq);
+            $idLang = (int) Configuration::get('PS_LANG_DEFAULT');
+            $apiResult = $this->updateFaqOnApi((int) $faq->api_faq_id, [
+                'status' => 'accepted',
+                'is_enabled' => true,
+                'question' => $this->resolveMultilangText($faq->question, $idLang),
+                'answer' => $this->resolveMultilangText($faq->answer, $idLang),
+            ], 'product_faq');
+
             if (!$apiResult['success']) {
                 return 'API error - ' . ($apiResult['message'] ?? 'Unknown');
             }
@@ -458,7 +467,7 @@ class AllProductFaqsController extends FrameworkBundleAdminController
                 'status' => 'rejected',
                 'rejection_reason' => $reason,
                 'is_enabled' => false,
-            ]);
+            ], 'product_faq');
 
             if (!$apiResult['success']) {
                 return 'API error - ' . ($apiResult['message'] ?? 'Unknown');
@@ -492,7 +501,7 @@ class AllProductFaqsController extends FrameworkBundleAdminController
                 'status' => 'rejected',
                 'rejection_reason' => 'Deleted by user',
                 'is_enabled' => false,
-            ]);
+            ], 'product_faq');
         }
 
         if (!$faq->delete()) {
@@ -500,49 +509,5 @@ class AllProductFaqsController extends FrameworkBundleAdminController
         }
 
         return true;
-    }
-
-    /**
-     * Sync FAQ acceptance to API.
-     *
-     * @param ProductFaq $faq FAQ entity
-     *
-     * @return array{success: bool, message?: string}
-     */
-    private function syncAcceptToApi(ProductFaq $faq): array
-    {
-        $idLang = (int) Configuration::get('PS_LANG_DEFAULT');
-        $questionText = is_array($faq->question)
-            ? ($faq->question[$idLang] ?? reset($faq->question))
-            : $faq->question;
-        $answerText = is_array($faq->answer)
-            ? ($faq->answer[$idLang] ?? reset($faq->answer))
-            : $faq->answer;
-
-        return $this->updateFaqOnApi((int) $faq->api_faq_id, [
-            'status' => 'accepted',
-            'is_enabled' => true,
-            'question' => $questionText,
-            'answer' => $answerText,
-        ]);
-    }
-
-    /**
-     * Update FAQ on API.
-     *
-     * @param int $apiFaqId API FAQ ID
-     * @param array<string, mixed> $data Data to send
-     *
-     * @return array{success: bool, message?: string}
-     */
-    private function updateFaqOnApi(int $apiFaqId, array $data): array
-    {
-        $response = $this->apiLogger->updateFaq($apiFaqId, $data, 'product_faq');
-
-        if (!isset($response['success']) || !$response['success']) {
-            return ['success' => false, 'message' => $response['message'] ?? 'Unknown error'];
-        }
-
-        return ['success' => true];
     }
 }

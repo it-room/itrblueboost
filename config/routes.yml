@@ -644,3 +644,14 @@ itrblueboost_admin_all_product_contents_delete:
     _legacy_controller: AdminItrblueboostAllProductContents
   requirements:
     id: \d+
+
+# ==========================================
+# Product List Counts (badges)
+# ==========================================
+
+itrblueboost_admin_product_list_counts:
+  path: itrblueboost/product-list-counts
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\ProductListCountsController::countsAction
+    _legacy_controller: AdminProducts

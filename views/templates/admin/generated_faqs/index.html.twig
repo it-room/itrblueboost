@@ -1,89 +1,11 @@
 {% extends '@PrestaShop/Admin/layout.html.twig' %}
 
-{% block content %}
-    <style>
-        .faq-table {
-            width: 100%;
-        }
-        .faq-table th {
-            background: #f8f9fa;
-            font-weight: 600;
-            padding: 12px;
-            border-bottom: 2px solid #dee2e6;
-        }
-        .faq-table td {
-            padding: 12px;
-            border-bottom: 1px solid #dee2e6;
-            vertical-align: top;
-        }
-        .faq-table tr:hover {
-            background: #f8f9fa;
-        }
-        .faq-question {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        .faq-answer {
-            color: #666;
-            font-size: 13px;
-            max-height: 60px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .entity-link {
-            color: #25b9d7;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .entity-link:hover {
-            text-decoration: underline;
-        }
-        .type-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        .type-product { background: #007bff; color: #fff; }
-        .type-category { background: #6f42c1; color: #fff; }
-        .status-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        .status-active, .status-accepted { background: #28a745; color: #fff; }
-        .status-inactive, .status-pending { background: #ffc107; color: #000; }
-        .status-rejected { background: #dc3545; color: #fff; }
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666;
-        }
-        .empty-state i {
-            font-size: 64px;
-            margin-bottom: 20px;
-            opacity: 0.3;
-        }
-        .filter-bar {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .pagination-wrapper {
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-        }
-    </style>
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('modules/itrblueboost/views/css/admin-common.css') }}">
+{% endblock %}
 
+{% block content %}
     <div class="card">
         <div class="card-header">
             <h3 class="card-header-title">
@@ -93,14 +15,12 @@
             </h3>
         </div>
         <div class="card-body">
-            <div class="filter-bar">
-                <label>{{ 'Type:'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
-                <select class="form-control" style="width: auto;" id="typeFilter">
-                    <option value="" {{ typeFilter == '' ? 'selected' : '' }}>{{ 'All'|trans({}, 'Admin.Global') }}</option>
-                    <option value="product" {{ typeFilter == 'product' ? 'selected' : '' }}>{{ 'Product'|trans({}, 'Admin.Global') }}</option>
-                    <option value="category" {{ typeFilter == 'category' ? 'selected' : '' }}>{{ 'Category'|trans({}, 'Admin.Global') }}</option>
-                </select>
-            </div>
+            {% include '@Modules/itrblueboost/views/templates/admin/_partials/_filter_status.html.twig' with {
+                showTypeFilter: true,
+                typeFilter: typeFilter,
+                statusFilter: statusFilter,
+                currentLimit: currentLimit,
+            } only %}
 
             {% if faqs|length > 0 %}
                 <div class="table-responsive">
@@ -135,7 +55,7 @@
                                     </td>
                                     <td>
                                         <div class="faq-question">{{ faq.question|default('-') }}</div>
-                                        <div class="faq-answer">{{ faq.answer|default('-')|striptags|slice(0, 200) }}{% if faq.answer|length > 200 %}...{% endif %}</div>
+                                        <div class="faq-answer">{{ faq.answer|default('-')|striptags }}</div>
                                     </td>
                                     <td>
                                         {% if faq.faq_type == 'product' %}
@@ -155,37 +75,13 @@
                     </table>
                 </div>
 
-                {% if totalPages > 1 %}
-                    <div class="pagination-wrapper">
-                        <nav>
-                            <ul class="pagination">
-                                {% if currentPage > 1 %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="{{ path('itrblueboost_admin_generated_faqs', {page: currentPage - 1, type: typeFilter, status: statusFilter}) }}">
-                                            <i class="material-icons">chevron_left</i>
-                                        </a>
-                                    </li>
-                                {% endif %}
-
-                                {% for p in 1..totalPages %}
-                                    {% if p >= currentPage - 2 and p <= currentPage + 2 %}
-                                        <li class="page-item {{ p == currentPage ? 'active' : '' }}">
-                                            <a class="page-link" href="{{ path('itrblueboost_admin_generated_faqs', {page: p, type: typeFilter, status: statusFilter}) }}">{{ p }}</a>
-                                        </li>
-                                    {% endif %}
-                                {% endfor %}
-
-                                {% if currentPage < totalPages %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="{{ path('itrblueboost_admin_generated_faqs', {page: currentPage + 1, type: typeFilter, status: statusFilter}) }}">
-                                            <i class="material-icons">chevron_right</i>
-                                        </a>
-                                    </li>
-                                {% endif %}
-                            </ul>
-                        </nav>
-                    </div>
-                {% endif %}
+                {% include '@Modules/itrblueboost/views/templates/admin/_partials/_pagination.html.twig' with {
+                    routeName: 'itrblueboost_admin_generated_faqs',
+                    routeParams: {type: typeFilter, status: statusFilter},
+                    currentPage: currentPage,
+                    totalPages: totalPages,
+                    currentLimit: currentLimit,
+                } only %}
             {% else %}
                 <div class="empty-state">
                     <i class="material-icons">quiz</i>
@@ -203,13 +99,23 @@
         (function() {
             'use strict';
 
-            document.getElementById('typeFilter').addEventListener('change', function() {
+            var typeFilterEl = document.getElementById('typeFilter');
+            if (typeFilterEl) {
+                typeFilterEl.addEventListener('change', function() {
+                    var url = new URL(window.location.href);
+                    if (this.value) {
+                        url.searchParams.set('type', this.value);
+                    } else {
+                        url.searchParams.delete('type');
+                    }
+                    url.searchParams.delete('page');
+                    window.location.href = url.toString();
+                });
+            }
+
+            document.getElementById('limitFilter').addEventListener('change', function() {
                 var url = new URL(window.location.href);
-                if (this.value) {
-                    url.searchParams.set('type', this.value);
-                } else {
-                    url.searchParams.delete('type');
-                }
+                url.searchParams.set('limit', this.value);
                 url.searchParams.delete('page');
                 window.location.href = url.toString();
             });

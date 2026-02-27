@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Itrblueboost\Controller\Admin;
 
 use Configuration;
+use Itrblueboost\Controller\Admin\Traits\ContentApiSyncTrait;
+use Itrblueboost\Controller\Admin\Traits\MultilangHelperTrait;
+use Itrblueboost\Controller\Admin\Traits\ResolveLimitTrait;
 use Itrblueboost\Entity\ProductContent;
 use Itrblueboost\Service\ApiLogger;
 use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
@@ -18,6 +21,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class AllProductContentsController extends FrameworkBundleAdminController
 {
+    use ResolveLimitTrait;
+    use ContentApiSyncTrait;
+    use MultilangHelperTrait;
     /**
      * @var ApiLogger
      */
@@ -33,8 +39,8 @@ class AllProductContentsController extends FrameworkBundleAdminController
      */
     public function indexAction(Request $request): Response
     {
-        $page = (int) $request->query->get('page', 1);
-        $limit = 24;
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = $this->resolveLimit((int) $request->query->get('limit', 20));
         $offset = ($page - 1) * $limit;
         $statusFilter = $request->query->get('status', '');
 
@@ -62,6 +68,7 @@ class AllProductContentsController extends FrameworkBundleAdminController
             'currentPage' => $page,
             'totalPages' => $totalPages,
             'statusFilter' => $statusFilter,
+            'currentLimit' => $limit,
             'layoutTitle' => $this->trans('All Product Contents', 'Modules.Itrblueboost.Admin'),
         ]);
     }
@@ -101,14 +108,11 @@ class AllProductContentsController extends FrameworkBundleAdminController
 
         if ($content->hasApiContentId()) {
             $idLang = (int) Configuration::get('PS_LANG_DEFAULT');
-            $contentText = is_array($content->generated_content)
-                ? ($content->generated_content[$idLang] ?? reset($content->generated_content))
-                : $content->generated_content;
 
             $apiResult = $this->updateContentOnApi((int) $content->api_content_id, [
                 'status' => 'accepted',
                 'is_enabled' => true,
-                'content' => $contentText,
+                'content' => $this->resolveMultilangText($content->generated_content, $idLang),
             ]);
 
             if (!$apiResult['success']) {
@@ -295,22 +299,4 @@ class AllProductContentsController extends FrameworkBundleAdminController
         return ['success' => true];
     }
 
-    /**
-     * Update content on API.
-     *
-     * @param int $apiContentId API Content ID
-     * @param array<string, mixed> $data Data to send
-     *
-     * @return array{success: bool, message?: string}
-     */
-    private function updateContentOnApi(int $apiContentId, array $data): array
-    {
-        $response = $this->apiLogger->updateContent($apiContentId, $data);
-
-        if (!isset($response['success']) || !$response['success']) {
-            return ['success' => false, 'message' => $response['message'] ?? 'Unknown error'];
-        }
-
-        return ['success' => true];
-    }
 }

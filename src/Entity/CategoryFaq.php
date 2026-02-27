@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Itrblueboost\Entity;
 
+use Itrblueboost\Entity\Traits\FaqEntityTrait;
+use Itrblueboost\Entity\Traits\FaqStatusTrait;
 use ObjectModel;
 use Shop;
 
@@ -14,6 +16,9 @@ use Shop;
  */
 class CategoryFaq extends ObjectModel
 {
+    use FaqEntityTrait;
+    use FaqStatusTrait;
+
     public const STATUS_PENDING = 'pending';
     public const STATUS_ACCEPTED = 'accepted';
     public const STATUS_REJECTED = 'rejected';
@@ -209,32 +214,6 @@ class CategoryFaq extends ObjectModel
     }
 
     /**
-     * Update FAQ positions.
-     *
-     * @param array<int, int> $positions Array [faq_id => new_position]
-     *
-     * @return bool
-     */
-    public static function updatePositions(array $positions): bool
-    {
-        $db = \Db::getInstance();
-
-        foreach ($positions as $idFaq => $position) {
-            $result = $db->update(
-                self::$definition['table'],
-                ['position' => (int) $position],
-                'id_itrblueboost_category_faq = ' . (int) $idFaq
-            );
-
-            if (!$result) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * Delete all FAQs for a category.
      *
      * @param int $idCategory Category ID
@@ -276,33 +255,4 @@ class CategoryFaq extends ObjectModel
         return (int) \Db::getInstance()->getValue($sql);
     }
 
-    /**
-     * Check if this FAQ has an associated API ID.
-     *
-     * @return bool
-     */
-    public function hasApiFaqId(): bool
-    {
-        return !empty($this->api_faq_id) && $this->api_faq_id > 0;
-    }
-
-    /**
-     * Check if this FAQ is pending.
-     *
-     * @return bool
-     */
-    public function isPending(): bool
-    {
-        return $this->status === self::STATUS_PENDING;
-    }
-
-    /**
-     * Check if this FAQ is accepted.
-     *
-     * @return bool
-     */
-    public function isAccepted(): bool
-    {
-        return $this->status === self::STATUS_ACCEPTED;
-    }
 }
