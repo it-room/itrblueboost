@@ -16,13 +16,13 @@ use PrestaShop\PrestaShop\Core\Grid\Search\SearchCriteriaInterface;
 class ProductContentQueryBuilder extends AbstractDoctrineQueryBuilder
 {
     /** @var DoctrineSearchCriteriaApplicatorInterface */
-    private DoctrineSearchCriteriaApplicatorInterface $searchCriteriaApplicator;
+    private $searchCriteriaApplicator;
 
     /** @var int */
-    private int $contextLangId;
+    private $contextLangId;
 
     /** @var int */
-    private int $contextShopId;
+    private $contextShopId;
 
     /**
      * @param Connection $connection
