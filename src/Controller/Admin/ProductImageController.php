@@ -617,7 +617,7 @@ class ProductImageController extends FrameworkBundleAdminController
         if (!empty($baseImageId)) {
             $baseImage = new Image((int) $baseImageId);
             if ($baseImage->id) {
-                $apiData['image_url'] = $this->getImageUrl($baseImage);
+                $apiData['image_url'] = $this->getOriginalImageUrl($baseImage);
             }
         }
 
@@ -882,11 +882,27 @@ class ProductImageController extends FrameworkBundleAdminController
             ImageType::getFormattedName('large')
         );
 
-        if (strpos($imageUrl, 'http') !== 0) {
-            $imageUrl = Tools::getShopDomainSsl(true) . $imageUrl;
+        if (strpos($imageUrl, 'http') === 0) {
+            return $imageUrl;
         }
 
-        return $imageUrl;
+        if (strpos($imageUrl, '//') === 0) {
+            return 'https:' . $imageUrl;
+        }
+
+        if (strpos($imageUrl, '/') === 0) {
+            return Tools::getShopDomainSsl(true) . $imageUrl;
+        }
+
+        return Tools::getShopDomainSsl(true) . '/' . $imageUrl;
+    }
+
+    private function getOriginalImageUrl(Image $image): string
+    {
+        $folders = implode('/', str_split((string) $image->id));
+        $path = '/img/p/' . $folders . '/' . $image->id . '.jpg';
+
+        return Tools::getShopDomainSsl(true) . $path;
     }
 
     /**

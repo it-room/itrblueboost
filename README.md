@@ -455,6 +455,12 @@ The module registers the following PrestaShop hooks:
 
 ## Changelog
 
+### Version 1.8.7
+- **Bugfix**: Fixed image overflow in the AI image generation modal (base image selector)
+- **Bugfix**: Fixed CSS asset paths in admin templates
+- **Bugfix**: Fixed original image URL sent to API for image generation with base image
+- **Bugfix**: Added missing stylesheet block in product image template
+
 ### Version 1.8.5
 - **Major Refactoring**: Unified all 16+ modal dialogs across the module with consistent architectural patterns
 - **Modal Unification**: Created reusable Twig partials for modals:

@@ -2,6 +2,18 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.7] - 2026-03-01
+
+### Fixed
+- Correction du débordement d'image dans la modale de génération d'image : ajout de `max-width: 100%`, `max-height: 80px` et `display: block` sur `.base-image-option img`
+- Correction des chemins CSS asset dans 5 templates admin (all_category_faqs, all_product_contents, all_product_faqs, generated_faqs, generated_images) : remplacement de `asset('modules/...')` par `asset('../modules/...')`
+- Ajout du block stylesheets manquant dans `product_image/index.html.twig` pour charger `admin-common.css`
+- Envoi de l'image originale (non redimensionnée) à l'API lors de la génération d'image avec image de base
+- Correction de la construction d'URL d'image pour gérer les URLs relatives avec et sans slash initial
+
+### Added
+- Nouvelle méthode `getOriginalImageUrl()` dans `ProductImageController` pour récupérer l'URL de l'image originale non redimensionnée
+
 ## [1.8.6] - 2026-02-27
 
 ### Changed
