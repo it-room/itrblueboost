@@ -2,6 +2,13 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.8] - 2026-03-04
+
+### Fixed
+- Correction de l'endpoint de rejet d'image API : changement de POST /api/image/reject vers PUT /api/image/{log_id} avec status et rejection_reason dans le corps JSON
+- Résolution de l'erreur HTTP 405 Method Not Allowed lors du rejet d'images générées
+- Ajout du champ log_id dans l'entité ProductImage pour stocker l'identifiant du log API retourné lors de la génération d'image
+
 ## [1.8.7] - 2026-03-01
 
 ### Fixed

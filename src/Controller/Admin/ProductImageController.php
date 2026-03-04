@@ -309,9 +309,15 @@ class ProductImageController extends FrameworkBundleAdminController
 
         $rejectionReason = (string) $request->request->get('rejection_reason', '');
 
+        if (empty($productImage->log_id)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Missing API log ID for this image.',
+            ]);
+        }
+
         $apiResult = $this->apiLogger->rejectImage(
-            (int) $productImage->prompt_id,
-            $id_product,
+            (int) $productImage->log_id,
             $rejectionReason
         );
 
@@ -515,7 +521,8 @@ class ProductImageController extends FrameworkBundleAdminController
                 continue;
             }
 
-            $savedImages = $this->saveGeneratedImages($images, (int) $idProduct, $promptId);
+            $logId = isset($response['log_id']) ? (int) $response['log_id'] : (isset($response['data']['log_id']) ? (int) $response['data']['log_id'] : null);
+            $savedImages = $this->saveGeneratedImages($images, (int) $idProduct, $promptId, $logId);
 
             $imageUrl = $router->generate('itrblueboost_admin_product_image_index', [
                 'id_product' => (int) $idProduct,
@@ -684,7 +691,8 @@ class ProductImageController extends FrameworkBundleAdminController
 
         $job->updateProgress(70, 'Saving generated images...');
 
-        $savedImages = $this->saveGeneratedImages($images, $idProduct, $promptId);
+        $logId = isset($response['log_id']) ? (int) $response['log_id'] : (isset($response['data']['log_id']) ? (int) $response['data']['log_id'] : null);
+        $savedImages = $this->saveGeneratedImages($images, $idProduct, $promptId, $logId);
 
         if (empty($savedImages['saved'])) {
             $allErrors = array_merge($apiErrors, $savedImages['errors']);
@@ -708,7 +716,7 @@ class ProductImageController extends FrameworkBundleAdminController
      *
      * @return array{saved: array, errors: array}
      */
-    private function saveGeneratedImages(array $images, int $idProduct, int $promptId): array
+    private function saveGeneratedImages(array $images, int $idProduct, int $promptId, ?int $logId = null): array
     {
         $savedImages = [];
         $saveErrors = [];
@@ -739,6 +747,7 @@ class ProductImageController extends FrameworkBundleAdminController
             $productImage->filename = $saveResult['filename'];
             $productImage->status = 'pending';
             $productImage->prompt_id = $promptId;
+            $productImage->log_id = $logId;
 
             if (!$productImage->add()) {
                 @unlink($saveResult['filepath']);

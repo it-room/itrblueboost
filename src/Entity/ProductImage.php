@@ -29,6 +29,9 @@ class ProductImage extends ObjectModel
     /** @var int Prompt ID used for generation */
     public $prompt_id;
 
+    /** @var int|null API log ID for image tracking */
+    public $log_id;
+
     /** @var int|null PrestaShop image ID after acceptance */
     public $id_image;
 
@@ -72,6 +75,10 @@ class ProductImage extends ObjectModel
                 'type' => self::TYPE_INT,
                 'validate' => 'isUnsignedId',
                 'required' => true,
+            ],
+            'log_id' => [
+                'type' => self::TYPE_INT,
+                'validate' => 'isUnsignedId',
             ],
             'id_image' => [
                 'type' => self::TYPE_INT,

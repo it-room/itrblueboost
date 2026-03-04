@@ -357,19 +357,16 @@ class ApiLogger
     /**
      * Reject an image via the API.
      *
-     * @param int $promptId Prompt ID used for generation
-     * @param int $productId Product ID
+     * @param int $logId API log ID
      * @param string $rejectionReason Rejection reason
      *
      * @return array{success: bool, message?: string}
      */
-    public function rejectImage(int $promptId, int $productId, string $rejectionReason): array
+    public function rejectImage(int $logId, string $rejectionReason): array
     {
-        return $this->call('POST', '/api/image/reject', [
-            'prompt_id' => $promptId,
-            'id_product' => $productId,
-            'rejection_reason' => $rejectionReason,
+        return $this->call('PUT', '/api/image/' . $logId, [
             'status' => 'rejected',
+            'rejection_reason' => $rejectionReason,
         ], 'image');
     }
 

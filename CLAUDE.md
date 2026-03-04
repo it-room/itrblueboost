@@ -16,7 +16,9 @@ Les controllers admin doit être en prestashop modern (symfony)
 4. **Zéro tolérance** : pas de dump(), code mort, ou commentaires obsolètes
 5. **Sécurité first** : validation des inputs, pas de credentials en dur
 
-Tu dois garder une compatibilité large sur le module php 7.1 minimume et prestashop 1.7.6
+Tu dois garder une compatibilité large sur le module (agent disponible) :
+ - php 7.1 minimume
+ - prestashop 1.7.2
 
 Fais umoi une classe de reponsabilité par hook : lorsque tu créées ou utilise un hook dans la classe principale, celui ci doit avoir une classe dans src/Hooks/
 Lorsque tu auras fini, tu me fera le readme via l'agent claude et tu remplira le CHANGELOG avec l'agent adequat

@@ -130,6 +130,7 @@ class Installer
                 `filename` VARCHAR(255) NOT NULL,
                 `status` VARCHAR(20) DEFAULT \'pending\',
                 `prompt_id` INT(11) UNSIGNED NOT NULL,
+                `log_id` INT(11) UNSIGNED NULL,
                 `id_image` INT(11) UNSIGNED NULL,
                 `rejection_reason` VARCHAR(1000) NULL,
                 `date_add` DATETIME NOT NULL,
