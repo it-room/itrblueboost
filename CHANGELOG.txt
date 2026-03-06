@@ -2,6 +2,50 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.13] - 2026-03-06
+
+### Added
+- Colonne `generated_content_short` dans la table `product_content_lang` pour stocker la description courte générée
+- Script d'upgrade `upgrade-1.8.13.php` pour ajouter la colonne automatiquement
+
+### Changed
+- Support du champ `generated_content_short` dans l'entité ProductContent et les contrôleurs
+
+## [1.8.12] - 2026-03-06
+
+### Added
+- Basculer vue grille/liste sur la page "All Product Contents" avec persistance localStorage
+- Cases à cocher pour la sélection en masse dans les deux vues (grille et liste)
+- Vue liste (tableau) pour les contenus produits avec colonnes : Référence, Type, Contenu, Statut, Actif, Date, Actions
+- Barre d'outils en masse flottante (barre inférieure fixe) avec actions : Accepter tout / Refuser tout / Supprimer tout
+- Trois nouveaux endpoints API en masse dans le contrôleur et les routes : `bulk-accept`, `bulk-reject`, `bulk-delete`
+
+### Changed
+- Interface de la page "All Product Contents" alignée avec la page "All Product FAQs" pour la cohérence UX
+- AllProductContentsController enrichi avec support des actions en masse (bulk operations)
+
+## [1.8.11] - 2026-03-06
+
+### Changed
+- Refactorisation de la génération de contenu produit : fusion des boutons "Générer Description" et "Générer Description courte" en un seul bouton "Générer le contenu (IA)"
+- L'API reçoit maintenant les deux content IDs (description et short_description) dans un seul appel séquentiel au lieu de deux appels distincts
+- Amélioration de l'UX : la modale de génération affiche maintenant un aperçu des deux contenus générés (description et description courte) avant insertion
+- Le bouton "Insérer" remplit maintenant les deux champs (description et description_short) en une seule action, réduisant les étapes pour l'utilisateur
+
+## [1.8.10] - 2026-03-06
+
+### Fixed
+- Correction des sélecteurs CSS dans la génération de contenu (admin-content-inline.js) : les sélecteurs trop larges détectaient également les champs meta_description et inséraient le contenu généré dans les champs meta, dépassant les limites de caractères PrestaShop et bloquant la sauvegarde produit
+- Ajout de filtres d'exclusion `:not([id*="meta_"])` et contrôles `indexOf('meta_')` sur toutes les stratégies de détection de champs et dans la fonction d'insertion de contenu
+- Amélioration de la robustesse de la détection des champs de description pour éviter les faux positifs sur les champs meta
+
+## [1.8.9] - 2026-03-06
+
+### Changed
+- Amélioration de la génération d'images en masse : envoi de l'URL de l'image de couverture du produit à l'API de génération, en plus du nom du produit
+- Harmonisation avec la génération d'images individuelles qui envoyait déjà l'image_url à l'API
+- La génération en masse utilise maintenant le même processus que la génération individuelles pour la construction des données d'API
+
 ## [1.8.8] - 2026-03-04
 
 ### Fixed

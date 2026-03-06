@@ -569,10 +569,20 @@ class ProductImageController extends FrameworkBundleAdminController
     {
         $productName = $this->getProductName($product, $idLang);
 
-        return [
+        $apiData = [
             'prompt_id' => $promptId,
             'product_name' => $productName,
         ];
+
+        $coverImage = Image::getCover((int) $product->id);
+        if (!empty($coverImage['id_image'])) {
+            $image = new Image((int) $coverImage['id_image']);
+            if ($image->id) {
+                $apiData['image_url'] = $this->getOriginalImageUrl($image);
+            }
+        }
+
+        return $apiData;
     }
 
     private function getProductName(Product $product, int $idLang): string

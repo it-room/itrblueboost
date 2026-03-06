@@ -153,70 +153,29 @@ class ProductContentController extends FrameworkBundleAdminController
         $descShort = $firstDesc['description_short'] ?? '';
 
         $languages = \Language::getLanguages(false);
-        $savedIds = [];
-        $saveErrors = [];
-        $previewContent = '';
-        $requestedContentId = null;
 
-        // Save description_long if available
-        if (!empty($descLong)) {
-            $content = $this->saveProductContent(
-                $id_product,
-                $apiContentId,
-                ProductContent::CONTENT_TYPE_DESCRIPTION,
-                $promptId,
-                $descLong,
-                $languages
-            );
-            if ($content) {
-                $savedIds[] = $content->id;
-                if ($contentType === 'description') {
-                    $previewContent = $descLong;
-                    $requestedContentId = (int) $content->id;
-                }
-            } else {
-                $saveErrors[] = 'description: ' . $this->getLastSaveError();
-            }
-        }
+        $content = $this->saveProductContent(
+            $id_product,
+            $apiContentId,
+            $promptId,
+            $descLong,
+            $descShort,
+            $languages
+        );
 
-        // Save description_short if available
-        if (!empty($descShort)) {
-            $content = $this->saveProductContent(
-                $id_product,
-                $apiContentId,
-                ProductContent::CONTENT_TYPE_SHORT_DESCRIPTION,
-                $promptId,
-                $descShort,
-                $languages
-            );
-            if ($content) {
-                $savedIds[] = $content->id;
-                if ($contentType === 'description_short') {
-                    $previewContent = $descShort;
-                    $requestedContentId = (int) $content->id;
-                }
-            } else {
-                $saveErrors[] = 'description_short: ' . $this->getLastSaveError();
-            }
-        }
-
-        if (empty($savedIds)) {
+        if (!$content) {
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Error saving content. ' . implode(' | ', $saveErrors),
+                'message' => 'Error saving content. ' . $this->getLastSaveError(),
             ]);
-        }
-
-        // Fallback preview: use whichever was requested, or the first available
-        if (empty($previewContent)) {
-            $previewContent = $contentType === 'description_short' ? $descShort : $descLong;
         }
 
         return new JsonResponse([
             'success' => true,
             'message' => 'Content generated (pending approval).',
-            'content_id' => $requestedContentId ?? $savedIds[0],
-            'content' => $previewContent,
+            'content_id' => (int) $content->id,
+            'description' => $descLong,
+            'description_short' => $descShort,
             'credits_used' => $response['credits_used'] ?? 0,
             'credits_remaining' => $response['credits_remaining'] ?? 0,
         ]);
@@ -506,32 +465,16 @@ class ProductContentController extends FrameworkBundleAdminController
                 $descShort = $firstDesc['description_short'] ?? '';
                 $languages = \Language::getLanguages(false);
 
-                if (!empty($descLong)) {
-                    $saved = $this->saveProductContent(
-                        $idProduct,
-                        $apiContentId,
-                        ProductContent::CONTENT_TYPE_DESCRIPTION,
-                        $promptId,
-                        $descLong,
-                        $languages
-                    );
-                    if ($saved) {
-                        $totalCreated++;
-                    }
-                }
-
-                if (!empty($descShort)) {
-                    $saved = $this->saveProductContent(
-                        $idProduct,
-                        $apiContentId,
-                        ProductContent::CONTENT_TYPE_SHORT_DESCRIPTION,
-                        $promptId,
-                        $descShort,
-                        $languages
-                    );
-                    if ($saved) {
-                        $totalCreated++;
-                    }
+                $saved = $this->saveProductContent(
+                    $idProduct,
+                    $apiContentId,
+                    $promptId,
+                    $descLong,
+                    $descShort,
+                    $languages
+                );
+                if ($saved) {
+                    $totalCreated++;
                 }
             }
 
@@ -579,13 +522,13 @@ class ProductContentController extends FrameworkBundleAdminController
     }
 
     /**
-     * Save a ProductContent entity.
+     * Save a ProductContent entity with both description texts.
      *
      * @param int $idProduct Product ID
      * @param int|null $apiContentId API content ID
-     * @param string $contentType Content type
      * @param int $promptId Prompt ID
-     * @param string $generatedText Generated text
+     * @param string $descriptionText Description text
+     * @param string $descriptionShortText Short description text
      * @param array<int, array<string, mixed>> $languages Languages list
      *
      * @return ProductContent|null
@@ -593,22 +536,25 @@ class ProductContentController extends FrameworkBundleAdminController
     private function saveProductContent(
         int $idProduct,
         ?int $apiContentId,
-        string $contentType,
         int $promptId,
-        string $generatedText,
+        string $descriptionText,
+        string $descriptionShortText,
         array $languages
     ): ?ProductContent {
         $content = new ProductContent();
         $content->id_product = $idProduct;
         $content->api_content_id = ($apiContentId !== null && $apiContentId > 0) ? (int) $apiContentId : 0;
-        $content->content_type = $contentType;
+        $content->content_type = ProductContent::CONTENT_TYPE_DESCRIPTION;
         $content->status = ProductContent::STATUS_PENDING;
         $content->prompt_id = $promptId;
         $content->active = 0;
 
         $content->generated_content = [];
+        $content->generated_content_short = [];
         foreach ($languages as $lang) {
-            $content->generated_content[(int) $lang['id_lang']] = $generatedText;
+            $idLang = (int) $lang['id_lang'];
+            $content->generated_content[$idLang] = $descriptionText;
+            $content->generated_content_short[$idLang] = $descriptionShortText;
         }
 
         if ($content->add()) {
@@ -634,31 +580,56 @@ class ProductContentController extends FrameworkBundleAdminController
             return ['success' => false, 'message' => 'Product not found.'];
         }
 
-        $generatedContent = $content->generated_content;
-
-        if ($content->content_type === ProductContent::CONTENT_TYPE_SHORT_DESCRIPTION) {
-            if (is_array($generatedContent)) {
-                foreach ($generatedContent as $idLang => $text) {
-                    $product->description_short[$idLang] = $text;
-                }
-            } else {
-                $product->description_short = $generatedContent;
-            }
-        } else {
-            if (is_array($generatedContent)) {
-                foreach ($generatedContent as $idLang => $text) {
-                    $product->description[$idLang] = $text;
-                }
-            } else {
-                $product->description = $generatedContent;
-            }
-        }
+        $this->applyDescription($product, $content->generated_content);
+        $this->applyDescriptionShort($product, $content->generated_content_short);
 
         if (!$product->update()) {
             return ['success' => false, 'message' => 'Error updating product.'];
         }
 
         return ['success' => true];
+    }
+
+    /**
+     * Apply description to product.
+     *
+     * @param Product $product
+     * @param mixed $generatedContent
+     */
+    private function applyDescription(Product $product, $generatedContent): void
+    {
+        if (empty($generatedContent)) {
+            return;
+        }
+
+        if (is_array($generatedContent)) {
+            foreach ($generatedContent as $idLang => $text) {
+                $product->description[$idLang] = $text;
+            }
+        } else {
+            $product->description = $generatedContent;
+        }
+    }
+
+    /**
+     * Apply short description to product.
+     *
+     * @param Product $product
+     * @param mixed $generatedContentShort
+     */
+    private function applyDescriptionShort(Product $product, $generatedContentShort): void
+    {
+        if (empty($generatedContentShort)) {
+            return;
+        }
+
+        if (is_array($generatedContentShort)) {
+            foreach ($generatedContentShort as $idLang => $text) {
+                $product->description_short[$idLang] = $text;
+            }
+        } else {
+            $product->description_short = $generatedContentShort;
+        }
     }
 
     /**

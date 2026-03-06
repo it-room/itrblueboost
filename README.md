@@ -16,6 +16,7 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 - **Product FAQ Generation**: Generate frequently asked questions for products using AI
 - **Category FAQ Generation**: Create FAQs at the category level
 - **AI Image Generation**: Generate product images using ITROOM API with async processing to prevent HTTP 504 timeouts
+- **Bulk Image Generation with Cover Images**: Automatically sends product cover images to the API for improved generation results
 - **Async Generation Jobs**: Image generation runs in background via Symfony command with progress tracking
 - **Animated Progress Bar**: Real-time progress display with step indicators (Start → API Call → Generation → Save → Done) and percentage completion
 - **Job Status Polling**: Frontend automatically polls for job status updates every 2 seconds with fallback to manual refresh
@@ -231,6 +232,9 @@ For individual FAQs:
 4. Choose an image prompt from the modal
 5. Watch the real-time progress bar as images are generated for each product sequentially
 6. Once complete, click on each product link in the results to view the generated images in the product's image management page
+
+**Cover Image Support:**
+When generating images in bulk, the module automatically sends each product's cover image URL to the AI API for better generation results. This brings parity with single-product image generation where the base image can be selected manually. The cover image (if present) is automatically included in the API request to provide context for improved image generation quality.
 
 ### Bulk Operations Summary
 
@@ -454,6 +458,10 @@ The module registers the following PrestaShop hooks:
 - **Multisite**: Fully supported
 
 ## Changelog
+
+### Version 1.8.8
+- **Enhancement**: Bulk image generation now automatically sends product cover images to the API for improved generation results
+- This brings parity between bulk and single-product image generation workflows
 
 ### Version 1.8.7
 - **Bugfix**: Fixed image overflow in the AI image generation modal (base image selector)

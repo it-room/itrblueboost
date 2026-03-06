@@ -609,6 +609,27 @@ itrblueboost_admin_all_product_contents:
     _controller: Itrblueboost\Controller\Admin\AllProductContentsController::indexAction
     _legacy_controller: AdminItrblueboostAllProductContents
 
+itrblueboost_admin_all_product_contents_bulk_accept:
+  path: itrblueboost/all-product-contents/bulk-accept
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllProductContentsController::bulkAcceptAction
+    _legacy_controller: AdminItrblueboostAllProductContents
+
+itrblueboost_admin_all_product_contents_bulk_reject:
+  path: itrblueboost/all-product-contents/bulk-reject
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllProductContentsController::bulkRejectAction
+    _legacy_controller: AdminItrblueboostAllProductContents
+
+itrblueboost_admin_all_product_contents_bulk_delete:
+  path: itrblueboost/all-product-contents/bulk-delete
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllProductContentsController::bulkDeleteAction
+    _legacy_controller: AdminItrblueboostAllProductContents
+
 itrblueboost_admin_all_product_contents_accept:
   path: itrblueboost/all-product-contents/{id}/accept
   methods: [POST]

@@ -226,6 +226,7 @@ class Installer
                 `id_itrblueboost_product_content` INT(11) UNSIGNED NOT NULL,
                 `id_lang` INT(11) UNSIGNED NOT NULL,
                 `generated_content` MEDIUMTEXT NOT NULL,
+                `generated_content_short` MEDIUMTEXT NULL,
                 PRIMARY KEY (`id_itrblueboost_product_content`, `id_lang`)
             ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8mb4',
 

@@ -54,6 +54,9 @@ class ProductContent extends ObjectModel
     /** @var string Generated content (multilingual) */
     public $generated_content;
 
+    /** @var string Generated short content (multilingual) */
+    public $generated_content_short;
+
     /**
      * Model definition.
      *
@@ -107,6 +110,12 @@ class ProductContent extends ObjectModel
                 'lang' => true,
                 'validate' => 'isCleanHtml',
                 'required' => true,
+                'size' => 16777215,
+            ],
+            'generated_content_short' => [
+                'type' => self::TYPE_HTML,
+                'lang' => true,
+                'validate' => 'isCleanHtml',
                 'size' => 16777215,
             ],
         ],
@@ -190,7 +199,7 @@ class ProductContent extends ObjectModel
     ): array {
         $idShop = $idShop ?: (int) \Context::getContext()->shop->id;
 
-        $sql = 'SELECT c.*, cl.generated_content
+        $sql = 'SELECT c.*, cl.generated_content, cl.generated_content_short
                 FROM `' . _DB_PREFIX_ . self::$definition['table'] . '` c
                 INNER JOIN `' . _DB_PREFIX_ . self::$definition['table'] . '_lang` cl
                     ON c.id_itrblueboost_product_content = cl.id_itrblueboost_product_content AND cl.id_lang = ' . $idLang . '
@@ -323,7 +332,7 @@ class ProductContent extends ObjectModel
     ): array {
         $idShop = $idShop ?: (int) \Context::getContext()->shop->id;
 
-        $sql = 'SELECT c.*, cl.generated_content, p.reference as product_reference, pl.name as product_name
+        $sql = 'SELECT c.*, cl.generated_content, cl.generated_content_short, p.reference as product_reference, pl.name as product_name
                 FROM `' . _DB_PREFIX_ . self::$definition['table'] . '` c
                 INNER JOIN `' . _DB_PREFIX_ . self::$definition['table'] . '_lang` cl
                     ON c.id_itrblueboost_product_content = cl.id_itrblueboost_product_content AND cl.id_lang = ' . $idLang . '

@@ -94,7 +94,7 @@
     }
 
     /**
-     * Inject generate buttons next to description fields
+     * Inject a single generate button next to the first description field found
      */
     function injectGenerateButtons() {
         var productId = window.itrblueboostProductId;
@@ -113,9 +113,24 @@
         // Find description fields
         var descriptionFields = findDescriptionFields();
 
-        descriptionFields.forEach(function(fieldInfo) {
-            injectButtonForField(fieldInfo, promptsUrl, generateUrl, productId);
-        });
+        if (descriptionFields.length === 0) {
+            console.log('[ITRBLUEBOOST-CONTENT] No description fields found.');
+            return;
+        }
+
+        // Inject a single button on the first field (description or description_short)
+        var targetField = null;
+        for (var i = 0; i < descriptionFields.length; i++) {
+            if (descriptionFields[i].type === 'description') {
+                targetField = descriptionFields[i];
+                break;
+            }
+        }
+        if (!targetField) {
+            targetField = descriptionFields[0];
+        }
+
+        injectButtonForField(targetField, promptsUrl, generateUrl, productId);
 
         // Inject modal if not exists
         if (!document.getElementById('itrblueboost-content-modal')) {
@@ -201,6 +216,12 @@
             var el = allDescTextareas[i];
             var elId = el.id || '';
             var elName = el.name || '';
+
+            // Skip meta fields (meta_description, meta_title, etc.)
+            if (elId.indexOf('meta_') !== -1 || elName.indexOf('meta_') !== -1) {
+                continue;
+            }
+
             var isShort = elId.indexOf('description_short') !== -1
                 || elName.indexOf('description_short') !== -1;
 
@@ -268,6 +289,13 @@
 
             for (var i = 0; i < rteFields.length; i++) {
                 var el = rteFields[i];
+
+                // Skip meta fields
+                if ((el.id && el.id.indexOf('meta_') !== -1)
+                    || (el.name && el.name.indexOf('meta_') !== -1)) {
+                    continue;
+                }
+
                 var isShortDesc = (el.id && el.id.indexOf('description_short') !== -1)
                     || (el.name && el.name.indexOf('description_short') !== -1);
                 var isDesc = !isShortDesc
@@ -380,7 +408,7 @@
         btn.type = 'button';
         btn.className = 'btn btn-outline-secondary itrblueboost-generate-content-btn';
         btn.style.cssText = 'margin: 5px 0; display: inline-flex; align-items: center; gap: 5px;';
-        btn.innerHTML = '<i class="material-icons" style="font-size: 18px;">auto_awesome</i> <span>G\u00e9n\u00e9rer (' + fieldInfo.label + ')</span>';
+        btn.innerHTML = '<i class="material-icons" style="font-size: 18px;">auto_awesome</i> <span>G\u00e9n\u00e9rer le contenu (IA)</span>';
         btn.dataset.contentType = fieldInfo.type;
         btn.dataset.promptsUrl = promptsUrl;
         btn.dataset.generateUrl = generateUrl;
@@ -493,7 +521,6 @@
         });
     }
 
-    var currentContentType = '';
     var currentGenerateUrl = '';
 
     /**
@@ -502,7 +529,6 @@
     function openGenerateModal(btn) {
         var promptsUrl = btn.dataset.promptsUrl;
         currentGenerateUrl = btn.dataset.generateUrl;
-        currentContentType = btn.dataset.contentType;
 
         var modal = document.getElementById('itrblueboost-content-modal');
         var loading = document.getElementById('itrblueboost-content-loading');
@@ -585,7 +611,7 @@
 
         var formData = new FormData();
         formData.append('prompt_id', promptId);
-        formData.append('content_type', currentContentType);
+        formData.append('content_type', 'description');
 
         fetch(currentGenerateUrl, {
             method: 'POST',
@@ -597,18 +623,30 @@
             progress.classList.add('d-none');
 
             if (data.success) {
-                result.innerHTML = '<div class="alert alert-success">' +
+                var previewHtml = '<div class="alert alert-success">' +
                     '<i class="material-icons">check_circle</i> ' + data.message +
                     '<br><small>Cr\u00e9dits utilis\u00e9s: ' + data.credits_used + ' | Cr\u00e9dits restants: ' + data.credits_remaining + '</small>' +
-                    '</div>' +
-                    '<div class="form-group mt-3">' +
-                    '<label>Contenu g\u00e9n\u00e9r\u00e9:</label>' +
-                    '<div class="border p-3 bg-light" style="max-height: 200px; overflow-y: auto;">' + (data.content || '') + '</div>' +
-                    '</div>' +
-                    '<button type="button" class="btn btn-primary mt-2" id="itrblueboost-insert-content">' +
-                    '<i class="material-icons">add</i> Ins\u00e9rer dans le champ' +
+                    '</div>';
+
+                if (data.description) {
+                    previewHtml += '<div class="form-group mt-3">' +
+                        '<label><strong>Description :</strong></label>' +
+                        '<div class="border p-3 bg-light" style="max-height: 150px; overflow-y: auto;">' + data.description + '</div>' +
+                        '</div>';
+                }
+
+                if (data.description_short) {
+                    previewHtml += '<div class="form-group mt-3">' +
+                        '<label><strong>Description courte :</strong></label>' +
+                        '<div class="border p-3 bg-light" style="max-height: 150px; overflow-y: auto;">' + data.description_short + '</div>' +
+                        '</div>';
+                }
+
+                previewHtml += '<button type="button" class="btn btn-primary mt-2" id="itrblueboost-insert-content">' +
+                    '<i class="material-icons">add</i> Ins\u00e9rer dans les champs' +
                     '</button>';
 
+                result.innerHTML = previewHtml;
                 result.classList.remove('d-none');
 
                 // Add insert handler
@@ -617,13 +655,14 @@
                     insertBtn.disabled = true;
                     insertBtn.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Validation...';
 
-                    acceptContentOnApi(data.content_id, function(success) {
-                        insertContentIntoField(data.content, currentContentType);
-                        hideModal();
-
-                        if (!success) {
-                            console.warn('[ITRBLUEBOOST-CONTENT] API accept failed, content inserted locally only');
+                    acceptContentOnApi(data.content_id, function() {
+                        if (data.description) {
+                            insertContentIntoField(data.description, 'description');
                         }
+                        if (data.description_short) {
+                            insertContentIntoField(data.description_short, 'description_short');
+                        }
+                        hideModal();
                     });
                 });
             } else {
@@ -658,6 +697,12 @@
 
             for (var j = 0; j < fields.length; j++) {
                 var field = fields[j];
+
+                // Skip meta fields (meta_description, meta_title, etc.)
+                if ((field.id && field.id.indexOf('meta_') !== -1)
+                    || (field.name && field.name.indexOf('meta_') !== -1)) {
+                    continue;
+                }
 
                 // Skip if this is description_short and we want description (or vice versa)
                 if (contentType !== 'description_short') {
@@ -707,10 +752,10 @@
                 '[id^="product_step1_description_short_"]',
                 // PS8 v1
                 '[name*="product[description_short]"]',
-                '[id*="product_description_short"]',
+                '[id*="product_description_short"]:not([id*="meta_"])',
                 // PS8 v2 (product_basic_description_short_X)
-                'textarea[id*="_description_short_"]',
-                'textarea[name*="[description_short]"]',
+                'textarea[id*="_description_short_"]:not([id*="meta_"])',
+                'textarea[name*="[description_short]"]:not([name*="meta_"])',
                 // PS 1.7 legacy
                 '[id^="form_step1_description_short_"]'
             ];
@@ -718,15 +763,15 @@
 
         return [
             // PS 1.7.8+
-            '[id^="product_step1_description_"]:not([id*="description_short"])',
+            '[id^="product_step1_description_"]:not([id*="description_short"]):not([id*="meta_"])',
             // PS8 v1
-            '[name*="product[description]"]:not([name*="description_short"])',
-            '[id*="product_description_"]:not([id*="description_short"])',
+            '[name*="product[description]"]:not([name*="description_short"]):not([name*="meta_"])',
+            '[id*="product_description_"]:not([id*="description_short"]):not([id*="meta_"])',
             // PS8 v2 (product_basic_description_X)
-            'textarea[id*="_description_"]:not([id*="description_short"])',
-            'textarea[name*="[description]"]:not([name*="description_short"])',
+            'textarea[id*="_description_"]:not([id*="description_short"]):not([id*="meta_"])',
+            'textarea[name*="[description]"]:not([name*="description_short"]):not([name*="meta_"])',
             // PS 1.7 legacy
-            '[id^="form_step1_description_"]:not([id*="description_short"])'
+            '[id^="form_step1_description_"]:not([id*="description_short"]):not([id*="meta_"])'
         ];
     }
 

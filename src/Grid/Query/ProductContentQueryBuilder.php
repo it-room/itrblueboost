@@ -51,7 +51,7 @@ class ProductContentQueryBuilder extends AbstractDoctrineQueryBuilder
     {
         $qb = $this->getBaseQueryBuilder($searchCriteria->getFilters());
 
-        $qb->select('c.id_itrblueboost_product_content, c.id_product, c.content_type, c.active, c.status, c.api_content_id, c.prompt_id, cl.generated_content');
+        $qb->select('c.id_itrblueboost_product_content, c.id_product, c.content_type, c.active, c.status, c.api_content_id, c.prompt_id, cl.generated_content, cl.generated_content_short');
 
         $this->searchCriteriaApplicator->applyPagination($searchCriteria, $qb);
         $this->searchCriteriaApplicator->applySorting($searchCriteria, $qb);
