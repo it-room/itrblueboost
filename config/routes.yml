@@ -658,10 +658,6 @@ itrblueboost_admin_all_product_contents_reject:
   requirements:
     id: \d+
 
-    _legacy_controller: AdminItrblueboostAllProductContents
-  requirements:
-    id: \d+
-
 itrblueboost_admin_all_product_contents_delete:
   path: itrblueboost/all-product-contents/{id}/delete
   methods: [POST]
