@@ -75,7 +75,7 @@
         .content-list-table .col-ref { width: 120px; }
         .content-list-table .col-type { width: 100px; }
         .content-list-table .col-status { width: 100px; }
-        .content-list-table .col-active { width: 80px; }
+
         .content-list-table .col-date { width: 130px; }
         .content-list-table .col-actions { width: 180px; text-align: right; }
         .content-list-table .content-card-actions { justify-content: flex-end; }
@@ -204,11 +204,6 @@
                                     <span class="status-badge status-{{ content.status }}" id="status-{{ content.id_itrblueboost_product_content }}">
                                         {{ content.status }}
                                     </span>
-                                    {% if content.status == 'accepted' %}
-                                        <span class="status-badge status-{{ content.active ? 'active' : 'inactive' }}" id="active-status-{{ content.id_itrblueboost_product_content }}">
-                                            {{ content.active ? 'Actif'|trans({}, 'Admin.Global') : 'Inactif'|trans({}, 'Admin.Global') }}
-                                        </span>
-                                    {% endif %}
                                 </div>
                             </div>
                             <div class="content-card-body">
@@ -244,16 +239,6 @@
                                             <i class="material-icons">close</i>
                                         </button>
                                     {% endif %}
-                                    {% if content.status == 'accepted' %}
-                                        <button type="button"
-                                                class="btn-action btn-toggle-{{ content.active ? 'active' : 'inactive' }}"
-                                                id="toggle-btn-{{ content.id_itrblueboost_product_content }}"
-                                                data-id="{{ content.id_itrblueboost_product_content }}"
-                                                data-url="{{ path('itrblueboost_admin_all_product_contents_toggle', {id: content.id_itrblueboost_product_content}) }}"
-                                                title="{{ content.active ? 'Disable'|trans({}, 'Admin.Actions') : 'Enable'|trans({}, 'Admin.Actions') }}">
-                                            <i class="material-icons">{{ content.active ? 'visibility_off' : 'visibility' }}</i>
-                                        </button>
-                                    {% endif %}
                                     <a href="{{ path('itrblueboost_admin_product_content_edit', {id_product: content.id_product, contentId: content.id_itrblueboost_product_content}) }}"
                                        class="btn-action btn-edit"
                                        title="{{ 'Edit'|trans({}, 'Admin.Actions') }}">
@@ -283,7 +268,6 @@
                                 <th class="col-ref">{{ 'Reference'|trans({}, 'Admin.Global') }}</th>
                                 <th>{{ 'Content'|trans({}, 'Admin.Global') }}</th>
                                 <th class="col-status">{{ 'Status'|trans({}, 'Admin.Global') }}</th>
-                                <th class="col-active">{{ 'Active'|trans({}, 'Admin.Global') }}</th>
                                 <th class="col-date">{{ 'Date'|trans({}, 'Admin.Global') }}</th>
                                 <th class="col-actions">{{ 'Actions'|trans({}, 'Admin.Global') }}</th>
                             </tr>
@@ -317,15 +301,6 @@
                                             {{ content.status }}
                                         </span>
                                     </td>
-                                    <td>
-                                        {% if content.status == 'accepted' %}
-                                            <span class="status-badge status-{{ content.active ? 'active' : 'inactive' }}" id="list-active-status-{{ content.id_itrblueboost_product_content }}">
-                                                {{ content.active ? 'Actif'|trans({}, 'Admin.Global') : 'Inactif'|trans({}, 'Admin.Global') }}
-                                            </span>
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    </td>
                                     <td>{{ content.date_add|date('d/m/Y H:i') }}</td>
                                     <td>
                                         <div class="content-card-actions">
@@ -343,16 +318,6 @@
                                                         data-url="{{ path('itrblueboost_admin_all_product_contents_reject', {id: content.id_itrblueboost_product_content}) }}"
                                                         title="{{ 'Reject'|trans({}, 'Admin.Actions') }}">
                                                     <i class="material-icons">close</i>
-                                                </button>
-                                            {% endif %}
-                                            {% if content.status == 'accepted' %}
-                                                <button type="button"
-                                                        class="btn-action btn-toggle-{{ content.active ? 'active' : 'inactive' }}"
-                                                        id="list-toggle-btn-{{ content.id_itrblueboost_product_content }}"
-                                                        data-id="{{ content.id_itrblueboost_product_content }}"
-                                                        data-url="{{ path('itrblueboost_admin_all_product_contents_toggle', {id: content.id_itrblueboost_product_content}) }}"
-                                                        title="{{ content.active ? 'Disable'|trans({}, 'Admin.Actions') : 'Enable'|trans({}, 'Admin.Actions') }}">
-                                                    <i class="material-icons">{{ content.active ? 'visibility_off' : 'visibility' }}</i>
                                                 </button>
                                             {% endif %}
                                             <a href="{{ path('itrblueboost_admin_product_content_edit', {id_product: content.id_product, contentId: content.id_itrblueboost_product_content}) }}"
@@ -867,78 +832,6 @@
                         button.innerHTML = originalHtml;
                     });
                 }
-            });
-
-            // ===========================
-            // Toggle active
-            // ===========================
-            document.querySelectorAll('.btn-action[data-url*="toggle"]').forEach(function(btn) {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    var id = this.dataset.id;
-                    var url = this.dataset.url;
-                    var button = this;
-
-                    fetch(url, {
-                        method: 'POST',
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                    })
-                    .then(function(response) { return response.json(); })
-                    .then(function(data) {
-                        if (data.success) {
-                            // Update grid view
-                            var statusBadge = document.getElementById('active-status-' + id);
-                            var icon = button.querySelector('i');
-
-                            // Update list view
-                            var listStatusBadge = document.getElementById('list-active-status-' + id);
-                            var listToggleBtn = document.getElementById('list-toggle-btn-' + id);
-
-                            if (data.active) {
-                                if (statusBadge) {
-                                    statusBadge.className = 'status-badge status-active';
-                                    statusBadge.textContent = 'Actif';
-                                }
-                                button.className = 'btn-action btn-toggle-active';
-                                if (icon) { icon.textContent = 'visibility_off'; }
-
-                                if (listStatusBadge) {
-                                    listStatusBadge.className = 'status-badge status-active';
-                                    listStatusBadge.textContent = 'Actif';
-                                }
-                                if (listToggleBtn) {
-                                    listToggleBtn.className = 'btn-action btn-toggle-active';
-                                    var listIcon = listToggleBtn.querySelector('i');
-                                    if (listIcon) { listIcon.textContent = 'visibility_off'; }
-                                }
-                            } else {
-                                if (statusBadge) {
-                                    statusBadge.className = 'status-badge status-inactive';
-                                    statusBadge.textContent = 'Inactif';
-                                }
-                                button.className = 'btn-action btn-toggle-inactive';
-                                if (icon) { icon.textContent = 'visibility'; }
-
-                                if (listStatusBadge) {
-                                    listStatusBadge.className = 'status-badge status-inactive';
-                                    listStatusBadge.textContent = 'Inactif';
-                                }
-                                if (listToggleBtn) {
-                                    listToggleBtn.className = 'btn-action btn-toggle-inactive';
-                                    var listIcon = listToggleBtn.querySelector('i');
-                                    if (listIcon) { listIcon.textContent = 'visibility'; }
-                                }
-                            }
-                        } else {
-                            alert(data.message || 'Error');
-                        }
-                    })
-                    .catch(function() {
-                        alert('Connection error');
-                    });
-                });
             });
 
             // ===========================

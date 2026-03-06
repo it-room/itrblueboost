@@ -2,6 +2,27 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.14] - 2026-03-06
+
+### Added
+- Badges FAQ sous les noms de catégories dans le listing catégories (admin-category-list-counts.js)
+- Bouton "Insérer dans le produit" sur la page d'édition de contenu avec cases à cocher pour description et description courte
+- Route `insert` pour appliquer sélectivement les contenus générés au produit
+
+### Changed
+- Page d'édition de contenu : affichage des deux textes (description + description courte) avec cases à cocher
+- Suppression du toggle "Actif" et du sélecteur "Type de contenu" de la page d'édition
+- Suppression de la colonne/badge/bouton "Actif" de la page "All Product Contents" (grille et liste)
+- Le bouton "Rejeter" est masqué quand le contenu est déjà accepté
+- Liste des contenus produit : aperçu des deux textes au lieu de la colonne "Type"
+
+### Fixed
+- Correction de la détection des produits dans le listing pour PrestaShop 8.2.3 (sélecteurs products-v2)
+- Correction du layout de la page d'édition (div card-body non fermée)
+
+### Removed
+- `AllProductContentsController::toggleActiveAction()` et sa route associée
+
 ## [1.8.13] - 2026-03-06
 
 ### Added

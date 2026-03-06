@@ -34,7 +34,6 @@
                                         <input type="checkbox" id="bulk-select-all">
                                     </th>
                                     <th>{{ 'ID'|trans({}, 'Admin.Global') }}</th>
-                                    <th>{{ 'Type'|trans({}, 'Admin.Global') }}</th>
                                     <th>{{ 'Content'|trans({}, 'Modules.Itrblueboost.Admin') }}</th>
                                     <th class="text-center">{{ 'Status'|trans({}, 'Admin.Global') }}</th>
                                     <th class="text-right">{{ 'Actions'|trans({}, 'Admin.Global') }}</th>
@@ -48,11 +47,11 @@
                                         </td>
                                         <td>{{ record.id_itrblueboost_product_content }}</td>
                                         <td>
-                                            <span class="badge badge-info">
-                                                {{ record.content_type == 'description_short' ? 'Short desc.'|trans({}, 'Modules.Itrblueboost.Admin') : 'Description'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                                            </span>
+                                            <div><strong>{{ 'Desc.'|trans({}, 'Modules.Itrblueboost.Admin') }}:</strong> {{ record.generated_content|striptags|slice(0, 80) }}{% if record.generated_content|length > 80 %}...{% endif %}</div>
+                                            {% if record.generated_content_short is defined and record.generated_content_short %}
+                                                <div style="margin-top: 4px;"><strong>{{ 'Courte'|trans({}, 'Modules.Itrblueboost.Admin') }}:</strong> {{ record.generated_content_short|striptags|slice(0, 80) }}{% if record.generated_content_short|length > 80 %}...{% endif %}</div>
+                                            {% endif %}
                                         </td>
-                                        <td>{{ record.generated_content|striptags|slice(0, 100) }}{% if record.generated_content|length > 100 %}...{% endif %}</td>
                                         <td class="text-center">
                                             {% if record.status == 'pending' %}
                                                 <span class="badge badge-warning">{{ 'Pending'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>

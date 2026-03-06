@@ -41,7 +41,7 @@ class Itrblueboost extends Module
     {
         $this->name = 'itrblueboost';
         $this->tab = 'administration';
-        $this->version = '1.8.13';
+        $this->version = '1.8.14';
         $this->author = 'ITROOM';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
@@ -380,6 +380,7 @@ class Itrblueboost extends Module
 
             $this->context->controller->addJS($this->_path . 'views/js/admin-bulk-common.js?v=' . $this->version);
             $this->context->controller->addJS($this->_path . 'views/js/admin-category-list-bulk.js?v=' . $this->version);
+            $this->context->controller->addJS($this->_path . 'views/js/admin-category-list-counts.js?v=' . $this->version);
             $this->context->controller->addCSS($this->_path . 'views/css/admin-product-list-bulk.css?v=' . $this->version);
         } catch (\Exception $e) {
             // Route not yet cached, skip category bulk assets

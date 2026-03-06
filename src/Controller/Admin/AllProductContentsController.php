@@ -181,49 +181,6 @@ class AllProductContentsController extends FrameworkBundleAdminController
     }
 
     /**
-     * @AdminSecurity("is_granted('update', request.get('_legacy_controller'))")
-     */
-    public function toggleActiveAction(Request $request, int $id): JsonResponse
-    {
-        $content = new ProductContent($id);
-
-        if (!$content->id) {
-            return new JsonResponse([
-                'success' => false,
-                'message' => 'Content not found.',
-            ]);
-        }
-
-        if ($content->status !== ProductContent::STATUS_ACCEPTED) {
-            return new JsonResponse([
-                'success' => false,
-                'message' => 'Content must be accepted before it can be toggled.',
-            ]);
-        }
-
-        $content->active = !$content->active;
-
-        if ($content->hasApiContentId()) {
-            $this->updateContentOnApi((int) $content->api_content_id, [
-                'is_enabled' => (bool) $content->active,
-            ]);
-        }
-
-        if (!$content->update()) {
-            return new JsonResponse([
-                'success' => false,
-                'message' => 'Error updating content.',
-            ]);
-        }
-
-        return new JsonResponse([
-            'success' => true,
-            'message' => $content->active ? 'Content activated.' : 'Content deactivated.',
-            'active' => (bool) $content->active,
-        ]);
-    }
-
-    /**
      * @AdminSecurity("is_granted('delete', request.get('_legacy_controller'))")
      */
     public function deleteAction(Request $request, int $id): JsonResponse

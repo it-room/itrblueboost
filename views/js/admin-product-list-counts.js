@@ -25,7 +25,7 @@
     function getAllProductIds() {
         var ids = [];
 
-        // Method 1: data-product-id on rows
+        // Method 1: data-product-id on rows (PS 1.7.x)
         var rows = document.querySelectorAll('tr[data-product-id]');
         if (rows.length > 0) {
             rows.forEach(function(row) {
@@ -37,10 +37,38 @@
             return ids;
         }
 
-        // Method 2: all checkboxes (not just checked)
+        // Method 2: extract IDs from product edit links (PS 8.x products-v2 + PS 1.7.x)
+        var editLinks = document.querySelectorAll(
+            'table a[href*="/products-v2/"][href*="/edit"],' +
+            'table a[href*="/products/"][href*="/edit"],' +
+            'table a[href*="products&id_product="]'
+        );
+        if (editLinks.length > 0) {
+            editLinks.forEach(function(link) {
+                var href = link.getAttribute('href');
+                var match = href.match(/products(?:-v2)?\/(\d+)/);
+                if (!match) {
+                    match = href.match(/id_product=(\d+)/);
+                }
+                if (match) {
+                    var id = parseInt(match[1], 10);
+                    if (id > 0 && ids.indexOf(id) === -1) {
+                        ids.push(id);
+                    }
+                }
+            });
+            if (ids.length > 0) {
+                return ids;
+            }
+        }
+
+        // Method 3: bulk action checkboxes (various PS versions)
         var selectors = [
             'input[name="bulk_action_selected_products[]"]',
-            'input.js-bulk-action-checkbox[value]'
+            'input.js-bulk-action-checkbox[value]',
+            'input.ps-bulk-action-checkbox[value]',
+            'input[name*="products_bulk"][type="checkbox"]',
+            'input[name*="product"][name*="bulk"][type="checkbox"]'
         ];
 
         for (var i = 0; i < selectors.length; i++) {
@@ -52,11 +80,13 @@
                         ids.push(val);
                     }
                 });
-                return ids;
+                if (ids.length > 0) {
+                    return ids;
+                }
             }
         }
 
-        // Method 3: ID column in table rows
+        // Method 4: ID column in table rows
         var tableRows = document.querySelectorAll('table tbody tr');
         tableRows.forEach(function(row) {
             var cells = row.querySelectorAll('td');
@@ -73,32 +103,65 @@
     }
 
     function findNameCell(productId) {
-        // Method 1: row with data-product-id
+        // Method 1: row with data-product-id (PS 1.7.x)
         var row = document.querySelector('tr[data-product-id="' + productId + '"]');
         if (row) {
-            var cells = row.querySelectorAll('td');
-            for (var i = 2; i < cells.length && i < 6; i++) {
-                var link = cells[i].querySelector('a');
-                if (link && link.textContent.trim().length > 1) {
-                    return cells[i];
+            var cell = findNameCellInRow(row);
+            if (cell) {
+                return cell;
+            }
+        }
+
+        // Method 2: find row via product edit link (PS 8.x + universal)
+        var linkSelectors = [
+            'a[href*="/products-v2/' + productId + '/edit"]',
+            'a[href*="/products-v2/' + productId + '"]',
+            'a[href*="/products/' + productId + '"]',
+            'a[href*="id_product=' + productId + '"]'
+        ];
+
+        for (var i = 0; i < linkSelectors.length; i++) {
+            var links = document.querySelectorAll('table ' + linkSelectors[i]);
+            for (var j = 0; j < links.length; j++) {
+                var cell = links[j].closest('td');
+                if (cell) {
+                    return cell;
                 }
             }
         }
 
-        // Method 2: find checkbox then traverse row
-        var cb = document.querySelector(
-            'input[name="bulk_action_selected_products[]"][value="' + productId + '"]'
-        );
-        if (cb) {
-            row = cb.closest('tr');
-            if (row) {
-                var cells = row.querySelectorAll('td');
-                for (var i = 2; i < cells.length && i < 6; i++) {
-                    var link = cells[i].querySelector('a');
-                    if (link && link.textContent.trim().length > 1) {
-                        return cells[i];
+        // Method 3: find checkbox then traverse row
+        var cbSelectors = [
+            'input[name="bulk_action_selected_products[]"][value="' + productId + '"]',
+            'input.js-bulk-action-checkbox[value="' + productId + '"]',
+            'input.ps-bulk-action-checkbox[value="' + productId + '"]',
+            'input[type="checkbox"][value="' + productId + '"]'
+        ];
+
+        for (var i = 0; i < cbSelectors.length; i++) {
+            var cb = document.querySelector(cbSelectors[i]);
+            if (cb) {
+                row = cb.closest('tr');
+                if (row) {
+                    var cell = findNameCellInRow(row);
+                    if (cell) {
+                        return cell;
                     }
                 }
+            }
+        }
+
+        return null;
+    }
+
+    function findNameCellInRow(row) {
+        var cells = row.querySelectorAll('td');
+
+        // Look for a cell containing a link with text (product name)
+        for (var i = 2; i < cells.length && i < 8; i++) {
+            var link = cells[i].querySelector('a');
+            if (link && link.textContent.trim().length > 1) {
+                return cells[i];
             }
         }
 

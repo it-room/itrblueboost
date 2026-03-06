@@ -561,6 +561,16 @@ itrblueboost_admin_product_content_edit:
     id_product: \d+
     contentId: \d+
 
+itrblueboost_admin_product_content_insert:
+  path: itrblueboost/product/{id_product}/content/{contentId}/insert
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\ProductContentController::insertAction
+    _legacy_controller: AdminProducts
+  requirements:
+    id_product: \d+
+    contentId: \d+
+
 itrblueboost_admin_product_content_accept:
   path: itrblueboost/product/{id_product}/content/{contentId}/accept
   methods: [POST]
@@ -648,11 +658,6 @@ itrblueboost_admin_all_product_contents_reject:
   requirements:
     id: \d+
 
-itrblueboost_admin_all_product_contents_toggle:
-  path: itrblueboost/all-product-contents/{id}/toggle
-  methods: [POST]
-  defaults:
-    _controller: Itrblueboost\Controller\Admin\AllProductContentsController::toggleActiveAction
     _legacy_controller: AdminItrblueboostAllProductContents
   requirements:
     id: \d+

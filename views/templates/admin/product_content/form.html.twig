@@ -57,30 +57,26 @@
             color: #6c757d;
             margin-top: 0.5rem;
         }
-        .content-switch-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #f8f9fa;
-            padding: 1rem 1.25rem;
-            border-radius: 6px;
-        }
-        .content-switch-label {
+        .insert-checkbox-row {
             display: flex;
             align-items: center;
             gap: 10px;
+            margin-bottom: 1rem;
+            background: #f0f9fb;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            border: 1px solid #d4f0f6;
         }
-        .content-switch-label .material-icons {
-            color: #25b9d7;
+        .insert-checkbox-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
         }
-        .content-switch-text strong {
-            display: block;
+        .insert-checkbox-row label {
+            margin: 0;
+            font-weight: 500;
             color: #363a41;
-            font-size: 0.95rem;
-        }
-        .content-switch-text span {
-            font-size: 0.8rem;
-            color: #6c757d;
+            cursor: pointer;
         }
         .content-preview {
             background: #f8f9fa;
@@ -115,51 +111,42 @@
                         {{ form_widget(form.id_product) }}
 
                         <div class="content-field-section">
-                            <div class="content-field-header">
-                                <i class="material-icons">category</i>
-                                <label>{{ 'Content type'|trans({}, 'Modules.Itrblueboost.Admin') }}<span class="required-indicator">*</span></label>
+                            <div class="insert-checkbox-row">
+                                <input type="checkbox" id="check-description" checked>
+                                <label for="check-description">{{ 'Insert this description'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
                             </div>
-                            {{ form_widget(form.content_type) }}
-                            {{ form_errors(form.content_type) }}
-                            <div class="content-field-help">
-                                {{ 'Select whether this is for the main description or short description.'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                            </div>
-                        </div>
-
-                        <div class="content-field-section">
                             <div class="content-field-header">
                                 <i class="material-icons">edit</i>
-                                <label>{{ 'Generated content'|trans({}, 'Modules.Itrblueboost.Admin') }}<span class="required-indicator">*</span></label>
+                                <label>{{ 'Description'|trans({}, 'Modules.Itrblueboost.Admin') }}<span class="required-indicator">*</span></label>
                             </div>
                             {{ form_widget(form.generated_content) }}
                             {{ form_errors(form.generated_content) }}
-                            <div class="content-field-help">
-                                {{ 'Edit the AI-generated content. You can use HTML formatting.'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                            </div>
                         </div>
 
                         <div class="content-field-section">
-                            {% if content is defined and content.id and content.status == 'pending' %}
-                                <div class="alert alert-warning d-flex align-items-center mb-3">
+                            <div class="insert-checkbox-row">
+                                <input type="checkbox" id="check-description-short" checked>
+                                <label for="check-description-short">{{ 'Insert this short description'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                            </div>
+                            <div class="content-field-header">
+                                <i class="material-icons">short_text</i>
+                                <label>{{ 'Short description'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                            </div>
+                            {{ form_widget(form.generated_content_short) }}
+                            {{ form_errors(form.generated_content_short) }}
+                        </div>
+
+                        {% if content is defined and content.id and content.status == 'pending' %}
+                            <div class="content-field-section">
+                                <div class="alert alert-warning d-flex align-items-center mb-0">
                                     <i class="material-icons mr-2">hourglass_empty</i>
                                     <div>
                                         <strong>{{ 'Content pending approval'|trans({}, 'Modules.Itrblueboost.Admin') }}</strong><br>
-                                        <small>{{ 'This content must be accepted to be applied to the product.'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
+                                        <small>{{ 'Check the content(s) you want to insert and click "Insert into product".'|trans({}, 'Modules.Itrblueboost.Admin') }}</small>
                                     </div>
                                 </div>
-                            {% endif %}
-                            <div class="content-switch-row">
-                                <div class="content-switch-label">
-                                    <i class="material-icons">visibility</i>
-                                    <div class="content-switch-text">
-                                        <strong>{{ 'Active'|trans({}, 'Modules.Itrblueboost.Admin') }}</strong>
-                                        <span>{{ 'Mark this content as active'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
-                                    </div>
-                                </div>
-                                {{ form_widget(form.active) }}
                             </div>
-                            {{ form_errors(form.active) }}
-                        </div>
+                        {% endif %}
 
                         {% if content is defined and content.id and content.hasApiContentId() %}
                         <div class="content-field-section">
@@ -174,6 +161,7 @@
                             </div>
                         </div>
                         {% endif %}
+                    </div>
 
                     <div class="card-footer">
                         <div class="d-flex justify-content-between align-items-center">
@@ -185,20 +173,20 @@
                             </div>
                             <div class="d-flex align-items-center">
                                 {% if content is defined and content.id %}
-                                    <button type="button" class="btn btn-danger mr-2" id="btn-reject-content"
-                                            data-content-id="{{ content.id }}"
-                                            data-reject-url="{{ path('itrblueboost_admin_product_content_reject', { id_product: id_product, contentId: content.id }) }}">
-                                        <i class="material-icons">cancel</i>
-                                        {{ 'Reject'|trans({}, 'Modules.Itrblueboost.Admin') }}
-                                    </button>
-
-                                    {% if content.status == 'pending' %}
-                                        <button type="button" class="btn btn-success mr-2" id="btn-accept-content"
-                                                data-accept-url="{{ path('itrblueboost_admin_product_content_accept', { id_product: id_product, contentId: content.id }) }}">
-                                            <i class="material-icons">check_circle</i>
-                                            {{ 'Accept'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                                    {% if content.status != 'accepted' %}
+                                        <button type="button" class="btn btn-danger mr-2" id="btn-reject-content"
+                                                data-content-id="{{ content.id }}"
+                                                data-reject-url="{{ path('itrblueboost_admin_product_content_reject', { id_product: id_product, contentId: content.id }) }}">
+                                            <i class="material-icons">cancel</i>
+                                            {{ 'Reject'|trans({}, 'Modules.Itrblueboost.Admin') }}
                                         </button>
                                     {% endif %}
+
+                                    <button type="button" class="btn btn-success mr-2" id="btn-insert-content"
+                                            data-insert-url="{{ path('itrblueboost_admin_product_content_insert', { id_product: id_product, contentId: content.id }) }}">
+                                        <i class="material-icons">publish</i>
+                                        {{ 'Insert into product'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                                    </button>
                                 {% endif %}
 
                                 <button type="submit" class="btn btn-primary" id="btn-save-content">
@@ -219,9 +207,10 @@
                     {{ 'Tips'|trans({}, 'Modules.Itrblueboost.Admin') }}
                 </div>
                 <ul class="mb-0 pl-3" style="font-size: 0.9rem; color: #666;">
-                    <li class="mb-2">{{ 'Review the generated content before accepting.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
-                    <li class="mb-2">{{ 'Accepting will update the product description.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
-                    <li>{{ 'You can edit the content before accepting.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
+                    <li class="mb-2">{{ 'Check the boxes to select which content to insert into the product.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
+                    <li class="mb-2">{{ 'You can edit the content before inserting.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
+                    <li class="mb-2">{{ '"Save" only saves your edits without applying to the product.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
+                    <li>{{ '"Insert into product" applies the checked content(s) to the product.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
                 </ul>
             </div>
         </div>
@@ -291,17 +280,30 @@
             }
         }
 
-        // Accept button handler
-        var btnAccept = document.getElementById('btn-accept-content');
-        if (btnAccept) {
-            btnAccept.addEventListener('click', function() {
-                var url = this.dataset.acceptUrl;
+        // Insert button handler
+        var btnInsert = document.getElementById('btn-insert-content');
+        if (btnInsert) {
+            btnInsert.addEventListener('click', function() {
+                var checkDesc = document.getElementById('check-description');
+                var checkShort = document.getElementById('check-description-short');
+
+                if (!checkDesc.checked && !checkShort.checked) {
+                    alert('{{ 'Please check at least one content to insert.'|trans({}, 'Modules.Itrblueboost.Admin') }}');
+                    return;
+                }
+
+                var url = this.dataset.insertUrl;
                 var btn = this;
                 btn.disabled = true;
 
+                var formData = new FormData();
+                formData.append('apply_description', checkDesc.checked ? '1' : '0');
+                formData.append('apply_description_short', checkShort.checked ? '1' : '0');
+
                 fetch(url, {
                     method: 'POST',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
                 })
                 .then(function(response) { return response.json(); })
                 .then(function(data) {

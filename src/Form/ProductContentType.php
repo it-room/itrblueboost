@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Itrblueboost\Form;
 
 use PrestaShopBundle\Form\Admin\Type\FormattedTextareaType;
-use PrestaShopBundle\Form\Admin\Type\SwitchType;
 use PrestaShopBundle\Form\Admin\Type\TranslatableType;
 use PrestaShopBundle\Form\Admin\Type\TranslatorAwareType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -21,16 +19,8 @@ class ProductContentType extends TranslatorAwareType
     {
         $builder
             ->add('id_product', HiddenType::class)
-            ->add('content_type', ChoiceType::class, [
-                'label' => $this->trans('Content type', 'Modules.Itrblueboost.Admin'),
-                'choices' => [
-                    $this->trans('Description', 'Modules.Itrblueboost.Admin') => 'description',
-                    $this->trans('Short description', 'Modules.Itrblueboost.Admin') => 'description_short',
-                ],
-                'required' => true,
-            ])
             ->add('generated_content', TranslatableType::class, [
-                'label' => $this->trans('Generated content', 'Modules.Itrblueboost.Admin'),
+                'label' => $this->trans('Description', 'Modules.Itrblueboost.Admin'),
                 'type' => FormattedTextareaType::class,
                 'required' => true,
                 'options' => [
@@ -41,8 +31,9 @@ class ProductContentType extends TranslatorAwareType
                     ],
                 ],
             ])
-            ->add('active', SwitchType::class, [
-                'label' => $this->trans('Active', 'Modules.Itrblueboost.Admin'),
+            ->add('generated_content_short', TranslatableType::class, [
+                'label' => $this->trans('Short description', 'Modules.Itrblueboost.Admin'),
+                'type' => FormattedTextareaType::class,
                 'required' => false,
             ]);
 

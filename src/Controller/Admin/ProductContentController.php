@@ -193,11 +193,19 @@ class ProductContentController extends FrameworkBundleAdminController
             return $this->redirectToRoute('itrblueboost_admin_product_content_index', ['id_product' => $id_product]);
         }
 
+        $languages = \Language::getLanguages(false);
+        $emptyMultilang = [];
+        foreach ($languages as $lang) {
+            $emptyMultilang[(int) $lang['id_lang']] = '';
+        }
+
+        $generatedContent = is_array($content->generated_content) ? $content->generated_content : $emptyMultilang;
+        $generatedContentShort = is_array($content->generated_content_short) ? $content->generated_content_short : $emptyMultilang;
+
         $formData = [
             'id_product' => $content->id_product,
-            'content_type' => $content->content_type,
-            'generated_content' => $content->generated_content,
-            'active' => (bool) $content->active,
+            'generated_content' => $generatedContent,
+            'generated_content_short' => $generatedContentShort,
             'modification_reason' => '',
         ];
 
@@ -211,12 +219,12 @@ class ProductContentController extends FrameworkBundleAdminController
 
             try {
                 $contentChanged = $this->hasMultilangChanged($content->generated_content, $data['generated_content']);
+                $shortChanged = $this->hasMultilangChanged($content->generated_content_short, $data['generated_content_short']);
 
-                $content->active = (bool) $data['active'];
-                $content->content_type = $data['content_type'];
                 $content->generated_content = $data['generated_content'];
+                $content->generated_content_short = $data['generated_content_short'];
 
-                if ($content->hasApiContentId() && $contentChanged) {
+                if ($content->hasApiContentId() && ($contentChanged || $shortChanged)) {
                     $modificationReason = $data['modification_reason'] ?? '';
 
                     if (empty(trim($modificationReason))) {
@@ -234,7 +242,6 @@ class ProductContentController extends FrameworkBundleAdminController
 
                     $this->updateContentOnApi((int) $content->api_content_id, [
                         'content' => $this->resolveMultilangText($data['generated_content'], $idLang),
-                        'is_enabled' => (bool) $content->active,
                         'modification_reason' => $modificationReason,
                     ]);
                 }
@@ -255,6 +262,74 @@ class ProductContentController extends FrameworkBundleAdminController
             'contentId' => $contentId,
             'content' => $content,
             'layoutTitle' => $this->trans('Edit Content', 'Modules.Itrblueboost.Admin'),
+        ]);
+    }
+
+    /**
+     * Insert (apply) selected content fields to product.
+     *
+     * @AdminSecurity("is_granted('update', request.get('_legacy_controller'))")
+     */
+    public function insertAction(Request $request, int $id_product, int $contentId): JsonResponse
+    {
+        $content = new ProductContent($contentId);
+
+        if (!$content->id || (int) $content->id_product !== $id_product) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Content not found.',
+            ]);
+        }
+
+        $applyDescription = (bool) $request->request->get('apply_description', false);
+        $applyShortDescription = (bool) $request->request->get('apply_description_short', false);
+
+        if (!$applyDescription && !$applyShortDescription) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Please select at least one content to insert.',
+            ]);
+        }
+
+        $product = new Product((int) $content->id_product);
+        if (!$product->id) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Product not found.',
+            ]);
+        }
+
+        if ($applyDescription) {
+            $this->applyDescription($product, $content->generated_content);
+        }
+
+        if ($applyShortDescription) {
+            $this->applyDescriptionShort($product, $content->generated_content_short);
+        }
+
+        if (!$product->update()) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Error updating product.',
+            ]);
+        }
+
+        $content->status = ProductContent::STATUS_ACCEPTED;
+
+        if ($content->hasApiContentId()) {
+            $idLang = (int) Configuration::get('PS_LANG_DEFAULT');
+
+            $this->updateContentOnApi((int) $content->api_content_id, [
+                'status' => 'accepted',
+                'content' => $this->resolveMultilangText($content->generated_content, $idLang),
+            ]);
+        }
+
+        $content->update();
+
+        return new JsonResponse([
+            'success' => true,
+            'message' => 'Content inserted into product.',
         ]);
     }
 
