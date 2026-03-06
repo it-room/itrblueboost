@@ -41,7 +41,7 @@ class Itrblueboost extends Module
     {
         $this->name = 'itrblueboost';
         $this->tab = 'administration';
-        $this->version = '1.8.14';
+        $this->version = '1.8.15';
         $this->author = 'ITROOM';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
@@ -302,7 +302,7 @@ class Itrblueboost extends Module
         }
 
         // Load common bulk utilities (must be loaded before specific bulk scripts)
-        if ($faqActive || $imageActive) {
+        if ($faqActive || $imageActive || $contentActive) {
             Media::addJsDef([
                 'itrblueboostModalTranslations' => [
                     'loading' => $this->trans('Loading available prompts...', [], 'Modules.Itrblueboost.Admin'),
@@ -314,6 +314,7 @@ class Itrblueboost extends Module
                     'selected' => $this->trans('selected', [], 'Modules.Itrblueboost.Admin'),
                     'includingWithFaqs' => $this->trans('including %count% with generated FAQs', [], 'Modules.Itrblueboost.Admin'),
                     'includingWithImages' => $this->trans('including %count% with generated images', [], 'Modules.Itrblueboost.Admin'),
+                    'includingWithContents' => $this->trans('including %count% with generated contents', [], 'Modules.Itrblueboost.Admin'),
                 ],
             ]);
             $this->context->controller->addJS($this->_path . 'views/js/admin-bulk-common.js?v=' . $this->version);
@@ -346,6 +347,20 @@ class Itrblueboost extends Module
                 $this->context->controller->addJS($this->_path . 'views/js/admin-product-list-bulk-images.js?v=' . $this->version);
             } catch (\Exception $e) {
                 // Route not yet cached, skip Image bulk assets
+            }
+        }
+
+        if ($contentActive) {
+            try {
+                Media::addJsDef([
+                    'itrblueboostBulkContentPromptsUrl' => $router->generate('itrblueboost_admin_product_content_prompts'),
+                    'itrblueboostBulkContentGenerateUrl' => $router->generate('itrblueboost_admin_product_content_bulk_generate'),
+                    'itrblueboostBulkContentLabel' => $this->trans('Generate Content (AI)', [], 'Modules.Itrblueboost.Admin'),
+                ]);
+
+                $this->context->controller->addJS($this->_path . 'views/js/admin-product-list-bulk-content.js?v=' . $this->version);
+            } catch (\Exception $e) {
+                // Route not yet cached, skip Content bulk assets
             }
         }
 

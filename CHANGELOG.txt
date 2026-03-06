@@ -2,6 +2,12 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.15] - 2026-03-06
+
+### Added
+- Génération de contenu en masse depuis le listing produits (bouton "Generate Content (AI)" dans le dropdown bulk)
+- Script `admin-product-list-bulk-content.js` utilisant le même pattern que FAQ et Images
+
 ## [1.8.14] - 2026-03-06
 
 ### Added
