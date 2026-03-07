@@ -34,14 +34,14 @@ class Itrblueboost extends Module
     public const CONFIG_BOOTSTRAP_VERSION = 'ITRBLUEBOOST_BOOTSTRAP_VERSION';
     public const CONFIG_API_MODE = 'ITRBLUEBOOST_API_MODE';
 
-    public const API_BASE_URL_PROD = 'https://apitr-sf.itroom.fr';
+    public const API_BASE_URL_PROD = 'https://api.blueboost.fr';
     public const API_BASE_URL_TEST = 'https://blueboost.itroom.fr';
 
     public function __construct()
     {
         $this->name = 'itrblueboost';
         $this->tab = 'administration';
-        $this->version = '1.8.15';
+        $this->version = '1.8.16';
         $this->author = 'ITROOM';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [

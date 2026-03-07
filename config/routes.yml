@@ -52,6 +52,27 @@ itrblueboost_admin_generated_images_delete:
   requirements:
     imageId: \d+
 
+itrblueboost_admin_generated_images_bulk_accept:
+  path: itrblueboost/generated-images/bulk-accept
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\GeneratedImagesController::bulkAcceptAction
+    _legacy_controller: AdminItrblueboostGeneratedImages
+
+itrblueboost_admin_generated_images_bulk_reject:
+  path: itrblueboost/generated-images/bulk-reject
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\GeneratedImagesController::bulkRejectAction
+    _legacy_controller: AdminItrblueboostGeneratedImages
+
+itrblueboost_admin_generated_images_bulk_delete:
+  path: itrblueboost/generated-images/bulk-delete
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\GeneratedImagesController::bulkDeleteAction
+    _legacy_controller: AdminItrblueboostGeneratedImages
+
 # ==========================================
 # All Product FAQs
 # ==========================================

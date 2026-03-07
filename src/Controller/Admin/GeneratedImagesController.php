@@ -266,6 +266,277 @@ class GeneratedImagesController extends FrameworkBundleAdminController
         ]);
     }
 
+    /**
+     * Bulk accept images.
+     *
+     * @AdminSecurity("is_granted('update', request.get('_legacy_controller'))")
+     */
+    public function bulkAcceptAction(Request $request): JsonResponse
+    {
+        $ids = $this->parseImageIds($request);
+
+        if (empty($ids)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'No image IDs provided.',
+            ]);
+        }
+
+        $errors = [];
+        $processed = 0;
+
+        foreach ($ids as $id) {
+            $result = $this->acceptSingleImage($id);
+            if ($result === true) {
+                ++$processed;
+            } else {
+                $errors[] = 'Image ' . $id . ': ' . $result;
+            }
+        }
+
+        return new JsonResponse([
+            'success' => $processed > 0,
+            'message' => $processed . ' image(s) accepted.',
+            'processed' => $processed,
+            'errors' => $errors,
+        ]);
+    }
+
+    /**
+     * Bulk reject images.
+     *
+     * @AdminSecurity("is_granted('update', request.get('_legacy_controller'))")
+     */
+    public function bulkRejectAction(Request $request): JsonResponse
+    {
+        $ids = $this->parseImageIds($request);
+
+        if (empty($ids)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'No image IDs provided.',
+            ]);
+        }
+
+        $rejectionReason = (string) $request->request->get('rejection_reason', '');
+        $errors = [];
+        $processed = 0;
+
+        foreach ($ids as $id) {
+            $result = $this->rejectSingleImage($id, $rejectionReason);
+            if ($result === true) {
+                ++$processed;
+            } else {
+                $errors[] = 'Image ' . $id . ': ' . $result;
+            }
+        }
+
+        return new JsonResponse([
+            'success' => $processed > 0,
+            'message' => $processed . ' image(s) rejected.',
+            'processed' => $processed,
+            'errors' => $errors,
+        ]);
+    }
+
+    /**
+     * Bulk delete images.
+     *
+     * @AdminSecurity("is_granted('delete', request.get('_legacy_controller'))")
+     */
+    public function bulkDeleteAction(Request $request): JsonResponse
+    {
+        $ids = $this->parseImageIds($request);
+
+        if (empty($ids)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'No image IDs provided.',
+            ]);
+        }
+
+        $errors = [];
+        $processed = 0;
+
+        foreach ($ids as $id) {
+            $result = $this->deleteSingleImage($id);
+            if ($result === true) {
+                ++$processed;
+            } else {
+                $errors[] = 'Image ' . $id . ': ' . $result;
+            }
+        }
+
+        return new JsonResponse([
+            'success' => $processed > 0,
+            'message' => $processed . ' image(s) deleted.',
+            'processed' => $processed,
+            'errors' => $errors,
+        ]);
+    }
+
+    /**
+     * Parse and validate image IDs from request.
+     *
+     * @return int[]
+     */
+    private function parseImageIds(Request $request): array
+    {
+        $rawIds = (string) $request->request->get('image_ids', '');
+
+        if (empty($rawIds)) {
+            return [];
+        }
+
+        $ids = array_map('intval', explode(',', $rawIds));
+
+        return array_filter($ids, function (int $id): bool {
+            return $id > 0;
+        });
+    }
+
+    /**
+     * Accept a single image.
+     *
+     * @return true|string True on success, error message on failure
+     */
+    private function acceptSingleImage(int $imageId)
+    {
+        $productImage = new ProductImage($imageId);
+
+        if (!$productImage->id) {
+            return 'Image not found';
+        }
+
+        if ($productImage->status !== 'pending') {
+            return 'Not pending';
+        }
+
+        $sourcePath = $productImage->getPendingFilePath();
+        if (!file_exists($sourcePath)) {
+            return 'Source file not found';
+        }
+
+        $idProduct = (int) $productImage->id_product;
+        $product = new Product($idProduct);
+        if (!$product->id) {
+            return 'Product not found';
+        }
+
+        $image = new Image();
+        $image->id_product = $idProduct;
+        $image->position = Image::getHighestPosition($idProduct) + 1;
+        $image->cover = !Image::getCover($idProduct);
+
+        if (!$image->add()) {
+            return 'PrestaShop image creation error';
+        }
+
+        $destPath = $image->getPathForCreation();
+
+        if (!is_dir(dirname($destPath))) {
+            mkdir(dirname($destPath), 0755, true);
+        }
+
+        if (!copy($sourcePath, $destPath . '.jpg')) {
+            $image->delete();
+
+            return 'Image copy error';
+        }
+
+        $imageTypes = ImageType::getImagesTypes('products');
+        foreach ($imageTypes as $imageType) {
+            $width = (int) $imageType['width'];
+            $height = (int) $imageType['height'];
+
+            ImageManager::resize(
+                $destPath . '.jpg',
+                $destPath . '-' . $imageType['name'] . '.jpg',
+                $width,
+                $height,
+                'jpg'
+            );
+
+            if (function_exists('imagewebp')) {
+                ImageManager::resize(
+                    $destPath . '.jpg',
+                    $destPath . '-' . $imageType['name'] . '.webp',
+                    $width,
+                    $height,
+                    'webp'
+                );
+            }
+        }
+
+        $productImage->status = 'accepted';
+        $productImage->id_image = (int) $image->id;
+
+        if (!$productImage->update()) {
+            return 'Status update error';
+        }
+
+        @unlink($sourcePath);
+
+        return true;
+    }
+
+    /**
+     * Reject a single image.
+     *
+     * @return true|string True on success, error message on failure
+     */
+    private function rejectSingleImage(int $imageId, string $reason = '')
+    {
+        $productImage = new ProductImage($imageId);
+
+        if (!$productImage->id) {
+            return 'Image not found';
+        }
+
+        if ($productImage->status !== 'pending') {
+            return 'Not pending';
+        }
+
+        $productImage->deleteFile();
+        $productImage->status = 'rejected';
+        $productImage->rejection_reason = $reason;
+
+        if (!$productImage->update()) {
+            return 'Status update error';
+        }
+
+        return true;
+    }
+
+    /**
+     * Delete a single image.
+     *
+     * @return true|string True on success, error message on failure
+     */
+    private function deleteSingleImage(int $imageId)
+    {
+        $productImage = new ProductImage($imageId);
+
+        if (!$productImage->id) {
+            return 'Image not found';
+        }
+
+        if ($productImage->status === 'accepted' && $productImage->id_image) {
+            $psImage = new Image((int) $productImage->id_image);
+            if ($psImage->id) {
+                $psImage->delete();
+            }
+        }
+
+        $productImage->deleteFile();
+
+        if (!$productImage->delete()) {
+            return 'Delete failed';
+        }
+
+        return true;
+    }
+
     private function getPrestaShopImageUrl(int $idImage): string
     {
         $folders = implode('/', str_split((string) $idImage));

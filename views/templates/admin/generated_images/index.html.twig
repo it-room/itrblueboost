@@ -6,6 +6,103 @@
 {% endblock %}
 
 {% block content %}
+    <style>
+        .image-checkbox {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            z-index: 2;
+        }
+        .image-card {
+            position: relative;
+        }
+        .image-card.selected {
+            outline: 3px solid #25b9d7;
+            outline-offset: -3px;
+        }
+        .bulk-toolbar {
+            position: fixed;
+            bottom: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #343a40;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 9999;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            transition: bottom 0.3s ease;
+            white-space: nowrap;
+        }
+        .bulk-toolbar.visible {
+            bottom: 30px;
+        }
+        .bulk-toolbar .bulk-count {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .bulk-toolbar .btn-bulk {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: opacity 0.2s;
+        }
+        .bulk-toolbar .btn-bulk:hover {
+            opacity: 0.85;
+        }
+        .bulk-toolbar .btn-bulk:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .bulk-toolbar .btn-bulk-accept {
+            background: #28a745;
+            color: #fff;
+        }
+        .bulk-toolbar .btn-bulk-reject {
+            background: #ffc107;
+            color: #000;
+        }
+        .bulk-toolbar .btn-bulk-delete {
+            background: #dc3545;
+            color: #fff;
+        }
+        .bulk-toolbar .btn-bulk-deselect {
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .bulk-toolbar .btn-bulk .material-icons {
+            font-size: 16px;
+        }
+        .select-all-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .select-all-bar label {
+            margin: 0;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+        }
+    </style>
+
     <div class="card">
         <div class="card-header">
             <h3 class="card-header-title">
@@ -21,9 +118,15 @@
             } only %}
 
             {% if images|length > 0 %}
+                <div class="select-all-bar">
+                    <input type="checkbox" id="selectAllCheckbox" style="width:18px;height:18px;cursor:pointer;">
+                    <label for="selectAllCheckbox">{{ 'Select all'|trans({}, 'Admin.Actions') }}</label>
+                </div>
+
                 <div class="image-grid">
                     {% for image in images %}
-                        <div class="image-card" id="image-card-{{ image.id_itrblueboost_product_image }}">
+                        <div class="image-card" id="image-card-{{ image.id_itrblueboost_product_image }}" data-image-id="{{ image.id_itrblueboost_product_image }}" data-status="{{ image.status }}">
+                            <input type="checkbox" class="image-checkbox" value="{{ image.id_itrblueboost_product_image }}">
                             {% if image.url %}
                                 <img src="{{ image.url }}" alt="Image {{ image.id_itrblueboost_product_image }}" loading="lazy">
                             {% else %}
@@ -87,6 +190,23 @@
         </div>
     </div>
 
+    {# Bulk toolbar #}
+    <div class="bulk-toolbar" id="bulkToolbar">
+        <span class="bulk-count" id="bulkCount">0 {{ 'selected'|trans({}, 'Modules.Itrblueboost.Admin') }}</span>
+        <button type="button" class="btn-bulk btn-bulk-accept" id="bulkAcceptBtn">
+            <i class="material-icons">check</i> {{ 'Accept'|trans({}, 'Admin.Actions') }}
+        </button>
+        <button type="button" class="btn-bulk btn-bulk-reject" id="bulkRejectBtn">
+            <i class="material-icons">close</i> {{ 'Reject'|trans({}, 'Admin.Actions') }}
+        </button>
+        <button type="button" class="btn-bulk btn-bulk-delete" id="bulkDeleteBtn">
+            <i class="material-icons">delete</i> {{ 'Delete'|trans({}, 'Admin.Actions') }}
+        </button>
+        <button type="button" class="btn-bulk btn-bulk-deselect" id="bulkDeselectBtn">
+            <i class="material-icons">close</i>
+        </button>
+    </div>
+
     <div class="toast-container" id="toastContainer"></div>
 
     {% include '@Modules/itrblueboost/views/templates/admin/_partials/_lightbox.html.twig' %}
@@ -104,7 +224,14 @@
 
             var rejectUrl = '';
             var rejectImageId = 0;
+            var isBulkReject = false;
             var toastContainer = document.getElementById('toastContainer');
+            var bulkToolbar = document.getElementById('bulkToolbar');
+            var bulkCount = document.getElementById('bulkCount');
+
+            var bulkAcceptUrl = '{{ path("itrblueboost_admin_generated_images_bulk_accept") }}';
+            var bulkRejectUrl = '{{ path("itrblueboost_admin_generated_images_bulk_reject") }}';
+            var bulkDeleteUrl = '{{ path("itrblueboost_admin_generated_images_bulk_delete") }}';
 
             function showToast(message, type) {
                 var toast = document.createElement('div');
@@ -131,6 +258,158 @@
                 var confirmBtn = document.getElementById('confirmReject');
                 confirmBtn.disabled = false;
                 confirmBtn.innerHTML = '<i class="material-icons">cancel</i> {{ 'Reject'|trans({}, 'Admin.Actions') }}';
+                isBulkReject = false;
+            });
+
+            // ===== Checkbox / Bulk selection =====
+            function getSelectedIds() {
+                var ids = [];
+                document.querySelectorAll('.image-checkbox:checked').forEach(function(cb) {
+                    ids.push(cb.value);
+                });
+                return ids;
+            }
+
+            function updateBulkToolbar() {
+                var ids = getSelectedIds();
+                var count = ids.length;
+
+                if (count > 0) {
+                    bulkToolbar.classList.add('visible');
+                    bulkCount.textContent = count + ' {{ 'selected'|trans({}, 'Modules.Itrblueboost.Admin') }}';
+                } else {
+                    bulkToolbar.classList.remove('visible');
+                }
+
+                // Update select all checkbox
+                var allCheckboxes = document.querySelectorAll('.image-checkbox');
+                var selectAll = document.getElementById('selectAllCheckbox');
+                if (selectAll && allCheckboxes.length > 0) {
+                    selectAll.checked = count === allCheckboxes.length;
+                    selectAll.indeterminate = count > 0 && count < allCheckboxes.length;
+                }
+
+                // Toggle selected class on cards
+                document.querySelectorAll('.image-card').forEach(function(card) {
+                    var cb = card.querySelector('.image-checkbox');
+                    if (cb) {
+                        card.classList.toggle('selected', cb.checked);
+                    }
+                });
+            }
+
+            document.querySelectorAll('.image-checkbox').forEach(function(cb) {
+                cb.addEventListener('change', updateBulkToolbar);
+            });
+
+            var selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    var checked = this.checked;
+                    document.querySelectorAll('.image-checkbox').forEach(function(cb) {
+                        cb.checked = checked;
+                    });
+                    updateBulkToolbar();
+                });
+            }
+
+            // Deselect all
+            document.getElementById('bulkDeselectBtn').addEventListener('click', function() {
+                document.querySelectorAll('.image-checkbox').forEach(function(cb) {
+                    cb.checked = false;
+                });
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = false;
+                }
+                updateBulkToolbar();
+            });
+
+            // ===== Bulk actions =====
+            function executeBulkAction(url, ids, extraData) {
+                var formData = new FormData();
+                formData.append('image_ids', ids.join(','));
+
+                if (extraData) {
+                    for (var key in extraData) {
+                        formData.append(key, extraData[key]);
+                    }
+                }
+
+                return fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                }).then(function(response) { return response.json(); });
+            }
+
+            // Bulk accept
+            document.getElementById('bulkAcceptBtn').addEventListener('click', function() {
+                var ids = getSelectedIds();
+                if (ids.length === 0) return;
+
+                var btn = this;
+                btn.disabled = true;
+                var originalHtml = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+                executeBulkAction(bulkAcceptUrl, ids)
+                    .then(function(data) {
+                        if (data.success) {
+                            showToast(data.message, 'success');
+                            setTimeout(function() { window.location.reload(); }, 800);
+                        } else {
+                            showToast(data.message || '{{ 'An error occurred.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'error');
+                            btn.disabled = false;
+                            btn.innerHTML = originalHtml;
+                        }
+                    })
+                    .catch(function() {
+                        showToast('{{ 'Connection error.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                    });
+            });
+
+            // Bulk reject - open modal
+            document.getElementById('bulkRejectBtn').addEventListener('click', function() {
+                var ids = getSelectedIds();
+                if (ids.length === 0) return;
+
+                isBulkReject = true;
+                document.getElementById('rejectionReason').value = '';
+                showModal();
+            });
+
+            // Bulk delete
+            document.getElementById('bulkDeleteBtn').addEventListener('click', function() {
+                var ids = getSelectedIds();
+                if (ids.length === 0) return;
+
+                if (!confirm('{{ 'Permanently delete selected images?'|trans({}, 'Modules.Itrblueboost.Admin') }}')) {
+                    return;
+                }
+
+                var btn = this;
+                btn.disabled = true;
+                var originalHtml = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+                executeBulkAction(bulkDeleteUrl, ids)
+                    .then(function(data) {
+                        if (data.success) {
+                            showToast(data.message, 'success');
+                            setTimeout(function() { window.location.reload(); }, 800);
+                        } else {
+                            showToast(data.message || '{{ 'An error occurred.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'error');
+                            btn.disabled = false;
+                            btn.innerHTML = originalHtml;
+                        }
+                    })
+                    .catch(function() {
+                        showToast('{{ 'Connection error.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                    });
             });
 
             // Filter
@@ -157,13 +436,15 @@
             var lightboxImg = document.getElementById('lightboxImage');
             var lightboxClose = document.querySelector('.image-lightbox-close');
 
-            document.querySelectorAll('.image-card img').forEach(function(img) {
-                img.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    lightboxImg.src = this.src;
-                    lightbox.classList.add('active');
-                    document.body.style.overflow = 'hidden';
-                });
+            document.querySelectorAll('.image-card img:not(.image-checkbox)').forEach(function(img) {
+                if (img.tagName !== 'INPUT') {
+                    img.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        lightboxImg.src = this.src;
+                        lightbox.classList.add('active');
+                        document.body.style.overflow = 'hidden';
+                    });
+                }
             });
 
             function closeLightbox() {
@@ -227,12 +508,13 @@
                 });
             });
 
-            // Reject buttons - open modal
+            // Reject buttons - open modal (single)
             document.querySelectorAll('.btn-reject').forEach(function(btn) {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
 
+                    isBulkReject = false;
                     rejectImageId = this.dataset.id;
                     rejectUrl = this.dataset.url;
                     document.getElementById('rejectionReason').value = '';
@@ -240,7 +522,7 @@
                 });
             });
 
-            // Confirm reject
+            // Confirm reject (handles both single and bulk)
             document.getElementById('confirmReject').addEventListener('click', function(e) {
                 e.preventDefault();
 
@@ -251,6 +533,29 @@
                 var originalHtml = button.innerHTML;
                 button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> {{ 'Processing...'|trans({}, 'Admin.Global') }}';
 
+                if (isBulkReject) {
+                    var ids = getSelectedIds();
+                    executeBulkAction(bulkRejectUrl, ids, { rejection_reason: rejectionReason })
+                        .then(function(data) {
+                            if (data.success) {
+                                hideModal();
+                                showToast(data.message, 'success');
+                                setTimeout(function() { window.location.reload(); }, 800);
+                            } else {
+                                showToast(data.message || '{{ 'An error occurred.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'error');
+                                button.disabled = false;
+                                button.innerHTML = originalHtml;
+                            }
+                        })
+                        .catch(function() {
+                            showToast('{{ 'Connection error.'|trans({}, 'Modules.Itrblueboost.Admin') }}', 'error');
+                            button.disabled = false;
+                            button.innerHTML = originalHtml;
+                        });
+                    return;
+                }
+
+                // Single reject
                 var formData = new FormData();
                 formData.append('rejection_reason', rejectionReason);
 
