@@ -700,6 +700,151 @@ itrblueboost_admin_product_list_counts:
     _legacy_controller: AdminProducts
 
 # ==========================================
+# Category Content Routes
+# ==========================================
+
+itrblueboost_admin_category_content_index:
+  path: itrblueboost/category/{id_category}/content
+  methods: [GET]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\CategoryContentController::indexAction
+    _legacy_controller: AdminItrblueboostCategoryContent
+  requirements:
+    id_category: \d+
+
+itrblueboost_admin_category_content_prompts:
+  path: itrblueboost/category-content/prompts
+  methods: [GET]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\CategoryContentController::getPromptsAction
+    _legacy_controller: AdminItrblueboostCategoryContent
+
+itrblueboost_admin_category_content_generate:
+  path: itrblueboost/category/{id_category}/content/generate
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\CategoryContentController::generateAction
+    _legacy_controller: AdminItrblueboostCategoryContent
+  requirements:
+    id_category: \d+
+
+itrblueboost_admin_category_content_edit:
+  path: itrblueboost/category/{id_category}/content/{contentId}/edit
+  methods: [GET, POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\CategoryContentController::editAction
+    _legacy_controller: AdminItrblueboostCategoryContent
+  requirements:
+    id_category: \d+
+    contentId: \d+
+
+itrblueboost_admin_category_content_insert:
+  path: itrblueboost/category/{id_category}/content/{contentId}/insert
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\CategoryContentController::insertAction
+    _legacy_controller: AdminItrblueboostCategoryContent
+  requirements:
+    id_category: \d+
+    contentId: \d+
+
+itrblueboost_admin_category_content_accept:
+  path: itrblueboost/category/{id_category}/content/{contentId}/accept
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\CategoryContentController::acceptAction
+    _legacy_controller: AdminItrblueboostCategoryContent
+  requirements:
+    id_category: \d+
+    contentId: \d+
+
+itrblueboost_admin_category_content_reject:
+  path: itrblueboost/category/{id_category}/content/{contentId}/reject
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\CategoryContentController::rejectAction
+    _legacy_controller: AdminItrblueboostCategoryContent
+  requirements:
+    id_category: \d+
+    contentId: \d+
+
+itrblueboost_admin_category_content_delete:
+  path: itrblueboost/category/{id_category}/content/{contentId}/delete
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\CategoryContentController::deleteAction
+    _legacy_controller: AdminItrblueboostCategoryContent
+  requirements:
+    id_category: \d+
+    contentId: \d+
+
+itrblueboost_admin_category_content_bulk_generate:
+  path: itrblueboost/category-content/bulk-generate
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\CategoryContentController::bulkGenerateAction
+    _legacy_controller: AdminItrblueboostCategoryContent
+
+# ==========================================
+# All Category Contents Routes
+# ==========================================
+
+itrblueboost_admin_all_category_contents:
+  path: itrblueboost/all-category-contents
+  methods: [GET]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllCategoryContentsController::indexAction
+    _legacy_controller: AdminItrblueboostAllCategoryContents
+
+itrblueboost_admin_all_category_contents_bulk_accept:
+  path: itrblueboost/all-category-contents/bulk-accept
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllCategoryContentsController::bulkAcceptAction
+    _legacy_controller: AdminItrblueboostAllCategoryContents
+
+itrblueboost_admin_all_category_contents_bulk_reject:
+  path: itrblueboost/all-category-contents/bulk-reject
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllCategoryContentsController::bulkRejectAction
+    _legacy_controller: AdminItrblueboostAllCategoryContents
+
+itrblueboost_admin_all_category_contents_bulk_delete:
+  path: itrblueboost/all-category-contents/bulk-delete
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllCategoryContentsController::bulkDeleteAction
+    _legacy_controller: AdminItrblueboostAllCategoryContents
+
+itrblueboost_admin_all_category_contents_accept:
+  path: itrblueboost/all-category-contents/{id}/accept
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllCategoryContentsController::acceptAction
+    _legacy_controller: AdminItrblueboostAllCategoryContents
+  requirements:
+    id: \d+
+
+itrblueboost_admin_all_category_contents_reject:
+  path: itrblueboost/all-category-contents/{id}/reject
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllCategoryContentsController::rejectAction
+    _legacy_controller: AdminItrblueboostAllCategoryContents
+  requirements:
+    id: \d+
+
+itrblueboost_admin_all_category_contents_delete:
+  path: itrblueboost/all-category-contents/{id}/delete
+  methods: [POST]
+  defaults:
+    _controller: Itrblueboost\Controller\Admin\AllCategoryContentsController::deleteAction
+    _legacy_controller: AdminItrblueboostAllCategoryContents
+  requirements:
+    id: \d+
+
+# ==========================================
 # Category List Counts
 # ==========================================
 

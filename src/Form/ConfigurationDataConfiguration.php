@@ -14,7 +14,8 @@ use PrestaShop\PrestaShop\Core\Configuration\DataConfigurationInterface;
  */
 class ConfigurationDataConfiguration implements DataConfigurationInterface
 {
-    private ApiService $apiService;
+    /** @var ApiService */
+    private $apiService;
 
     public function __construct(ApiService $apiService)
     {
@@ -77,6 +78,7 @@ class ConfigurationDataConfiguration implements DataConfigurationInterface
             Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_IMAGE, 0);
             Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CATEGORY_FAQ, 0);
             Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CONTENT, 0);
+            Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CATEGORY_CONTENT, 0);
             Configuration::updateValue(Itrblueboost::CONFIG_CREDITS_REMAINING, '');
 
             return;
@@ -89,6 +91,7 @@ class ConfigurationDataConfiguration implements DataConfigurationInterface
             Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_IMAGE, 0);
             Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CATEGORY_FAQ, 0);
             Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CONTENT, 0);
+            Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CATEGORY_CONTENT, 0);
 
             return;
         }
@@ -106,11 +109,13 @@ class ConfigurationDataConfiguration implements DataConfigurationInterface
         $imageActive = $this->isServiceActive($activeServices, ['image', 'product_image', 'image_product', 'img']);
         $categoryFaqActive = $this->isServiceActive($activeServices, ['faq', 'category_faq', 'faq_category', 'cat_faq', 'category_qa']);
         $contentActive = $this->isServiceActive($activeServices, ['content', 'product_content', 'description', 'product_description']);
+        $categoryContentActive = $this->isServiceActive($activeServices, ['content', 'category_content', 'description', 'category_description', 'cat_content']);
 
         Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_FAQ, $faqActive ? 1 : 0);
         Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_IMAGE, $imageActive ? 1 : 0);
         Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CATEGORY_FAQ, $categoryFaqActive ? 1 : 0);
         Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CONTENT, $contentActive ? 1 : 0);
+        Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CATEGORY_CONTENT, $categoryContentActive ? 1 : 0);
     }
 
     /**

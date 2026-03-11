@@ -77,6 +77,9 @@ class Installer
             'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'itrblueboost_product_content_shop`',
             'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'itrblueboost_product_content_lang`',
             'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'itrblueboost_product_content`',
+            'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'itrblueboost_category_content_shop`',
+            'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'itrblueboost_category_content_lang`',
+            'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'itrblueboost_category_content`',
             'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'itrblueboost_generation_job_shop`',
             'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'itrblueboost_generation_job`',
         ];
@@ -234,6 +237,41 @@ class Installer
                 `id_itrblueboost_product_content` INT(11) UNSIGNED NOT NULL,
                 `id_shop` INT(11) UNSIGNED NOT NULL,
                 PRIMARY KEY (`id_itrblueboost_product_content`, `id_shop`)
+            ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8mb4',
+
+            'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'itrblueboost_category_content` (
+                `id_itrblueboost_category_content` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `id_category` INT(11) UNSIGNED NOT NULL,
+                `api_content_id` INT(11) UNSIGNED NULL,
+                `content_type` VARCHAR(20) NOT NULL DEFAULT \'description\',
+                `status` VARCHAR(20) DEFAULT \'pending\',
+                `prompt_id` INT(11) UNSIGNED NOT NULL,
+                `active` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
+                `original_meta_title` VARCHAR(255) NULL,
+                `original_meta_description` VARCHAR(512) NULL,
+                `original_meta_keywords` VARCHAR(512) NULL,
+                `date_add` DATETIME NOT NULL,
+                `date_upd` DATETIME NOT NULL,
+                PRIMARY KEY (`id_itrblueboost_category_content`),
+                KEY `id_category` (`id_category`),
+                KEY `status` (`status`)
+            ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8mb4',
+
+            'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'itrblueboost_category_content_lang` (
+                `id_itrblueboost_category_content` INT(11) UNSIGNED NOT NULL,
+                `id_lang` INT(11) UNSIGNED NOT NULL,
+                `generated_content` MEDIUMTEXT NOT NULL,
+                `generated_content_short` MEDIUMTEXT NULL,
+                `meta_title` VARCHAR(255) NULL,
+                `meta_description` VARCHAR(512) NULL,
+                `meta_keywords` VARCHAR(512) NULL,
+                PRIMARY KEY (`id_itrblueboost_category_content`, `id_lang`)
+            ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8mb4',
+
+            'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'itrblueboost_category_content_shop` (
+                `id_itrblueboost_category_content` INT(11) UNSIGNED NOT NULL,
+                `id_shop` INT(11) UNSIGNED NOT NULL,
+                PRIMARY KEY (`id_itrblueboost_category_content`, `id_shop`)
             ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8mb4',
 
             'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'itrblueboost_generation_job` (
@@ -448,6 +486,16 @@ class Installer
                 'wording_domain' => 'Modules.Itrblueboost.Admin',
                 'name' => 'All Contenus produits',
             ],
+            // Sous-menu: All Category Contents
+            [
+                'class_name' => 'AdminItrblueboostAllCategoryContents',
+                'route_name' => 'itrblueboost_admin_all_category_contents',
+                'visible' => true,
+                'parent_class_name' => 'AdminItrblueboostParent',
+                'wording' => 'All category contents',
+                'wording_domain' => 'Modules.Itrblueboost.Admin',
+                'name' => 'All Contenus catégories',
+            ],
             // Sous-menu: Compatibility
             [
                 'class_name' => 'AdminItrblueboostCompatibility',
@@ -516,6 +564,15 @@ class Installer
                 'wording_domain' => 'Modules.Itrblueboost.Admin',
                 'name' => 'Product Content',
             ],
+            // Tab caché: Category Content
+            [
+                'class_name' => 'AdminItrblueboostCategoryContent',
+                'visible' => false,
+                'parent_class_name' => -1,
+                'wording' => 'Category Content',
+                'wording_domain' => 'Modules.Itrblueboost.Admin',
+                'name' => 'Category Content',
+            ],
         ];
     }
 
@@ -529,6 +586,7 @@ class Installer
             && Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_IMAGE, 0)
             && Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CATEGORY_FAQ, 0)
             && Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CONTENT, 0)
+            && Configuration::updateValue(Itrblueboost::CONFIG_SERVICE_CATEGORY_CONTENT, 0)
             && Configuration::updateValue(Itrblueboost::CONFIG_CREDITS_REMAINING, '')
             && Configuration::updateValue(Itrblueboost::CONFIG_BOOTSTRAP_VERSION, 'bootstrap5')
             && Configuration::updateValue(Itrblueboost::CONFIG_API_MODE, 'prod');
@@ -544,6 +602,7 @@ class Installer
             && Configuration::deleteByName(Itrblueboost::CONFIG_SERVICE_IMAGE)
             && Configuration::deleteByName(Itrblueboost::CONFIG_SERVICE_CATEGORY_FAQ)
             && Configuration::deleteByName(Itrblueboost::CONFIG_SERVICE_CONTENT)
+            && Configuration::deleteByName(Itrblueboost::CONFIG_SERVICE_CATEGORY_CONTENT)
             && Configuration::deleteByName(Itrblueboost::CONFIG_CREDITS_REMAINING)
             && Configuration::deleteByName(Itrblueboost::CONFIG_BOOTSTRAP_VERSION)
             && Configuration::deleteByName(Itrblueboost::CONFIG_API_MODE);

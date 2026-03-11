@@ -1,0 +1,319 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .content-form-card {
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        .content-form-card .card-header {
+            background: linear-gradient(135deg, #25b9d7 0%, #1e9bb5 100%);
+            color: #fff;
+            padding: 1.25rem;
+        }
+        .content-form-card .card-header-title {
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+        .content-form-card .card-body {
+            padding: 0;
+        }
+        .content-field-section {
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        .content-field-section:last-child {
+            border-bottom: none;
+        }
+        .content-field-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0.75rem;
+        }
+        .content-field-header .material-icons {
+            color: #25b9d7;
+        }
+        .content-field-header label {
+            font-weight: 600;
+            color: #363a41;
+            margin: 0;
+        }
+        .insert-checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+            background: #f0f9fb;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            border: 1px solid #d4f0f6;
+        }
+        .insert-checkbox-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .insert-checkbox-row label {
+            margin: 0;
+            font-weight: 500;
+            cursor: pointer;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-lg-8">
+            {{ form_start(form) }}
+                <div class="card content-form-card">
+                    <div class="card-header">
+                        <h3 class="card-header-title">
+                            <i class="material-icons">description</i>
+                            {{ layoutTitle }}
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        {{ form_widget(form.id_category) }}
+
+                        <div class="content-field-section">
+                            <div class="insert-checkbox-row">
+                                <input type="checkbox" id="check-description" checked>
+                                <label for="check-description">{{ 'Insert this description'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                            </div>
+                            <div class="content-field-header">
+                                <i class="material-icons">edit</i>
+                                <label>{{ 'Description'|trans({}, 'Modules.Itrblueboost.Admin') }}<span style="color:#dc3545;">*</span></label>
+                            </div>
+                            {{ form_widget(form.generated_content) }}
+                            {{ form_errors(form.generated_content) }}
+                        </div>
+
+                        <div class="content-field-section">
+                            <div class="insert-checkbox-row">
+                                <input type="checkbox" id="check-description-short" checked>
+                                <label for="check-description-short">{{ 'Insert this additional description'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                            </div>
+                            <div class="content-field-header">
+                                <i class="material-icons">short_text</i>
+                                <label>{{ 'Additional description'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                            </div>
+                            {{ form_widget(form.generated_content_short) }}
+                            {{ form_errors(form.generated_content_short) }}
+                        </div>
+
+                        <div class="content-field-section">
+                            <div class="insert-checkbox-row">
+                                <input type="checkbox" id="check-seo" checked>
+                                <label for="check-seo">{{ 'Insert SEO fields'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                            </div>
+                            <div class="content-field-header">
+                                <i class="material-icons">search</i>
+                                <label>{{ 'SEO - Meta title'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                            </div>
+                            {{ form_widget(form.meta_title) }}
+                            {{ form_errors(form.meta_title) }}
+
+                            {% if content is defined and content.original_meta_title %}
+                                <small class="text-muted">{{ 'Original:'|trans({}, 'Modules.Itrblueboost.Admin') }} {{ content.original_meta_title }}</small>
+                            {% endif %}
+                        </div>
+
+                        <div class="content-field-section">
+                            <div class="content-field-header">
+                                <i class="material-icons">notes</i>
+                                <label>{{ 'SEO - Meta description'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                            </div>
+                            {{ form_widget(form.meta_description) }}
+                            {{ form_errors(form.meta_description) }}
+
+                            {% if content is defined and content.original_meta_description %}
+                                <small class="text-muted">{{ 'Original:'|trans({}, 'Modules.Itrblueboost.Admin') }} {{ content.original_meta_description }}</small>
+                            {% endif %}
+                        </div>
+
+                        <div class="content-field-section">
+                            <div class="content-field-header">
+                                <i class="material-icons">label</i>
+                                <label>{{ 'SEO - Meta keywords'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                            </div>
+                            {{ form_widget(form.meta_keywords) }}
+                            {{ form_errors(form.meta_keywords) }}
+
+                            {% if content is defined and content.original_meta_keywords %}
+                                <small class="text-muted">{{ 'Original:'|trans({}, 'Modules.Itrblueboost.Admin') }} {{ content.original_meta_keywords }}</small>
+                            {% endif %}
+                        </div>
+
+                        {% if content is defined and content.id and content.hasApiContentId() %}
+                        <div class="content-field-section">
+                            <div class="content-field-header">
+                                <i class="material-icons">edit_note</i>
+                                <label>{{ 'Modification reason'|trans({}, 'Modules.Itrblueboost.Admin') }}</label>
+                            </div>
+                            {{ form_widget(form.modification_reason, {'attr': {'placeholder': 'Explain why you are modifying this content...'|trans({}, 'Modules.Itrblueboost.Admin'), 'rows': '2'}}) }}
+                            {{ form_errors(form.modification_reason) }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ path('itrblueboost_admin_category_content_index', { id_category: id_category }) }}" class="btn btn-outline-secondary">
+                                <i class="material-icons">arrow_back</i>
+                                {{ 'Back'|trans({}, 'Admin.Actions') }}
+                            </a>
+                            <div class="d-flex align-items-center">
+                                {% if content is defined and content.id %}
+                                    {% if content.status != 'accepted' %}
+                                        <button type="button" class="btn btn-danger mr-2" id="btn-reject-content"
+                                                data-reject-url="{{ path('itrblueboost_admin_category_content_reject', { id_category: id_category, contentId: content.id }) }}">
+                                            <i class="material-icons">cancel</i>
+                                            {{ 'Reject'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                                        </button>
+                                    {% endif %}
+
+                                    <button type="button" class="btn btn-success mr-2" id="btn-insert-content"
+                                            data-insert-url="{{ path('itrblueboost_admin_category_content_insert', { id_category: id_category, contentId: content.id }) }}">
+                                        <i class="material-icons">publish</i>
+                                        {{ 'Insert into category'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                                    </button>
+                                {% endif %}
+
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="material-icons">save</i>
+                                    {{ 'Save'|trans({}, 'Admin.Actions') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {{ form_end(form) }}
+        </div>
+
+        <div class="col-lg-4">
+            <div style="background: #f8f9fa; border-radius: 8px; padding: 1.25rem;">
+                <div style="font-size: 0.85rem; font-weight: 600; color: #6c757d; text-transform: uppercase; margin-bottom: 1rem; display: flex; align-items: center; gap: 6px;">
+                    <i class="material-icons">lightbulb</i>
+                    {{ 'Tips'|trans({}, 'Modules.Itrblueboost.Admin') }}
+                </div>
+                <ul class="mb-0 pl-3" style="font-size: 0.9rem; color: #666;">
+                    <li class="mb-2">{{ 'Check the boxes to select which content to insert into the category.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
+                    <li class="mb-2">{{ 'You can edit the content before inserting.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
+                    <li class="mb-2">{{ '"Save" only saves your edits without applying to the category.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
+                    <li>{{ '"Insert into category" applies the checked content(s) to the category.'|trans({}, 'Modules.Itrblueboost.Admin') }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {% if content is defined and content.id %}
+        {% include '@Modules/itrblueboost/views/templates/admin/_partials/_reject_modal.html.twig' with {
+            rejectTitle: 'Reject Content'|trans({}, 'Modules.Itrblueboost.Admin'),
+            warningMessage: 'This action will permanently delete this content.'|trans({}, 'Modules.Itrblueboost.Admin'),
+            showHiddenUrl: true,
+            hiddenUrlId: 'reject-url',
+        } only %}
+    {% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+    (function() {
+        'use strict';
+
+        var btnReject = document.getElementById('btn-reject-content');
+        var rejectModal = document.getElementById('rejectModal');
+
+        if (btnReject && rejectModal) {
+            var rejectReasonInput = document.getElementById('rejectionReason');
+            var rejectContentUrl = document.getElementById('reject-url');
+            var btnConfirmReject = document.getElementById('confirmReject');
+
+            btnReject.addEventListener('click', function() {
+                rejectContentUrl.value = this.dataset.rejectUrl;
+                rejectReasonInput.value = '';
+                $(rejectModal).modal('show');
+            });
+
+            if (btnConfirmReject) {
+                btnConfirmReject.addEventListener('click', function() {
+                    var url = rejectContentUrl.value;
+                    var reason = rejectReasonInput.value;
+                    btnConfirmReject.disabled = true;
+
+                    var formData = new FormData();
+                    formData.append('rejection_reason', reason);
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            $(rejectModal).modal('hide');
+                            window.location.href = '{{ path('itrblueboost_admin_category_content_index', { id_category: id_category }) }}';
+                        } else {
+                            alert(data.message || 'Error');
+                            btnConfirmReject.disabled = false;
+                        }
+                    })
+                    .catch(function() {
+                        alert('Connection error');
+                        btnConfirmReject.disabled = false;
+                    });
+                });
+            }
+        }
+
+        var btnInsert = document.getElementById('btn-insert-content');
+        if (btnInsert) {
+            btnInsert.addEventListener('click', function() {
+                var checkDesc = document.getElementById('check-description');
+                var checkShort = document.getElementById('check-description-short');
+                var checkSeo = document.getElementById('check-seo');
+
+                if (!checkDesc.checked && !checkShort.checked && !checkSeo.checked) {
+                    alert('{{ 'Please check at least one content to insert.'|trans({}, 'Modules.Itrblueboost.Admin') }}');
+                    return;
+                }
+
+                var url = this.dataset.insertUrl;
+                var btn = this;
+                btn.disabled = true;
+
+                var formData = new FormData();
+                formData.append('apply_description', checkDesc.checked ? '1' : '0');
+                formData.append('apply_description_short', checkShort.checked ? '1' : '0');
+                formData.append('apply_seo', checkSeo.checked ? '1' : '0');
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Error');
+                        btn.disabled = false;
+                    }
+                })
+                .catch(function() {
+                    alert('Connection error');
+                    btn.disabled = false;
+                });
+            });
+        }
+    })();
+    </script>
+{% endblock %}

@@ -1,0 +1,128 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Itrblueboost\Grid\Query;
+
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\QueryBuilder;
+use PrestaShop\PrestaShop\Core\Grid\Query\AbstractDoctrineQueryBuilder;
+use PrestaShop\PrestaShop\Core\Grid\Query\DoctrineSearchCriteriaApplicatorInterface;
+use PrestaShop\PrestaShop\Core\Grid\Search\SearchCriteriaInterface;
+
+/**
+ * Query Builder for Category Content Grid.
+ */
+class CategoryContentQueryBuilder extends AbstractDoctrineQueryBuilder
+{
+    /** @var DoctrineSearchCriteriaApplicatorInterface */
+    private $searchCriteriaApplicator;
+
+    /** @var int */
+    private $contextLangId;
+
+    /** @var int */
+    private $contextShopId;
+
+    /**
+     * @param Connection $connection
+     * @param string $dbPrefix
+     * @param DoctrineSearchCriteriaApplicatorInterface $searchCriteriaApplicator
+     * @param int $contextLangId
+     * @param int $contextShopId
+     */
+    public function __construct(
+        Connection $connection,
+        string $dbPrefix,
+        DoctrineSearchCriteriaApplicatorInterface $searchCriteriaApplicator,
+        int $contextLangId,
+        int $contextShopId
+    ) {
+        parent::__construct($connection, $dbPrefix);
+        $this->searchCriteriaApplicator = $searchCriteriaApplicator;
+        $this->contextLangId = $contextLangId;
+        $this->contextShopId = $contextShopId;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getSearchQueryBuilder(SearchCriteriaInterface $searchCriteria): QueryBuilder
+    {
+        $qb = $this->getBaseQueryBuilder($searchCriteria->getFilters());
+
+        $qb->select('c.id_itrblueboost_category_content, c.id_category, c.content_type, c.active, c.status, c.api_content_id, c.prompt_id, cl.generated_content, cl.generated_content_short, cl.meta_title, cl.meta_description, cl.meta_keywords');
+
+        $this->searchCriteriaApplicator->applyPagination($searchCriteria, $qb);
+        $this->searchCriteriaApplicator->applySorting($searchCriteria, $qb);
+
+        return $qb;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getCountQueryBuilder(SearchCriteriaInterface $searchCriteria): QueryBuilder
+    {
+        $qb = $this->getBaseQueryBuilder($searchCriteria->getFilters());
+
+        $qb->select('COUNT(DISTINCT c.id_itrblueboost_category_content)');
+
+        return $qb;
+    }
+
+    /**
+     * @param array<string, mixed> $filters
+     *
+     * @return QueryBuilder
+     */
+    private function getBaseQueryBuilder(array $filters): QueryBuilder
+    {
+        $qb = $this->connection->createQueryBuilder()
+            ->from($this->dbPrefix . 'itrblueboost_category_content', 'c')
+            ->innerJoin(
+                'c',
+                $this->dbPrefix . 'itrblueboost_category_content_lang',
+                'cl',
+                'c.id_itrblueboost_category_content = cl.id_itrblueboost_category_content AND cl.id_lang = :id_lang'
+            )
+            ->innerJoin(
+                'c',
+                $this->dbPrefix . 'itrblueboost_category_content_shop',
+                'cs',
+                'c.id_itrblueboost_category_content = cs.id_itrblueboost_category_content AND cs.id_shop = :id_shop'
+            )
+            ->setParameter('id_lang', $this->contextLangId)
+            ->setParameter('id_shop', $this->contextShopId);
+
+        $this->applyFilters($qb, $filters);
+
+        return $qb;
+    }
+
+    /**
+     * @param QueryBuilder $qb
+     * @param array<string, mixed> $filters
+     */
+    private function applyFilters(QueryBuilder $qb, array $filters): void
+    {
+        $allowedFilters = [
+            'id_itrblueboost_category_content',
+            'id_category',
+            'status',
+        ];
+
+        foreach ($filters as $filterName => $filterValue) {
+            if (!in_array($filterName, $allowedFilters, true)) {
+                continue;
+            }
+
+            if ($filterValue === '' || $filterValue === null) {
+                continue;
+            }
+
+            $qb->andWhere('c.' . $filterName . ' = :' . $filterName)
+                ->setParameter($filterName, $filterValue);
+        }
+    }
+}

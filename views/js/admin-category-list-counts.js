@@ -155,7 +155,9 @@
                 }
 
                 var faqCount = categoryCounts.faq || 0;
-                if (faqCount === 0) {
+                var contentCount = categoryCounts.content || 0;
+
+                if (faqCount === 0 && contentCount === 0) {
                     return;
                 }
 
@@ -168,10 +170,20 @@
                 container.className = 'itrblueboost-category-counts';
                 container.style.marginTop = '4px';
 
-                var badge = document.createElement('span');
-                badge.className = 'badge badge-info itrblueboost-count-badge';
-                badge.textContent = faqCount + ' FAQ';
-                container.appendChild(badge);
+                if (faqCount > 0) {
+                    var faqBadge = document.createElement('span');
+                    faqBadge.className = 'badge badge-info itrblueboost-count-badge';
+                    faqBadge.textContent = faqCount + ' FAQ';
+                    container.appendChild(faqBadge);
+                }
+
+                if (contentCount > 0) {
+                    var contentBadge = document.createElement('span');
+                    contentBadge.className = 'badge badge-success itrblueboost-count-badge';
+                    contentBadge.style.marginLeft = faqCount > 0 ? '4px' : '0';
+                    contentBadge.textContent = contentCount + ' Content';
+                    container.appendChild(contentBadge);
+                }
 
                 cell.appendChild(container);
             });

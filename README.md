@@ -13,6 +13,7 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 ## Features
 
 - **Product Description Generation**: Generate AI-powered product descriptions and short descriptions
+- **Category Description Generation**: Generate AI-powered category descriptions, additional descriptions, and SEO fields (meta title, meta description, meta keywords) (new in v1.8.17, SEO in v1.8.18)
 - **Product FAQ Generation**: Generate frequently asked questions for products using AI
 - **Category FAQ Generation**: Create FAQs at the category level
 - **AI Image Generation**: Generate product images using ITROOM API with async processing to prevent HTTP 504 timeouts
@@ -21,10 +22,10 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 - **Animated Progress Bar**: Real-time progress display with step indicators (Start → API Call → Generation → Save → Done) and percentage completion
 - **Job Status Polling**: Frontend automatically polls for job status updates every 2 seconds with fallback to manual refresh
 - **Fallback Processing**: Automatic fallback to inline processing using `fastcgi_finish_request()` if command execution is unavailable
-- **Inline Content Generation**: Generate descriptions directly from product edit form with inline buttons
+- **Inline Content Generation**: Generate descriptions directly from product/category edit form with inline buttons
 - **Bulk Operations**: Generate content in bulk for multiple products/categories; perform Accept All, Reject All, and Delete All operations on FAQs and images
-- **Flexible FAQ View Modes**: Toggle between grid view (cards) and list view (table) with automatic preference persistence
-- **Checkbox Selection System**: Select multiple FAQs across grid/list views with synchronized checkboxes and visual feedback
+- **Flexible View Modes**: Toggle between grid view (cards) and list view (table) with automatic preference persistence
+- **Checkbox Selection System**: Select multiple items across grid/list views with synchronized checkboxes and visual feedback
 - **Floating Bulk Toolbar**: Context-aware floating action toolbar appears when items are selected for quick bulk operations
 - **Theme Compatibility Settings**: Configure Bootstrap version compatibility (Bootstrap 4, Bootstrap 4 Alpha, Bootstrap 5) for proper theme integration
 - **API Mode Selection**: Switch between Production and Test API environments without code changes
@@ -33,8 +34,8 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 - **Multi-shop Support**: Compatible with multi-shop PrestaShop installations
 - **Language Support**: Support for all PrestaShop languages
 - **Modern Admin UI**: Symfony-based modern admin controllers
-- **Front-office Display**: Automatically displays generated FAQs on product and category pages
-- **Product Listing Badges**: Visual badges next to product names in the admin product listing showing FAQ, image, and content counts at a glance
+- **Front-office Display**: Automatically displays generated content (descriptions and FAQs) on product and category pages
+- **Content Listing Badges**: Visual badges in product and category admin listings showing counts of generated content, FAQs, and images at a glance
 - **Complete API Logging**: All API calls (FAQ generation, image generation, content generation, account info) are logged with full request/response details, context, and error messages
 
 ## Requirements
@@ -112,6 +113,8 @@ The module uses the following configuration keys (stored in `ps_configuration`):
 - `ITRBLUEBOOST_ENABLE_PRODUCT_FAQ`: Enable/disable product FAQ generation
 - `ITRBLUEBOOST_ENABLE_PRODUCT_IMAGE`: Enable/disable product image generation
 - `ITRBLUEBOOST_ENABLE_CATEGORY_FAQ`: Enable/disable category FAQ generation
+- `ITRBLUEBOOST_ENABLE_PRODUCT_CONTENT`: Enable/disable product description generation
+- `ITRBLUEBOOST_ENABLE_CATEGORY_CONTENT`: Enable/disable category description generation (new in v1.8.17)
 - `ITRBLUEBOOST_BOOTSTRAP_VERSION`: Selected Bootstrap version (bootstrap4, bootstrap4alpha, or bootstrap5; default: bootstrap5)
 - `ITRBLUEBOOST_API_MODE`: API environment mode (prod or test; default: prod)
 - `ITRBLUEBOOST_CREDITS_REMAINING`: Stores the last known remaining API credits (automatically updated)
@@ -123,6 +126,7 @@ The module creates a dropdown menu in the **Configurer** section with the follow
 - **Settings**: Configure API key and enable/disable services
 - **Compatibility**: Select the Bootstrap version used on your site theme
 - **All Product Contents**: Centralized view for managing all AI-generated product descriptions and short descriptions
+- **All Category Contents**: Centralized view for managing all AI-generated category descriptions (new in v1.8.17)
 - **All generated images**: View and manage all AI-generated product images
 - **All product FAQs**: Browse and edit all generated product FAQs
 - **All category FAQs**: Browse and edit all generated category FAQs
@@ -130,8 +134,9 @@ The module creates a dropdown menu in the **Configurer** section with the follow
 Additional contextual tabs are automatically displayed:
 - Product FAQs tab on product edit page (when enabled)
 - AI Images tab on product edit page (when enabled)
+- Content inline generation buttons next to description and short description fields on product/category edit pages (when enabled)
 - Category FAQs tab on category edit page (when enabled)
-- Generate buttons next to description and short description fields on product edit page (when enabled)
+- Category Content inline generation button on category edit page (when enabled)
 
 ## Usage
 
@@ -238,16 +243,51 @@ When generating images in bulk, the module automatically sends each product's co
 
 ### Bulk Operations Summary
 
-The module supports bulk operations for both FAQ and image generation from the product and category list pages:
+The module supports bulk operations for FAQ, content, and image generation from the product and category list pages:
 
 **Product List Bulk Actions:**
 - "Generate FAQ (AI)": Generate FAQs for multiple products simultaneously
+- "Generate Content (AI)": Generate descriptions for multiple products simultaneously
 - "Generate Images (AI)": Generate images for multiple products with the same prompt
 
 **Category List Bulk Actions:**
 - "Generate FAQ (AI)": Generate FAQs for multiple categories simultaneously
+- "Generate Content (AI)": Generate descriptions for multiple categories simultaneously (new in v1.8.17)
 
 These bulk operations use the same asynchronous GenerationJob pattern as single-product operations, ensuring no HTTP timeouts regardless of how many items are processed.
+
+### Generating Category Descriptions
+
+Category descriptions can be generated directly from the category edit form or through the centralized admin interface (new in v1.8.17).
+
+**From Category Edit Form (Inline Generation):**
+1. Navigate to a category edit page
+2. Locate the "Description" or "Additional description" fields
+3. Click the "Generate Content (AI)" button to generate content using AI
+4. The generated content appears as a pending item in a modal
+5. Review the generated description and additional description
+6. Click "Insert" to apply the content to the category's description or additional description fields
+
+**From All Category Contents Menu:**
+1. Go to **Configurer** → **ITR Blue Boost** → **All Category Contents**
+2. View all generated category descriptions in a paginated list or grid view
+3. Filter by status: pending, accepted, or rejected
+4. For pending contents:
+   - **Accept**: Click the accept button to apply the generated content to the category
+   - **Reject**: Click the reject button and optionally provide a rejection reason
+5. For accepted contents:
+   - **Delete**: Remove contents you no longer need
+6. Use bulk operations to manage multiple contents at once
+
+**Content Type Mapping:**
+- **Description**: Maps to category `description` field
+- **Additional description**: Maps to category `additional_description` field
+- **Meta title**: Maps to category `meta_title` field (new in v1.8.18)
+- **Meta description**: Maps to category `meta_description` field (new in v1.8.18)
+- **Meta keywords**: Maps to category `meta_keywords` field (new in v1.8.18)
+
+**SEO Fields (v1.8.18):**
+The API now returns SEO fields alongside descriptions. On the edit form, each content type (description, additional description, SEO) has its own checkbox to selectively apply fields to the category. Original meta values are displayed for comparison below each SEO field.
 
 ### Generating Category FAQs
 
@@ -261,14 +301,17 @@ These bulk operations use the same asynchronous GenerationJob pattern as single-
 1. Go to category list view
 2. Select multiple categories
 3. Click "Generate FAQ (AI)" from bulk actions
+4. Optional: Click "Generate Content (AI)" from bulk actions to generate descriptions for multiple categories
 
 ### Front-Office Display
 
 Generated content automatically appears on the front-office:
+- **Product Descriptions**: Displayed as part of the product description when accepted
 - **Product FAQs**: Displayed in the product page extra content section
+- **Category Descriptions**: Displayed as part of the category description when accepted (new in v1.8.17)
 - **Category FAQs**: Displayed in the category page footer
 
-Customers can view and interact with the generated FAQs without any additional configuration.
+Customers can view and interact with the generated content without any additional configuration. Only accepted and active content is displayed on the front-office.
 
 #### Bootstrap Version Compatibility
 
@@ -286,20 +329,24 @@ The front-office FAQ templates automatically adapt their HTML markup and styling
 
 The `bootstrap_version` variable is automatically passed from the hooks (`hookDisplayProductExtraContent` and `hookDisplayFooterCategory`) to the Smarty templates, ensuring FAQs display with correct styling and functionality regardless of your theme's Bootstrap version. No additional configuration is required beyond selecting the correct Bootstrap version in the Compatibility settings.
 
-### Product Listing Badges
+### Content Listing Badges
 
-The module automatically displays visual badges next to product names in the admin product listing page, providing a quick overview of AI-generated content for each product.
+The module automatically displays visual badges in admin product and category listing pages, providing a quick overview of AI-generated content for each item.
 
-**Badge Types:**
+**Product Listing Badges:**
 - **FAQ** (blue `badge-info`): Shows the count of FAQ entries for the product
 - **Images** (grey `badge-secondary`): Shows the count of generated images
 - **Contenu** (green `badge-success`): Shows the count of generated content items (descriptions)
 
+**Category Listing Badges:**
+- **FAQ** (blue `badge-info`): Shows the count of FAQ entries for the category
+- **Contenu** (green `badge-success`): Shows the count of generated content items (descriptions) (new in v1.8.17)
+
 **How It Works:**
-1. On the product listing page, the module fetches counts for all visible products in a single batch AJAX call
-2. Badges are injected dynamically next to the product name column
+1. On product/category listing pages, the module fetches counts for all visible items in a single batch AJAX call
+2. Badges are injected dynamically next to the product/category name column
 3. Badges update automatically when the listing is reloaded (pagination, filters, sorting)
-4. Badges are only shown for products that have at least one item in any category
+4. Badges are only shown for items that have at least one item in any category
 
 This feature requires no configuration — it appears automatically when at least one AI service (FAQ, Images, or Content) is enabled.
 
@@ -310,6 +357,9 @@ The module creates the following database tables:
 - `itrblueboost_product_content`: Product description and short description content data
 - `itrblueboost_product_content_lang`: Product content in different languages
 - `itrblueboost_product_content_shop`: Product content to shop associations
+- `itrblueboost_category_content`: Category description content data (new in v1.8.17)
+- `itrblueboost_category_content_lang`: Category content in different languages (new in v1.8.17)
+- `itrblueboost_category_content_shop`: Category content to shop associations (new in v1.8.17)
 - `itrblueboost_product_faq`: Product FAQ data
 - `itrblueboost_product_faq_lang`: FAQ content in different languages
 - `itrblueboost_product_faq_shop`: FAQ to shop associations
@@ -443,11 +493,11 @@ Navigate to **Configurer** → **ITR Blue Boost** → **API Logs** to view:
 The module registers the following PrestaShop hooks:
 
 - `actionAdminControllerSetMedia`: Load JS/CSS assets on admin pages
-- `displayProductExtraContent`: Display product FAQs on front-office
+- `displayProductExtraContent`: Display product FAQs and contents on front-office
 - `actionProductDelete`: Clean up FAQs/images/contents when product is deleted
 - `actionObjectImageDeleteAfter`: Update AI image records when PrestaShop images are deleted
-- `displayFooterCategory`: Display category FAQs on front-office
-- `actionCategoryDelete`: Clean up FAQs when category is deleted
+- `displayFooterCategory`: Display category FAQs and contents on front-office
+- `actionCategoryDelete`: Clean up FAQs and contents when category is deleted
 - `displayBackOfficeHeader`: Display credit badge in admin header (optimized with Configuration storage)
 
 ## Compatibility
@@ -458,6 +508,27 @@ The module registers the following PrestaShop hooks:
 - **Multisite**: Fully supported
 
 ## Changelog
+
+### Version 1.8.17 (Unreleased)
+- **New Feature**: AI content generation for categories (descriptions and additional descriptions)
+- **New Entity**: `CategoryContent` for managing category descriptions with multilang and multishop support
+- **SEO Fields**: API returns `meta_title`, `meta_description`, `meta_keywords` alongside descriptions; stored in `_lang` table with original values in main table (v1.8.18)
+- **New API Endpoint**: POST `/api/description` with `type: "category"` for category content generation
+- **New Controller**: `CategoryContentController` for inline category content generation from category edit page
+- **New Controller**: `AllCategoryContentsController` for global category content management with grid/list view toggle
+- **New Configuration Key**: `ITRBLUEBOOST_ENABLE_CATEGORY_CONTENT` for enabling/disabling category content generation
+- **New Admin Menu**: "All Category Contents" sub-menu for centralized category content management
+- **Inline Generation**: "Generate Content (AI)" button on category edit page (same as product)
+- **Bulk Operations**: "Generate Content (AI)" bulk action on category listing page
+- **Content Badges**: Category listing now displays content count badges alongside FAQ badges
+- **Database Tables**: New tables `itrblueboost_category_content`, `itrblueboost_category_content_lang`, `itrblueboost_category_content_shop`
+- **Content Type Mapping**:
+  - `generated_content` → category `description` field
+  - `generated_content_short` → category `additional_description` field
+- **Grid/List Views**: All Category Contents page supports grid and list view toggle with view preference persistence
+- **Bulk Actions**: Accept All, Reject All, Delete All operations for category contents with floating toolbar
+- **Status Management**: Category contents support pending, accepted, rejected status workflow
+- **Inline Insertion**: "Insert" button in generation modal to apply content to category description fields
 
 ### Version 1.8.8
 - **Enhancement**: Bulk image generation now automatically sends product cover images to the API for improved generation results

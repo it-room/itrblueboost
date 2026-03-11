@@ -10,6 +10,7 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
     require_once __DIR__ . '/vendor/autoload.php';
 }
 
+use Itrblueboost\Entity\CategoryContent;
 use Itrblueboost\Entity\CategoryFaq;
 use Itrblueboost\Entity\ProductContent;
 use Itrblueboost\Entity\ProductFaq;
@@ -30,6 +31,7 @@ class Itrblueboost extends Module
     public const CONFIG_SERVICE_IMAGE = 'ITRBLUEBOOST_SERVICE_IMAGE';
     public const CONFIG_SERVICE_CATEGORY_FAQ = 'ITRBLUEBOOST_SERVICE_CATEGORY_FAQ';
     public const CONFIG_SERVICE_CONTENT = 'ITRBLUEBOOST_SERVICE_CONTENT';
+    public const CONFIG_SERVICE_CATEGORY_CONTENT = 'ITRBLUEBOOST_SERVICE_CATEGORY_CONTENT';
     public const CONFIG_CREDITS_REMAINING = 'ITRBLUEBOOST_CREDITS_REMAINING';
     public const CONFIG_BOOTSTRAP_VERSION = 'ITRBLUEBOOST_BOOTSTRAP_VERSION';
     public const CONFIG_API_MODE = 'ITRBLUEBOOST_API_MODE';
@@ -41,7 +43,7 @@ class Itrblueboost extends Module
     {
         $this->name = 'itrblueboost';
         $this->tab = 'administration';
-        $this->version = '1.8.16';
+        $this->version = '1.8.18';
         $this->author = 'ITROOM';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
@@ -123,8 +125,9 @@ class Itrblueboost extends Module
         $imageServiceActive = (bool) Configuration::get(self::CONFIG_SERVICE_IMAGE);
         $categoryFaqServiceActive = (bool) Configuration::get(self::CONFIG_SERVICE_CATEGORY_FAQ);
         $contentServiceActive = (bool) Configuration::get(self::CONFIG_SERVICE_CONTENT);
+        $categoryContentServiceActive = (bool) Configuration::get(self::CONFIG_SERVICE_CATEGORY_CONTENT);
 
-        if (!$faqServiceActive && !$imageServiceActive && !$categoryFaqServiceActive && !$contentServiceActive) {
+        if (!$faqServiceActive && !$imageServiceActive && !$categoryFaqServiceActive && !$contentServiceActive && !$categoryContentServiceActive) {
             return;
         }
 
@@ -147,15 +150,15 @@ class Itrblueboost extends Module
             && strpos($requestUri, '/edit') === false
             && !preg_match('/\/categories\/\d+/', $requestUri);
 
-        if ($isCategoryListPage && $categoryFaqServiceActive) {
-            $this->loadCategoryListAssets();
+        if ($isCategoryListPage && ($categoryFaqServiceActive || $categoryContentServiceActive)) {
+            $this->loadCategoryListAssets($categoryFaqServiceActive, $categoryContentServiceActive);
             return;
         }
 
         // Check if we're on category edit page
         $isCategoryPage = strpos($requestUri, '/sell/catalog/categories/') !== false;
 
-        if ($isCategoryPage && $categoryFaqServiceActive) {
+        if ($isCategoryPage && ($categoryFaqServiceActive || $categoryContentServiceActive)) {
             $idCategory = $this->getCategoryIdFromUrl($requestUri);
 
             if ($idCategory > 0) {
@@ -163,16 +166,50 @@ class Itrblueboost extends Module
                     /** @var \Symfony\Component\Routing\RouterInterface $router */
                     $router = $this->get('router');
 
-                    $faqCount = CategoryFaq::countByCategory($idCategory);
+                    $jsDef = [];
 
-                    Media::addJsDef([
-                        'itrblueboostCategoryFaqCount' => (int) $faqCount,
-                        'itrblueboostCategoryFaqUrl' => $router->generate('itrblueboost_admin_category_faq_index', [
+                    if ($categoryFaqServiceActive) {
+                        $faqCount = CategoryFaq::countByCategory($idCategory);
+                        $jsDef['itrblueboostCategoryFaqCount'] = (int) $faqCount;
+                        $jsDef['itrblueboostCategoryFaqUrl'] = $router->generate('itrblueboost_admin_category_faq_index', [
                             'id_category' => $idCategory,
-                        ]),
-                    ]);
+                        ]);
+                    }
+
+                    if ($categoryContentServiceActive) {
+                        $jsDef['itrblueboostCategoryContentPromptsUrl'] = $router->generate('itrblueboost_admin_category_content_prompts');
+                        $jsDef['itrblueboostCategoryContentGenerateUrl'] = $router->generate('itrblueboost_admin_category_content_generate', [
+                            'id_category' => $idCategory,
+                        ]);
+                        $jsDef['itrblueboostCategoryContentAcceptUrl'] = $router->generate('itrblueboost_admin_category_content_accept', [
+                            'id_category' => $idCategory,
+                            'contentId' => 0,
+                        ]);
+                        $jsDef['itrblueboostCategoryContentUrl'] = $router->generate('itrblueboost_admin_category_content_index', [
+                            'id_category' => $idCategory,
+                        ]);
+                    }
+
+                    if (!empty($jsDef)) {
+                        Media::addJsDef($jsDef);
+                    }
 
                     $this->context->controller->addJS($this->_path . 'views/js/admin-category-toolbar.js?v=' . $this->version);
+
+                    if ($categoryContentServiceActive && isset($jsDef['itrblueboostCategoryContentPromptsUrl'])) {
+                        Media::addJsDef([
+                            'itrblueboostCategoryContentTranslations' => [
+                                'modalTitle' => $this->trans('Generate content with AI', [], 'Modules.Itrblueboost.Admin'),
+                                'loadingPrompts' => $this->trans('Loading available prompts...', [], 'Modules.Itrblueboost.Admin'),
+                                'selectPrompt' => $this->trans('Select a prompt to generate content:', [], 'Modules.Itrblueboost.Admin'),
+                                'choosePrompt' => $this->trans('Choose a prompt', [], 'Modules.Itrblueboost.Admin'),
+                                'close' => $this->trans('Close', [], 'Admin.Actions'),
+                                'generate' => $this->trans('Generate', [], 'Modules.Itrblueboost.Admin'),
+                                'generating' => $this->trans('Generating... This may take a few seconds.', [], 'Modules.Itrblueboost.Admin'),
+                            ],
+                        ]);
+                        $this->context->controller->addJS($this->_path . 'views/js/admin-category-content-inline.js?v=' . $this->version);
+                    }
                 } catch (\Exception $e) {
                     // Route not yet cached, skip category toolbar assets
                 }
@@ -368,18 +405,18 @@ class Itrblueboost extends Module
     }
 
     /**
-     * Load assets for category list page (bulk actions).
+     * Load assets for category list page (bulk actions + count badges).
+     *
+     * @param bool $faqActive Whether FAQ service is active
+     * @param bool $contentActive Whether Content service is active
      */
-    private function loadCategoryListAssets(): void
+    private function loadCategoryListAssets(bool $faqActive = true, bool $contentActive = false): void
     {
         try {
             /** @var \Symfony\Component\Routing\RouterInterface $router */
             $router = $this->get('router');
 
             Media::addJsDef([
-                'itrblueboostBulkCategoryFaqPromptsUrl' => $router->generate('itrblueboost_admin_category_faq_prompts'),
-                'itrblueboostBulkCategoryFaqGenerateUrl' => $router->generate('itrblueboost_admin_category_faq_bulk_generate'),
-                'itrblueboostBulkCategoryFaqLabel' => $this->trans('Generate FAQ (AI)', [], 'Modules.Itrblueboost.Admin'),
                 'itrblueboostCategoryListCountsUrl' => $router->generate('itrblueboost_admin_category_list_counts'),
                 'itrblueboostModalTranslations' => [
                     'loading' => $this->trans('Loading available prompts...', [], 'Modules.Itrblueboost.Admin'),
@@ -390,11 +427,30 @@ class Itrblueboost extends Module
                     'generating' => $this->trans('Generating...', [], 'Admin.Global'),
                     'selected' => $this->trans('selected', [], 'Modules.Itrblueboost.Admin'),
                     'includingWithFaqs' => $this->trans('including %count% with generated FAQs', [], 'Modules.Itrblueboost.Admin'),
+                    'includingWithContents' => $this->trans('including %count% with generated contents', [], 'Modules.Itrblueboost.Admin'),
                 ],
             ]);
 
             $this->context->controller->addJS($this->_path . 'views/js/admin-bulk-common.js?v=' . $this->version);
-            $this->context->controller->addJS($this->_path . 'views/js/admin-category-list-bulk.js?v=' . $this->version);
+
+            if ($faqActive) {
+                Media::addJsDef([
+                    'itrblueboostBulkCategoryFaqPromptsUrl' => $router->generate('itrblueboost_admin_category_faq_prompts'),
+                    'itrblueboostBulkCategoryFaqGenerateUrl' => $router->generate('itrblueboost_admin_category_faq_bulk_generate'),
+                    'itrblueboostBulkCategoryFaqLabel' => $this->trans('Generate FAQ (AI)', [], 'Modules.Itrblueboost.Admin'),
+                ]);
+                $this->context->controller->addJS($this->_path . 'views/js/admin-category-list-bulk.js?v=' . $this->version);
+            }
+
+            if ($contentActive) {
+                Media::addJsDef([
+                    'itrblueboostBulkCategoryContentPromptsUrl' => $router->generate('itrblueboost_admin_category_content_prompts'),
+                    'itrblueboostBulkCategoryContentGenerateUrl' => $router->generate('itrblueboost_admin_category_content_bulk_generate'),
+                    'itrblueboostBulkCategoryContentLabel' => $this->trans('Generate Content (AI)', [], 'Modules.Itrblueboost.Admin'),
+                ]);
+                $this->context->controller->addJS($this->_path . 'views/js/admin-category-list-bulk-content.js?v=' . $this->version);
+            }
+
             $this->context->controller->addJS($this->_path . 'views/js/admin-category-list-counts.js?v=' . $this->version);
             $this->context->controller->addCSS($this->_path . 'views/css/admin-product-list-bulk.css?v=' . $this->version);
         } catch (\Exception $e) {
@@ -622,6 +678,7 @@ class Itrblueboost extends Module
 
         if ($idCategory > 0) {
             CategoryFaq::deleteByCategory($idCategory);
+            CategoryContent::deleteByCategory($idCategory);
         }
     }
 

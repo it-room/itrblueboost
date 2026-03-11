@@ -2,6 +2,49 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.18] - 2026-03-11
+
+### Added
+- Support des champs SEO (meta_title, meta_description, meta_keywords) dans la réponse de génération API
+- Champs SEO éditables dans le formulaire d'édition de contenu catégorie avec cases à cocher pour insertion sélective
+- Stockage et affichage des valeurs SEO originales pour comparaison dans le formulaire d'édition
+- Application des champs SEO à la catégorie lors des actions d'acceptation/insertion
+
+### Fixed
+- Support du nouveau format de réponse API avec tableau de descriptions au niveau racine
+- Correction de l'exception de rendu template causée par le route_name du tab contenu catégorie
+
+## [1.8.17] - 2026-03-11
+
+### Added
+- Génération de contenu IA pour les catégories (descriptions et descriptions complémentaires) via POST /api/description avec type: "category"
+- Bouton "Générer le contenu (IA)" sur la page d'édition de catégorie avec modale de sélection de prompt et insertion de contenu en ligne
+- Génération de contenu en masse sur la page de listing des catégories utilisant les utilitaires ITRBulkCommon
+- Badges de comptage de contenu sur la page de listing des catégories aux côtés des badges FAQ
+- Page "All Category Contents" dans le menu admin avec vue grille/liste, actions en masse (accepter/rejeter/supprimer) et pagination
+- Entité CategoryContent (ObjectModel avec support multilingue et multiboutique)
+- Contrôleur CategoryContentController avec opérations CRUD complètes (index, generate, edit, insert, accept, reject, delete, bulkGenerate)
+- Contrôleur AllCategoryContentsController pour la vue de gestion globale des contenus
+- Système de grille pour contenu catégorie (GridDefinitionFactory, QueryBuilder, GridDataFactory)
+- Formulaire CategoryContentType avec champs TranslatableType
+- Méthode generateCategoryContent() dans le service ApiLogger
+- Script d'upgrade upgrade-1.8.17.php pour les tables de base de données et la configuration
+- Constante CONFIG_SERVICE_CATEGORY_CONTENT et détection du service dans la configuration
+
+## [1.8.16] - 2026-03-07
+
+### Added
+- Webhook front controller (`/module/itrblueboost/webhook`) pour la synchronisation API vers module
+- Action `sync_credits` : définit le solde absolu de crédits (resynchronisation idempotente)
+- Action `sync_services` : synchronise l'état actif des services (faq, image, category_faq, content)
+- Authentification webhook par en-tête `X-API-Key`
+- Utilisation de `Configuration::updateGlobalValue()` pour compatibilité multi-boutiques
+- Actions en masse sur la page des images générées : accepter, refuser, supprimer
+- Case à cocher "Sélectionner tout" et barre d'outils fixe en bas de page
+
+### Changed
+- URL API de production : `apitr-sf.itroom.fr` → `api.blueboost.fr`
+
 ## [1.8.15] - 2026-03-06
 
 ### Added

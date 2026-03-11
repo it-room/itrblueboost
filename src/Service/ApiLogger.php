@@ -377,7 +377,23 @@ class ApiLogger
      */
     public function getContentPrompts(): array
     {
-        $result = $this->call('GET', '/api/description/prompts', null, 'content');
+        $result = $this->call('GET', '/api/description/prompts?type=product', null, 'content');
+
+        if (!isset($result['success'])) {
+            $result['success'] = isset($result['prompts']);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Get content prompts for categories.
+     *
+     * @return array{success: bool, prompts?: array, message?: string}
+     */
+    public function getCategoryContentPrompts(): array
+    {
+        $result = $this->call('GET', '/api/description/prompts?type=category', null, 'content');
 
         if (!isset($result['success'])) {
             $result['success'] = isset($result['prompts']);
@@ -438,5 +454,43 @@ class ApiLogger
     public function updateContent(int $apiContentId, array $data): array
     {
         return $this->call('PUT', '/api/description/' . $apiContentId, $data, 'product_content');
+    }
+
+    /**
+     * Generate content for a category (description).
+     *
+     * @param int $promptId Prompt ID
+     * @param array<string, mixed> $categoryData Category data
+     * @param int|null $categoryId Category ID for history
+     *
+     * @return array{success: bool, data?: array, message?: string, credits_used?: int, credits_remaining?: int}
+     */
+    public function generateCategoryContent(
+        int $promptId,
+        array $categoryData,
+        ?int $categoryId = null
+    ): array {
+        if ($categoryId !== null) {
+            $categoryData['id_category'] = $categoryId;
+        }
+
+        $result = $this->call('POST', '/api/description', [
+            'prompt_id' => $promptId,
+            'type' => 'category',
+            'category' => $categoryData,
+        ], 'category_content');
+
+        if (isset($result['success']) && $result['success'] && isset($result['credits_used']) && $result['credits_used'] > 0) {
+            CreditHistory::log(
+                'category_content',
+                (int) $result['credits_used'],
+                (int) ($result['credits_remaining'] ?? 0),
+                $categoryId,
+                'category',
+                $categoryData['name'] ?? null
+            );
+        }
+
+        return $result;
     }
 }

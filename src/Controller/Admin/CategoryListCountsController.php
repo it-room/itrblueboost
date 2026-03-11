@@ -38,7 +38,8 @@ class CategoryListCountsController extends FrameworkBundleAdminController
         $idList = implode(',', $categoryIds);
 
         $faqCounts = $this->fetchFaqCounts($idList, $idShop);
-        $counts = $this->buildCounts($categoryIds, $faqCounts);
+        $contentCounts = $this->fetchContentCounts($idList, $idShop);
+        $counts = $this->buildCounts($categoryIds, $faqCounts, $contentCounts);
 
         return new JsonResponse([
             'success' => true,
@@ -99,24 +100,61 @@ class CategoryListCountsController extends FrameworkBundleAdminController
     }
 
     /**
+     * Fetch content counts for categories.
+     *
+     * @param string $idList Comma-separated category IDs
+     * @param int $idShop Shop ID
+     *
+     * @return array<int, int>
+     */
+    private function fetchContentCounts(string $idList, int $idShop): array
+    {
+        $sql = 'SELECT c.id_category, COUNT(*) AS cnt
+                FROM `' . _DB_PREFIX_ . 'itrblueboost_category_content` c
+                INNER JOIN `' . _DB_PREFIX_ . 'itrblueboost_category_content_shop` cs
+                    ON c.id_itrblueboost_category_content = cs.id_itrblueboost_category_content
+                    AND cs.id_shop = ' . $idShop . '
+                WHERE c.id_category IN (' . $idList . ')
+                GROUP BY c.id_category';
+
+        $results = Db::getInstance()->executeS($sql);
+        $map = [];
+
+        if (is_array($results)) {
+            foreach ($results as $row) {
+                $map[(int) $row['id_category']] = (int) $row['cnt'];
+            }
+        }
+
+        return $map;
+    }
+
+    /**
      * Build counts structure keyed by category ID.
      *
      * @param array<int> $categoryIds Category IDs
      * @param array<int, int> $faqCounts FAQ counts
+     * @param array<int, int> $contentCounts Content counts
      *
      * @return array<int, array<string, int>>
      */
-    private function buildCounts(array $categoryIds, array $faqCounts): array
+    private function buildCounts(array $categoryIds, array $faqCounts, array $contentCounts): array
     {
         $counts = [];
 
         foreach ($categoryIds as $id) {
             $faq = $faqCounts[$id] ?? 0;
+            $content = $contentCounts[$id] ?? 0;
 
-            if ($faq > 0) {
-                $counts[$id] = [
-                    'faq' => $faq,
-                ];
+            if ($faq > 0 || $content > 0) {
+                $entry = [];
+                if ($faq > 0) {
+                    $entry['faq'] = $faq;
+                }
+                if ($content > 0) {
+                    $entry['content'] = $content;
+                }
+                $counts[$id] = $entry;
             }
         }
 

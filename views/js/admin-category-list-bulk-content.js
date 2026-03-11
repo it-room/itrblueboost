@@ -1,0 +1,140 @@
+/**
+ * ITRBlueBoost - Bulk Content Generation on Category List
+ * Thin wrapper around ITRBulkCommon.
+ */
+(function() {
+    'use strict';
+
+    var B = ITRBulkCommon;
+    var bulkActionAdded = false;
+    var modalRefs = null;
+    var PREFIX = 'itrblueboost-bulk-cat-content-';
+
+    function init() {
+        if (typeof itrblueboostBulkCategoryContentLabel === 'undefined') {
+            return;
+        }
+
+        B.initBulk(addBulkAction, createModal);
+    }
+
+    function addBulkAction() {
+        if (bulkActionAdded) {
+            return;
+        }
+
+        bulkActionAdded = B.addBulkActionButton({
+            dropdownSelectors: B.CATEGORY_DROPDOWN_SELECTORS,
+            cssClass: 'itrblueboost-bulk-category-content',
+            label: itrblueboostBulkCategoryContentLabel,
+            icon: 'description',
+            onClick: handleBulkContentClick
+        });
+    }
+
+    function createModal() {
+        if (modalRefs) {
+            return;
+        }
+
+        modalRefs = B.createBulkModal({
+            modalId: 'itrblueboostBulkCategoryContentModal',
+            prefix: PREFIX,
+            title: 'Generate Content (AI) - Bulk',
+            icon: 'description',
+            entityLabel: 'category(ies)',
+            promptLabel: 'Select a prompt:',
+            progressLabel: 'Generating content... Please wait.',
+            btnClass: 'btn-success',
+            onGenerate: handleGenerate
+        });
+    }
+
+    function handleBulkContentClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var selectedIds = B.getSelectedIds(B.CATEGORY_CHECKBOX_SELECTORS, 'data-category-id');
+
+        if (selectedIds.length === 0) {
+            alert('Please select at least one category.');
+            return;
+        }
+
+        if (!modalRefs) {
+            createModal();
+        }
+
+        window.itrblueboostSelectedContentCategoryIds = selectedIds;
+
+        var countEl = document.getElementById(PREFIX + 'count');
+        if (countEl) {
+            countEl.textContent = selectedIds.length;
+        }
+
+        B.resetModal(PREFIX, modalRefs);
+        $('#itrblueboostBulkCategoryContentModal').modal('show');
+        B.loadPrompts(itrblueboostBulkCategoryContentPromptsUrl, PREFIX, modalRefs);
+
+        if (typeof itrblueboostCategoryListCountsUrl !== 'undefined') {
+            var t = window.itrblueboostModalTranslations || {};
+            B.loadExistingCounts({
+                url: itrblueboostCategoryListCountsUrl,
+                ids: selectedIds,
+                prefix: PREFIX,
+                countKey: 'content',
+                label: t.includingWithContents || 'including %count% with generated contents',
+                idParam: 'category_ids'
+            });
+        }
+    }
+
+    function handleGenerate() {
+        var promptId = modalRefs.promptSelect.value;
+        var categoryIds = window.itrblueboostSelectedContentCategoryIds || [];
+
+        if (!promptId || categoryIds.length === 0) {
+            return;
+        }
+
+        document.getElementById(PREFIX + 'form').classList.add('d-none');
+        modalRefs.generateBtn.classList.add('d-none');
+        document.getElementById(PREFIX + 'progress').classList.remove('d-none');
+
+        B.updateProgressBar(PREFIX, 50, 'Processing...');
+
+        var formData = new FormData();
+        formData.append('prompt_id', promptId);
+        formData.append('category_ids', categoryIds.join(','));
+
+        fetch(itrblueboostBulkCategoryContentGenerateUrl, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            B.updateProgressBar(PREFIX, 100, '100%');
+            document.getElementById(PREFIX + 'progress').classList.add('d-none');
+
+            var resultDiv = document.getElementById(PREFIX + 'result');
+
+            if (data.success) {
+                resultDiv.innerHTML = B.buildResultHtml(data, 'description', 'content_count', 'Content', 'content_url');
+            } else {
+                resultDiv.innerHTML = '<div class="alert alert-danger">' +
+                    '<i class="material-icons" style="vertical-align: middle;">error</i> ' +
+                    B.escapeHtml(data.message || 'Error generating content.') +
+                    '</div>';
+            }
+
+            resultDiv.classList.remove('d-none');
+        })
+        .catch(function() {
+            B.showGenerateError(PREFIX, 'Connection error.');
+        });
+    }
+
+    init();
+    B.observeForBulkAction(addBulkAction, function() { return bulkActionAdded; });
+})();
