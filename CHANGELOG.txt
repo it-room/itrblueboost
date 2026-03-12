@@ -2,6 +2,16 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.19] - 2026-03-12
+
+### Added
+- Intégration avec le module itrmicrodata via hooks personnalisés :
+  - actionMicrodataProduct : fournit la description produit IA pour le JSON-LD Product
+  - actionMicrodataProductList : fournit les descriptions IA pour le JSON-LD des listings produits
+  - actionMicrodataProductListPreload : précharge en batch les contenus produits pour optimiser les performances (évite les requêtes N+1)
+- Classes de hooks : ActionMicrodataProduct, ActionMicrodataProductList, ActionMicrodataProductListPreload
+- Script d'upgrade upgrade-1.8.19.php pour l'enregistrement des nouveaux hooks
+
 ## [1.8.18] - 2026-03-11
 
 ### Added

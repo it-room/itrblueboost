@@ -37,6 +37,7 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 - **Front-office Display**: Automatically displays generated content (descriptions and FAQs) on product and category pages
 - **Content Listing Badges**: Visual badges in product and category admin listings showing counts of generated content, FAQs, and images at a glance
 - **Complete API Logging**: All API calls (FAQ generation, image generation, content generation, account info) are logged with full request/response details, context, and error messages
+- **itrmicrodata Integration**: Hooks into itrmicrodata module to provide AI-generated product descriptions for JSON-LD structured data (Product schema on product pages and ItemList schema on listings), with batch preloading to avoid N+1 queries (new in v1.8.19)
 
 ## Requirements
 
@@ -499,6 +500,9 @@ The module registers the following PrestaShop hooks:
 - `displayFooterCategory`: Display category FAQs and contents on front-office
 - `actionCategoryDelete`: Clean up FAQs and contents when category is deleted
 - `displayBackOfficeHeader`: Display credit badge in admin header (optimized with Configuration storage)
+- `actionMicrodataProduct`: Provide AI-generated product description to itrmicrodata for Product JSON-LD
+- `actionMicrodataProductList`: Provide AI-generated descriptions for product listing JSON-LD
+- `actionMicrodataProductListPreload`: Batch preload product content before listing loop to avoid N+1 queries
 
 ## Compatibility
 
@@ -508,6 +512,13 @@ The module registers the following PrestaShop hooks:
 - **Multisite**: Fully supported
 
 ## Changelog
+
+### Version 1.8.19
+- **itrmicrodata Integration**: Hook into itrmicrodata module to provide AI-generated product descriptions for JSON-LD structured data
+- **New Hook**: `actionMicrodataProduct` provides accepted product description for Product JSON-LD on product pages
+- **New Hook**: `actionMicrodataProductList` provides product descriptions for ItemList JSON-LD on listing pages
+- **New Hook**: `actionMicrodataProductListPreload` batch preloads product content in a single SQL query before the listing loop
+- **New Hook Classes**: `ActionMicrodataProduct`, `ActionMicrodataProductList`, `ActionMicrodataProductListPreload` in `src/Hooks/`
 
 ### Version 1.8.17 (Unreleased)
 - **New Feature**: AI content generation for categories (descriptions and additional descriptions)
@@ -802,6 +813,7 @@ The module follows a single-responsibility pattern for hook handling:
 - Hook handler classes are instantiated by the main module class
 - Each handler implements its own logic with a single `execute()` method
 - Example: `DisplayBackOfficeHeader.php` handles the `displayBackOfficeHeader` hook for rendering the credits badge
+- Example: `ActionMicrodataProduct.php`, `ActionMicrodataProductList.php`, `ActionMicrodataProductListPreload.php` handle integration with the itrmicrodata module
 
 ### Code Standards
 

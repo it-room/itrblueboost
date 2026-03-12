@@ -43,7 +43,7 @@ class Itrblueboost extends Module
     {
         $this->name = 'itrblueboost';
         $this->tab = 'administration';
-        $this->version = '1.8.18';
+        $this->version = '1.8.19';
         $this->author = 'ITROOM';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
@@ -77,7 +77,10 @@ class Itrblueboost extends Module
             && $this->registerHook('actionObjectImageDeleteAfter')
             && $this->registerHook('displayFooterCategory')
             && $this->registerHook('actionCategoryDelete')
-            && $this->registerHook('displayBackOfficeHeader');
+            && $this->registerHook('displayBackOfficeHeader')
+            && $this->registerHook('actionMicrodataProduct')
+            && $this->registerHook('actionMicrodataProductList')
+            && $this->registerHook('actionMicrodataProductListPreload');
     }
 
     public function uninstall(): bool
@@ -694,5 +697,44 @@ class Itrblueboost extends Module
         $hook = new \Itrblueboost\Hooks\DisplayBackOfficeHeader($this);
 
         return $hook->execute($params);
+    }
+
+    /**
+     * Hook to provide AI-generated product description to itrmicrodata.
+     *
+     * @param array<string, mixed> $params Hook parameters containing 'product'
+     *
+     * @return array<string, string>
+     */
+    public function hookActionMicrodataProduct(array $params): array
+    {
+        $hook = new \Itrblueboost\Hooks\ActionMicrodataProduct($this);
+
+        return $hook->execute($params);
+    }
+
+    /**
+     * Hook to provide AI-generated descriptions for product listings to itrmicrodata.
+     *
+     * @param array<string, mixed> $params Hook parameters containing 'product'
+     *
+     * @return array<string, string>
+     */
+    public function hookActionMicrodataProductList(array $params): array
+    {
+        $hook = new \Itrblueboost\Hooks\ActionMicrodataProductList($this);
+
+        return $hook->execute($params);
+    }
+
+    /**
+     * Hook to batch-preload product content before the listing loop.
+     *
+     * @param array<string, mixed> $params Hook parameters containing 'productIds'
+     */
+    public function hookActionMicrodataProductListPreload(array $params): void
+    {
+        $hook = new \Itrblueboost\Hooks\ActionMicrodataProductListPreload($this);
+        $hook->execute($params);
     }
 }
