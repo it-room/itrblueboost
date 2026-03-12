@@ -38,6 +38,7 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 - **Content Listing Badges**: Visual badges in product and category admin listings showing counts of generated content, FAQs, and images at a glance
 - **Complete API Logging**: All API calls (FAQ generation, image generation, content generation, account info) are logged with full request/response details, context, and error messages
 - **itrmicrodata Integration**: Hooks into itrmicrodata module to provide AI-generated product descriptions for JSON-LD structured data (Product schema on product pages and ItemList schema on listings), with batch preloading to avoid N+1 queries (new in v1.8.19)
+- **Automatic Webservice Key**: Creates a PrestaShop webservice key at install/upgrade with full permissions on all resources, syncs with ITROOM API automatically (new in v1.8.20)
 
 ## Requirements
 
@@ -512,6 +513,13 @@ The module registers the following PrestaShop hooks:
 - **Multisite**: Fully supported
 
 ## Changelog
+
+### Version 1.8.20
+- **Automatic Webservice Key**: Creates a PrestaShop webservice key at install/upgrade with full permissions on all resources
+- **API Sync**: Syncs webservice key with ITROOM API via PUT /api/webservice
+- **Automatic Key Deletion**: Webservice key is deleted on module uninstall
+- **HTTP Method Support**: Added PUT/PATCH method support in ApiService
+- **New Service**: `WebserviceKeyManager` for managing webservice key lifecycle
 
 ### Version 1.8.19
 - **itrmicrodata Integration**: Hook into itrmicrodata module to provide AI-generated product descriptions for JSON-LD structured data

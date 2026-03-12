@@ -2,6 +2,16 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.20] - 2026-03-12
+
+### Added
+- Création automatique d'une clé webservice PrestaShop à l'installation/mise à jour avec permissions complètes sur toutes les ressources
+- Synchronisation de la clé webservice avec l'API ITROOM via PUT /api/webservice
+- Suppression automatique de la clé webservice à la désinstallation du module
+- Support des méthodes HTTP PUT et PATCH dans ApiService
+- Nouvelle constante de configuration ITRBLUEBOOST_WEBSERVICE_KEY_ID
+- Service WebserviceKeyManager pour la gestion du cycle de vie de la clé WS
+
 ## [1.8.19] - 2026-03-12
 
 ### Added

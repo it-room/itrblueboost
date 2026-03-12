@@ -95,8 +95,8 @@ class ApiService
             CURLOPT_HTTPHEADER => $headers,
         ];
 
-        if ($method === 'POST' && $data !== null) {
-            $options[CURLOPT_POST] = true;
+        if (($method === 'POST' || $method === 'PUT' || $method === 'PATCH') && $data !== null) {
+            $options[CURLOPT_CUSTOMREQUEST] = $method;
             $options[CURLOPT_POSTFIELDS] = json_encode($data);
             $headers[] = 'Content-Type: application/json';
             $options[CURLOPT_HTTPHEADER] = $headers;

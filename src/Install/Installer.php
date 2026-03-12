@@ -7,6 +7,7 @@ namespace Itrblueboost\Install;
 use Configuration;
 use Db;
 use Itrblueboost;
+use Itrblueboost\Service\WebserviceKeyManager;
 use Language;
 use Tab;
 
@@ -15,7 +16,8 @@ use Tab;
  */
 class Installer
 {
-    private Itrblueboost $module;
+    /** @var Itrblueboost */
+    private $module;
 
     public function __construct(Itrblueboost $module)
     {
@@ -29,7 +31,8 @@ class Installer
     {
         return $this->installDatabase()
             && $this->installTabs()
-            && $this->installConfiguration();
+            && $this->installConfiguration()
+            && $this->installWebserviceKey();
     }
 
     /**
@@ -37,7 +40,8 @@ class Installer
      */
     public function uninstall()
     {
-        return $this->uninstallDatabase()
+        return $this->uninstallWebserviceKey()
+            && $this->uninstallDatabase()
             && $this->uninstallTabs()
             && $this->uninstallConfiguration();
     }
@@ -605,6 +609,27 @@ class Installer
             && Configuration::deleteByName(Itrblueboost::CONFIG_SERVICE_CATEGORY_CONTENT)
             && Configuration::deleteByName(Itrblueboost::CONFIG_CREDITS_REMAINING)
             && Configuration::deleteByName(Itrblueboost::CONFIG_BOOTSTRAP_VERSION)
-            && Configuration::deleteByName(Itrblueboost::CONFIG_API_MODE);
+            && Configuration::deleteByName(Itrblueboost::CONFIG_API_MODE)
+            && Configuration::deleteByName(Itrblueboost::CONFIG_WEBSERVICE_KEY_ID);
+    }
+
+    /**
+     * Create webservice key and sync with API.
+     */
+    private function installWebserviceKey(): bool
+    {
+        $manager = new WebserviceKeyManager();
+
+        return $manager->createAndSync();
+    }
+
+    /**
+     * Delete webservice key on uninstall.
+     */
+    private function uninstallWebserviceKey(): bool
+    {
+        $manager = new WebserviceKeyManager();
+
+        return $manager->deleteKey();
     }
 }
