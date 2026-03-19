@@ -307,9 +307,12 @@ class Installer
 
     /**
      * Install admin tabs.
+     * Cleans all existing module tabs first to ensure a fresh, consistent state.
      */
     private function installTabs(): bool
     {
+        $this->cleanAllModuleTabs();
+
         $tabs = $this->getTabs();
         $createdTabs = [];
 
@@ -320,6 +323,35 @@ class Installer
         }
 
         return true;
+    }
+
+    /**
+     * Remove all existing tabs for this module before reinstalling.
+     *
+     * @return void
+     */
+    private function cleanAllModuleTabs(): void
+    {
+        $db = Db::getInstance();
+        $moduleName = pSQL($this->module->name);
+
+        $tabIds = $db->executeS(
+            'SELECT id_tab FROM `' . _DB_PREFIX_ . 'tab` WHERE module = \'' . $moduleName . '\''
+        );
+
+        if (!is_array($tabIds) || empty($tabIds)) {
+            return;
+        }
+
+        $ids = array_map(function ($row) {
+            return (int) $row['id_tab'];
+        }, $tabIds);
+
+        $idList = implode(',', $ids);
+
+        $db->execute('DELETE FROM `' . _DB_PREFIX_ . 'tab_lang` WHERE id_tab IN (' . $idList . ')');
+        $db->execute('DELETE FROM `' . _DB_PREFIX_ . 'tab_shop` WHERE id_tab IN (' . $idList . ')');
+        $db->execute('DELETE FROM `' . _DB_PREFIX_ . 'tab` WHERE id_tab IN (' . $idList . ')');
     }
 
     /**
