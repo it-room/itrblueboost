@@ -328,32 +328,22 @@ class Installer
      */
     private function installTab(array $tabData, array &$createdTabs): bool
     {
-        $tabId = Tab::getIdFromClassName($tabData['class_name']);
+        $tabId = (int) Tab::getIdFromClassName($tabData['class_name']);
 
-        if ($tabId) {
+        if ($tabId > 0) {
             $createdTabs[$tabData['class_name']] = $tabId;
             return true;
         }
+
+        // Clean orphan records from previous partial installs
+        $this->cleanOrphanTab($tabData['class_name']);
 
         $tab = new Tab();
         $tab->class_name = $tabData['class_name'];
         $tab->module = $this->module->name;
         $tab->active = $tabData['visible'];
 
-        // Handle parent: -1 = hidden, 0 = root level, string = parent class name
-        if ($tabData['parent_class_name'] === -1) {
-            $tab->id_parent = -1;
-        } elseif ($tabData['parent_class_name'] === 0) {
-            $tab->id_parent = 0;
-        } else {
-            // Try to get parent from our created tabs first, then from database
-            if (isset($createdTabs[$tabData['parent_class_name']])) {
-                $tab->id_parent = $createdTabs[$tabData['parent_class_name']];
-            } else {
-                $tab->id_parent = (int) Tab::getIdFromClassName($tabData['parent_class_name']);
-            }
-        }
-
+        $tab->id_parent = $this->resolveParentId($tabData['parent_class_name'], $createdTabs);
         $tab->name = $this->getTabNames($tabData['name']);
 
         if (!empty($tabData['route_name'])) {
@@ -376,6 +366,52 @@ class Installer
         }
 
         return $result;
+    }
+
+    /**
+     * Resolve the parent tab ID from class name, integer, or created tabs cache.
+     *
+     * @param string|int $parentClassName
+     * @param array<string, int> $createdTabs
+     *
+     * @return int
+     */
+    private function resolveParentId($parentClassName, array $createdTabs): int
+    {
+        if ($parentClassName === -1 || $parentClassName === 0) {
+            return (int) $parentClassName;
+        }
+
+        if (isset($createdTabs[$parentClassName])) {
+            return $createdTabs[$parentClassName];
+        }
+
+        return (int) Tab::getIdFromClassName($parentClassName);
+    }
+
+    /**
+     * Remove orphan tab records left by a previous partial install.
+     *
+     * @param string $className
+     *
+     * @return void
+     */
+    private function cleanOrphanTab(string $className): void
+    {
+        $db = Db::getInstance();
+        $escapedClassName = pSQL($className);
+
+        $orphanId = (int) $db->getValue(
+            'SELECT id_tab FROM `' . _DB_PREFIX_ . 'tab` WHERE class_name = \'' . $escapedClassName . '\''
+        );
+
+        if ($orphanId <= 0) {
+            return;
+        }
+
+        $db->execute('DELETE FROM `' . _DB_PREFIX_ . 'tab_lang` WHERE id_tab = ' . $orphanId);
+        $db->execute('DELETE FROM `' . _DB_PREFIX_ . 'tab_shop` WHERE id_tab = ' . $orphanId);
+        $db->execute('DELETE FROM `' . _DB_PREFIX_ . 'tab` WHERE id_tab = ' . $orphanId);
     }
 
     /**
@@ -406,19 +442,18 @@ class Installer
 
         // Then delete by class name (in case some were missed)
         $tabs = $this->getTabs();
-
-        // Delete children first, then parents (reverse order)
         $tabs = array_reverse($tabs);
 
         foreach ($tabs as $tabData) {
-            $tabId = Tab::getIdFromClassName($tabData['class_name']);
+            $tabId = (int) Tab::getIdFromClassName($tabData['class_name']);
 
-            if (!$tabId) {
-                continue;
+            if ($tabId > 0) {
+                $tab = new Tab($tabId);
+                $tab->delete();
             }
 
-            $tab = new Tab($tabId);
-            $tab->delete();
+            // Also clean any orphan records
+            $this->cleanOrphanTab($tabData['class_name']);
         }
 
         return true;
