@@ -45,6 +45,7 @@ class DisplayBackOfficeHeader
         }
 
         $credits = (int) $credits;
+        $hasUpdate = $this->checkUpdateAvailable();
 
         try {
             /** @var \Symfony\Component\Routing\RouterInterface $router */
@@ -54,20 +55,48 @@ class DisplayBackOfficeHeader
             return '';
         }
 
-        return $this->renderBadge($credits, $configUrl);
+        $logoUrl = $this->module->getPathUri() . 'logo.png';
+
+        return $this->renderBadge($credits, $configUrl, $logoUrl, $hasUpdate);
+    }
+
+    /**
+     * Check if a module update is available from cached data.
+     *
+     * @return bool
+     */
+    private function checkUpdateAvailable(): bool
+    {
+        $cached = Configuration::get(Itrblueboost::CONFIG_UPDATE_CACHE);
+
+        if (empty($cached)) {
+            return false;
+        }
+
+        $data = json_decode($cached, true);
+
+        if (!is_array($data)) {
+            return false;
+        }
+
+        return !empty($data['hasUpdate']);
     }
 
     /**
      * Render the credits badge HTML.
      *
-     * @param int $credits Remaining credits
+     * @param int    $credits   Remaining credits
      * @param string $configUrl URL to the configuration page
+     * @param string $logoUrl   URL to the module logo
+     * @param bool   $hasUpdate Whether an update is available
      *
      * @return string
      */
-    private function renderBadge(int $credits, string $configUrl): string
+    private function renderBadge(int $credits, string $configUrl, string $logoUrl, bool $hasUpdate): string
     {
         $escapedUrl = htmlspecialchars($configUrl, ENT_QUOTES, 'UTF-8');
+        $escapedLogoUrl = htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8');
+        $updateDot = $hasUpdate ? '<span class="itrblueboost-update-dot"></span>' : '';
 
         return '
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -89,6 +118,7 @@ class DisplayBackOfficeHeader
                 vertical-align: middle;
                 line-height: 1.4;
                 font-family: "Open Sans", Arial, Helvetica, sans-serif;
+                position: relative;
             }
             .itrblueboost-credits-badge:hover {
                 transform: translateY(-1px);
@@ -96,11 +126,30 @@ class DisplayBackOfficeHeader
                 color: #fff !important;
                 text-decoration: none !important;
             }
-            .itrblueboost-credits-badge .material-icons {
-                font-size: 16px;
+            .itrblueboost-credits-badge .itrblueboost-logo {
+                width: 18px;
+                height: 18px;
+                border-radius: 3px;
+                filter: brightness(0) invert(1);
             }
             .itrblueboost-credits-badge .credits-count {
                 font-weight: 700;
+            }
+            .itrblueboost-update-dot {
+                position: absolute;
+                top: -3px;
+                right: -3px;
+                width: 12px;
+                height: 12px;
+                background: #ff9800;
+                border: 2px solid #fff;
+                border-radius: 50%;
+                animation: itrblueboost-pulse 2s infinite;
+            }
+            @keyframes itrblueboost-pulse {
+                0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.6); }
+                70% { box-shadow: 0 0 0 6px rgba(255, 152, 0, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
             }
         </style>
         <script>
@@ -120,7 +169,7 @@ class DisplayBackOfficeHeader
                 var badge = document.createElement("a");
                 badge.href = "' . $escapedUrl . '";
                 badge.className = "itrblueboost-credits-badge";
-                badge.innerHTML = \'<i class="material-icons">toll</i><span class="credits-count">' . $credits . '</span> cr\u00e9dits\';
+                badge.innerHTML = \'<img src="' . $escapedLogoUrl . '" alt="BlueBoost" class="itrblueboost-logo"><span class="credits-count">' . $credits . '</span> cr\u00e9dits' . $updateDot . '\';
                 badge.title = "Cr\u00e9dits ITROOM restants";
 
                 var isModern = document.querySelector("#header-shop-list-container, .component-name-wrapper, .header-right .shop-list");

@@ -484,6 +484,9 @@
 {% endblock %}
 
 {% block content %}
+    {# Module Update Status Bar #}
+    <div id="itrblueboost-update-status" style="display:none;margin-bottom:1rem;"></div>
+
     {# Configuration Form Card #}
     <div class="card itr-form-card">
         <div class="card-header">
@@ -500,9 +503,6 @@
                     </label>
                     <div class="col-lg-9">
                         {{ form_widget(form.api_key, {'attr': {'class': 'form-control itr-api-key-input', 'placeholder': 'Entrez votre clé API ITROOM...'}}) }}
-                        {% if form.api_key.vars.help is defined and form.api_key.vars.help %}
-                            <small class="form-text text-muted">{{ form.api_key.vars.help }}</small>
-                        {% endif %}
                         {{ form_errors(form.api_key) }}
                     </div>
                 </div>
@@ -705,4 +705,15 @@
             </div>
         </div>
     {% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        window.itrblueboostUpdateCheckUrl = '{{ path("itrblueboost_admin_update_check") }}';
+        window.itrblueboostUpdatePerformUrl = '{{ path("itrblueboost_admin_update_perform") }}';
+        window.itrblueboostUpdateCsrfToken = '{{ csrf_token("itrblueboost_update") }}';
+        window.itrblueboostCurrentVersion = '{{ currentModuleVersion|default("0.0.0") }}';
+    </script>
+    <script src="{{ asset('../modules/itrblueboost/views/js/admin-module-update.js') }}"></script>
 {% endblock %}

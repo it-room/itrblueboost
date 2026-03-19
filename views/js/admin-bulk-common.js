@@ -503,22 +503,49 @@ var ITRBulkCommon = (function() {
     /**
      * Set up a MutationObserver to re-try adding the bulk action button.
      *
+     * Checks actual DOM presence of the button element (via cssClass) rather
+     * than relying on a JS flag, so buttons are re-injected after AJAX grid
+     * reloads (e.g. filtering by category or status).
+     *
      * @param {Function} addFn The addBulkAction function to call
-     * @param {Function} isAddedFn Returns true if already added
+     * @param {Function} resetFn Called to reset the "added" flag before re-adding
+     * @param {string} cssClass CSS class of the injected button element
      */
-    function observeForBulkAction(addFn, isAddedFn) {
-        if (typeof MutationObserver !== 'undefined') {
-            var observer = new MutationObserver(function() {
-                if (!isAddedFn()) {
+    function observeForBulkAction(addFn, resetFn, cssClass) {
+        var debounceTimer = null;
+
+        function scheduleRecheck() {
+            if (debounceTimer) {
+                clearTimeout(debounceTimer);
+            }
+
+            debounceTimer = setTimeout(function() {
+                if (!document.querySelector('.' + cssClass)) {
+                    resetFn();
                     addFn();
                 }
-            });
+            }, 300);
+        }
+
+        if (typeof MutationObserver !== 'undefined') {
+            var observer = new MutationObserver(scheduleRecheck);
 
             observer.observe(document.body, {
                 childList: true,
                 subtree: true
             });
         }
+
+        // Listen for PS 8.x grid AJAX events (filtering, sorting, pagination)
+        document.addEventListener('click', function(e) {
+            var target = e.target.closest(
+                '.ps-sortable-column, .grid-search-button, .js-grid-reset-button, ' +
+                '.page-link, [data-action="grid-filter-submit"], [data-action="grid-filter-reset"]'
+            );
+            if (target) {
+                setTimeout(scheduleRecheck, 800);
+            }
+        });
     }
 
     /**

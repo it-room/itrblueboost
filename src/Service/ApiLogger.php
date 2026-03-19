@@ -203,15 +203,16 @@ class ApiLogger
     }
 
     /**
-     * Get FAQ prompts (for both products and categories).
+     * Get FAQ prompts filtered by type.
      *
-     * @param string $context Context for logging
+     * @param string $context Context for logging (product_faq or category_faq)
      *
      * @return array{success: bool, prompts?: array, message?: string}
      */
     public function getFaqPrompts(string $context = 'faq'): array
     {
-        $result = $this->call('GET', '/api/faq/prompts', null, $context);
+        $type = ($context === 'category_faq') ? 'category' : 'product';
+        $result = $this->call('GET', '/api/faq/prompts?type=' . $type, null, $context);
 
         if (!isset($result['success'])) {
             $result['success'] = isset($result['prompts']);

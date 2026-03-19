@@ -451,6 +451,24 @@ services:
             - [setContainer, ['@service_container']]
         public: true
 
+    # ==========================================
+    # Module Update - Services
+    # ==========================================
+
+    Itrblueboost\Service\ModuleUpdater:
+        class: Itrblueboost\Service\ModuleUpdater
+        public: true
+
+    Itrblueboost\Controller\Admin\ModuleUpdateController:
+        class: Itrblueboost\Controller\Admin\ModuleUpdateController
+        arguments:
+            - '@Itrblueboost\Service\ModuleUpdater'
+        tags:
+            - { name: controller.service_arguments }
+        calls:
+            - [setContainer, ['@service_container']]
+        public: true
+
     # Controller All Category Contents
     Itrblueboost\Controller\Admin\AllCategoryContentsController:
         class: Itrblueboost\Controller\Admin\AllCategoryContentsController

@@ -194,13 +194,9 @@
     }
 
     function observeDomChanges() {
-        if (typeof MutationObserver === 'undefined') {
-            return;
-        }
-
         var debounceTimer = null;
 
-        var observer = new MutationObserver(function() {
+        function scheduleReinject() {
             if (debounceTimer) {
                 clearTimeout(debounceTimer);
             }
@@ -210,12 +206,36 @@
                     injectCounts();
                 }
             }, 500);
+        }
+
+        if (typeof MutationObserver !== 'undefined') {
+            var observer = new MutationObserver(scheduleReinject);
+
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        }
+
+        // Listen for PS 8.x grid AJAX events (filtering, sorting, pagination)
+        document.addEventListener('click', function(e) {
+            var target = e.target.closest(
+                '.ps-sortable-column, .grid-search-button, .js-grid-reset-button, ' +
+                '.page-link, [data-action="grid-filter-submit"], [data-action="grid-filter-reset"]'
+            );
+            if (target) {
+                setTimeout(scheduleReinject, 800);
+            }
         });
 
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
+        // Listen for URL changes (PS filter via query string)
+        var lastUrl = location.href;
+        setInterval(function() {
+            if (location.href !== lastUrl) {
+                lastUrl = location.href;
+                scheduleReinject();
+            }
+        }, 1000);
     }
 
     init();

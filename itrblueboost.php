@@ -36,6 +36,7 @@ class Itrblueboost extends Module
     public const CONFIG_BOOTSTRAP_VERSION = 'ITRBLUEBOOST_BOOTSTRAP_VERSION';
     public const CONFIG_API_MODE = 'ITRBLUEBOOST_API_MODE';
     public const CONFIG_WEBSERVICE_KEY_ID = 'ITRBLUEBOOST_WEBSERVICE_KEY_ID';
+    public const CONFIG_UPDATE_CACHE = 'ITRBLUEBOOST_UPDATE_CACHE';
 
     public const API_BASE_URL_PROD = 'https://api.blueboost.fr';
     public const API_BASE_URL_TEST = 'https://blueboost.itroom.fr';
@@ -44,7 +45,7 @@ class Itrblueboost extends Module
     {
         $this->name = 'itrblueboost';
         $this->tab = 'administration';
-        $this->version = '1.8.20';
+        $this->version = '1.8.21';
         $this->author = 'ITROOM';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
@@ -138,11 +139,13 @@ class Itrblueboost extends Module
         $requestUri = $_SERVER['REQUEST_URI'] ?? '';
 
         // Check if we're on product list page
+        // List URL: /products or /products/{offset}/{limit}/{orderBy}/{orderWay}
+        // Edit URL: /products/{id} or /products/{id}/edit or /products/{id}/form
         $isProductListPage = (strpos($requestUri, '/sell/catalog/products-v2') !== false
             || strpos($requestUri, '/sell/catalog/products') !== false)
             && strpos($requestUri, '/edit') === false
             && !preg_match('/\/products-v2\/\d+/', $requestUri)
-            && !preg_match('/\/products\/\d+/', $requestUri);
+            && !preg_match('/\/products\/\d+(?:\/(?:edit|form))?(?:\?|#|$)/', $requestUri);
 
         if ($isProductListPage && ($faqServiceActive || $imageServiceActive || $contentServiceActive)) {
             $this->loadProductListAssets($faqServiceActive, $imageServiceActive, $contentServiceActive);
@@ -150,9 +153,11 @@ class Itrblueboost extends Module
         }
 
         // Check if we're on category list page
+        // List URL: /categories or /categories/{offset}/{limit}/{orderBy}/{orderWay}
+        // Edit URL: /categories/{id} or /categories/{id}/edit
         $isCategoryListPage = strpos($requestUri, '/sell/catalog/categories') !== false
             && strpos($requestUri, '/edit') === false
-            && !preg_match('/\/categories\/\d+/', $requestUri);
+            && !preg_match('/\/categories\/\d+(?:\/(?:edit|form))?(?:\?|#|$)/', $requestUri);
 
         if ($isCategoryListPage && ($categoryFaqServiceActive || $categoryContentServiceActive)) {
             $this->loadCategoryListAssets($categoryFaqServiceActive, $categoryContentServiceActive);

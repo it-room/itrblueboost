@@ -2,6 +2,25 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.21] - 2026-03-19
+
+### Added
+- Nouvelle fonctionnalité : vérification et installation automatique des mises à jour du module via releases GitHub
+- Nouveau service `ModuleUpdater` pour vérifier les mises à jour sur l'API GitHub, télécharger et extraire les archives ZIP, exécuter les upgrades PrestaShop
+- Nouveau contrôleur `ModuleUpdateController` avec deux endpoints : vérification des mises à jour (GET) et installation (POST)
+- Nouveau fichier JavaScript `admin-module-update.js` pour vérifier les mises à jour au chargement de la page de configuration, afficher le statut dans la barre d'outils et ouvrir la modale de mise à jour
+- Routes de mise à jour : `itrblueboost_admin_module_update_check` et `itrblueboost_admin_module_update_perform`
+- Nouvelles constante de configuration `CONFIG_UPDATE_CACHE` pour le cache 1h des mises à jour
+- Intégration de la modale de mise à jour dans le template de configuration avec gestion des erreurs CSRF et réseau
+- Support de l'authentification par jeton GitHub pour accroître les limites de l'API GitHub (optionnel)
+
+### Fixed
+- Correction de la détection de la page liste produits : le regex excluait les URLs avec pagination/tri (/products/0/20/name_category/asc) en confondant l'offset avec un ID produit
+- Même correction appliquée à la détection de la page liste catégories
+- Amélioration de la ré-injection des boutons d'actions en masse (FAQ, Images, Contenu) après rechargement AJAX du grid : détection basée sur la présence DOM réelle au lieu d'un flag JavaScript
+- Amélioration de la ré-injection des badges de comptage après filtrage/tri/pagination
+- Ajout d'écouteurs d'événements de grid PrestaShop (filtre, tri, pagination, changement d'URL) pour une détection fiable des rechargements
+
 ## [1.8.20] - 2026-03-12
 
 ### Added

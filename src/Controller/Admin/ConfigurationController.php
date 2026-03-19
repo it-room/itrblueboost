@@ -68,6 +68,9 @@ class ConfigurationController extends FrameworkBundleAdminController
         $totalCreditsUsed30Days = CreditHistory::getTotalCreditsUsed(30);
         $totalCreditsUsedAllTime = CreditHistory::getTotalCreditsUsed(0);
 
+        $module = \Module::getInstanceByName('itrblueboost');
+        $currentModuleVersion = $module ? $module->version : '0.0.0';
+
         return $this->render('@Modules/itrblueboost/views/templates/admin/configuration.html.twig', [
             'form' => $form->createView(),
             'accountInfo' => $accountInfo,
@@ -76,6 +79,7 @@ class ConfigurationController extends FrameworkBundleAdminController
             'dailyConsumption' => $dailyConsumption,
             'totalCreditsUsed30Days' => $totalCreditsUsed30Days,
             'totalCreditsUsedAllTime' => $totalCreditsUsedAllTime,
+            'currentModuleVersion' => $currentModuleVersion,
             'help_link' => false,
             'enableSidebar' => true,
             'layoutHeaderToolbarBtn' => [],

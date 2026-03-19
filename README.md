@@ -39,6 +39,7 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 - **Complete API Logging**: All API calls (FAQ generation, image generation, content generation, account info) are logged with full request/response details, context, and error messages
 - **itrmicrodata Integration**: Hooks into itrmicrodata module to provide AI-generated product descriptions for JSON-LD structured data (Product schema on product pages and ItemList schema on listings), with batch preloading to avoid N+1 queries (new in v1.8.19)
 - **Automatic Webservice Key**: Creates a PrestaShop webservice key at install/upgrade with full permissions on all resources, syncs with ITROOM API automatically (new in v1.8.20)
+- **Module Auto-Updates**: Automatically checks for new GitHub releases and notifies admins when updates are available; one-click update installation with CSRF protection (new in v1.8.21)
 
 ## Requirements
 
@@ -120,6 +121,57 @@ The module uses the following configuration keys (stored in `ps_configuration`):
 - `ITRBLUEBOOST_BOOTSTRAP_VERSION`: Selected Bootstrap version (bootstrap4, bootstrap4alpha, or bootstrap5; default: bootstrap5)
 - `ITRBLUEBOOST_API_MODE`: API environment mode (prod or test; default: prod)
 - `ITRBLUEBOOST_CREDITS_REMAINING`: Stores the last known remaining API credits (automatically updated)
+- `ITRBLUEBOOST_UPDATE_CACHE`: Cached GitHub release information for update checks (expires after 1 hour)
+
+### Module Auto-Updates
+
+The module automatically checks for new releases on GitHub and notifies administrators when updates are available. This feature is integrated into the admin dashboard toolbar.
+
+#### How Auto-Updates Work
+
+**Update Check Process:**
+1. The module periodically checks the GitHub repository (it-room/itrblueboost) for new releases
+2. Update information is cached for 1 hour to avoid exceeding GitHub API rate limits
+3. If an update is available, a warning button appears in the admin toolbar
+4. If no update is available, an "Up to date" indicator is displayed with the last check timestamp
+
+**Update Installation:**
+1. Click the update warning button to open the update details modal
+2. The modal displays:
+   - Current module version
+   - Latest available version on GitHub
+   - Release notes (from GitHub release description)
+   - A direct link to the full release on GitHub
+3. Click "Update" to proceed with installation
+4. The module will:
+   - Download the release ZIP from GitHub
+   - Extract the archive to a temporary directory
+   - Replace existing module files with the new version
+   - Run PrestaShop's upgrade mechanism to execute any database migrations
+   - Clear the update cache to force a fresh check
+
+#### Technical Details
+
+**Security:**
+- All update actions are protected by CSRF tokens
+- The update action requires admin update permissions
+- GitHub API calls use secure HTTPS with proper timeouts
+
+**Error Handling:**
+- If GitHub is unreachable, the module uses previously cached data if available
+- If the cache is also unavailable, a warning message is displayed
+- Missing PHP ZipArchive extension, non-writable module directory, or connection errors are reported with clear error messages
+- Failed updates do not affect the current module installation
+
+**Performance:**
+- Update checks use a 1-hour cache to minimize API calls to GitHub
+- Cache automatically expires after 1 hour, triggering a fresh check on the next access
+- Release information from GitHub is cached locally in the PrestaShop configuration
+
+**Compatibility:**
+- Requires PHP ZipArchive extension (standard in most PHP installations)
+- Module directory must be writable by the web server
+- Works with PrestaShop's built-in upgrade mechanism
 
 ## Admin Menu Structure
 
@@ -513,6 +565,13 @@ The module registers the following PrestaShop hooks:
 - **Multisite**: Fully supported
 
 ## Changelog
+
+### Version 1.8.21
+- **Bugfix**: Fixed product/category list page detection regex that incorrectly excluded URLs with pagination parameters (e.g., `/products/0/20/name_category/asc`)
+- **Bugfix**: Improved re-injection of bulk action buttons after grid AJAX reloads (filtering, sorting, pagination)
+- **Bugfix**: Improved re-injection of count badges after grid AJAX reloads
+- **Enhancement**: Replaced JavaScript flag-based reload detection with actual DOM presence detection
+- **Enhancement**: Added PrestaShop grid event listeners (filter, sort, pagination, URL change) for reliable AJAX reload detection
 
 ### Version 1.8.20
 - **Automatic Webservice Key**: Creates a PrestaShop webservice key at install/upgrade with full permissions on all resources

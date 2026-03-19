@@ -136,5 +136,5 @@
     }
 
     init();
-    B.observeForBulkAction(addBulkAction, function() { return bulkActionAdded; });
+    B.observeForBulkAction(addBulkAction, function() { bulkActionAdded = false; }, 'itrblueboost-bulk-faq');
 })();
