@@ -128,18 +128,10 @@ class WebserviceKeyManager
         $db = Db::getInstance();
 
         foreach ($shops as $idShop) {
-            $idShop = (int) $idShop;
-            $exists = (bool) $db->getValue(
-                'SELECT id_webservice_account FROM `' . _DB_PREFIX_ . 'webservice_account_shop`
-                 WHERE id_webservice_account = ' . $keyId . ' AND id_shop = ' . $idShop
+            $db->execute(
+                'INSERT IGNORE INTO `' . _DB_PREFIX_ . 'webservice_account_shop`
+                 (`id_webservice_account`, `id_shop`) VALUES (' . (int) $keyId . ', ' . (int) $idShop . ')'
             );
-
-            if (!$exists) {
-                $db->insert('webservice_account_shop', [
-                    'id_webservice_account' => $keyId,
-                    'id_shop' => $idShop,
-                ]);
-            }
         }
     }
 
