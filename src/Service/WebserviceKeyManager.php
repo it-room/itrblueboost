@@ -22,26 +22,35 @@ class WebserviceKeyManager
 
     /**
      * Create or retrieve the webservice key, then sync with API.
+     * Never blocks module install on failure.
      *
-     * @return bool
+     * @return bool Always returns true to not block install
      */
     public function createAndSync(): bool
     {
-        $keyId = (int) Configuration::get(Itrblueboost::CONFIG_WEBSERVICE_KEY_ID);
+        try {
+            $keyId = (int) Configuration::get(Itrblueboost::CONFIG_WEBSERVICE_KEY_ID);
 
-        if ($keyId > 0 && $this->webserviceKeyExists($keyId)) {
-            return $this->syncWithApi($keyId);
+            if ($keyId > 0 && $this->webserviceKeyExists($keyId)) {
+                $this->syncWithApi($keyId);
+                return true;
+            }
+
+            $this->cleanOrphanShopAssociations();
+
+            $keyId = $this->createWebserviceKey();
+
+            if ($keyId <= 0) {
+                return true;
+            }
+
+            Configuration::updateValue(Itrblueboost::CONFIG_WEBSERVICE_KEY_ID, $keyId);
+            $this->syncWithApi($keyId);
+        } catch (\Exception $e) {
+            // Webservice key creation is non-critical, never block install
         }
 
-        $keyId = $this->createWebserviceKey();
-
-        if ($keyId <= 0) {
-            return false;
-        }
-
-        Configuration::updateValue(Itrblueboost::CONFIG_WEBSERVICE_KEY_ID, $keyId);
-
-        return $this->syncWithApi($keyId);
+        return true;
     }
 
     /**
@@ -58,6 +67,22 @@ class WebserviceKeyManager
                 WHERE id_webservice_account = ' . $keyId;
 
         return (bool) Db::getInstance()->getValue($sql);
+    }
+
+    /**
+     * Remove orphan webservice_account_shop rows that no longer have
+     * a matching webservice_account entry (left by previous partial installs).
+     *
+     * @return void
+     */
+    private function cleanOrphanShopAssociations(): void
+    {
+        Db::getInstance()->execute(
+            'DELETE ws FROM `' . _DB_PREFIX_ . 'webservice_account_shop` ws
+             LEFT JOIN `' . _DB_PREFIX_ . 'webservice_account` wa
+               ON wa.id_webservice_account = ws.id_webservice_account
+             WHERE wa.id_webservice_account IS NULL'
+        );
     }
 
     /**
