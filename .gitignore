@@ -1,5 +1,6 @@
 uploads/pending/*
 !uploads/pending/index.php
+!uploads/pending/.htaccess
 
 var/
 
@@ -7,3 +8,5 @@ config.xml
 config_*.xml
 
 composer.lock
+
+.claude/
