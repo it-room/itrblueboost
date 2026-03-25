@@ -6,6 +6,8 @@ Toutes les modifications notables de ce module sont documentées dans ce fichier
 
 ### Fixed
 - Correction de l'erreur `count(): Argument #1 must be of type Countable|array, null given` lors de la mise à jour du module sur PS 8.x + PHP 8.x — `Module::runUpgradeModule()` appelle `count(null)` quand aucun fichier d'upgrade n'est trouvé
+- Correction du controller de mise à jour : `catch (\Exception)` ne catchait pas les `TypeError` (qui sont des `\Error`, pas des `\Exception` en PHP 8)
+- Séparation des étapes download/extract et upgrade dans le controller : si les fichiers sont déjà déployés et que `runUpgradeModule()` échoue, la réponse est maintenant un succès avec un warning
 
 ## [1.8.23] - 2026-03-25
 

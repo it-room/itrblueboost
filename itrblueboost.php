@@ -173,7 +173,6 @@ class Itrblueboost extends Module
 
         if (($isCategoryPage || $isLegacyCategoryPage) && ($categoryFaqServiceActive || $categoryContentServiceActive)) {
             $idCategory = $this->getCategoryIdFromUrl($requestUri);
-sur la mise 
             if ($idCategory > 0) {
                 $this->loadCategoryEditAssets(
                     $idCategory,
