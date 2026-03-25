@@ -125,7 +125,14 @@ class ModuleUpdater
             throw new \RuntimeException('Cannot instantiate module itrblueboost.');
         }
 
-        $result = $module->runUpgradeModule();
+        try {
+            $result = $module->runUpgradeModule();
+        } catch (\TypeError $e) {
+            // PS 8.x + PHP 8: runUpgradeModule() may call count(null)
+            // when no upgrade files are found — treat as success
+            $result = ['success' => true];
+        }
+
         $this->clearCache();
 
         return [

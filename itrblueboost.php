@@ -45,7 +45,7 @@ class Itrblueboost extends Module
     {
         $this->name = 'itrblueboost';
         $this->tab = 'administration';
-        $this->version = '1.8.23';
+        $this->version = '1.8.24';
         $this->author = 'ITROOM';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
@@ -173,7 +173,7 @@ class Itrblueboost extends Module
 
         if (($isCategoryPage || $isLegacyCategoryPage) && ($categoryFaqServiceActive || $categoryContentServiceActive)) {
             $idCategory = $this->getCategoryIdFromUrl($requestUri);
-
+sur la mise 
             if ($idCategory > 0) {
                 $this->loadCategoryEditAssets(
                     $idCategory,

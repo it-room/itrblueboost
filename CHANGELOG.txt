@@ -2,6 +2,11 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.24] - 2026-03-25
+
+### Fixed
+- Correction de l'erreur `count(): Argument #1 must be of type Countable|array, null given` lors de la mise à jour du module sur PS 8.x + PHP 8.x — `Module::runUpgradeModule()` appelle `count(null)` quand aucun fichier d'upgrade n'est trouvé
+
 ## [1.8.23] - 2026-03-25
 
 ### Fixed
