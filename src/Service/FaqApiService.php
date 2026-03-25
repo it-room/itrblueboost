@@ -119,23 +119,18 @@ class FaqApiService
 
         $response = $this->apiLogger->call('GET', $endpoint, null, $type . '_faq');
 
-        if (!$response['success'] || !isset($response['data'])) {
+        if (isset($response['success']) && $response['success'] === false) {
             return [];
         }
 
-        $data = $response['data'];
-
-        // Handle both {faqs: [...]} and direct array
-        if (isset($data['faqs']) && is_array($data['faqs'])) {
-            return $data['faqs'];
+        // call() returns array_merge($decoded, ['http_code' => ...])
+        // API may return {faqs: [...]} or {data: [...]} or plain array
+        if (isset($response['faqs']) && is_array($response['faqs'])) {
+            return $response['faqs'];
         }
 
-        if (isset($data['data']) && is_array($data['data'])) {
-            return $data['data'];
-        }
-
-        if (is_array($data) && isset($data[0])) {
-            return $data;
+        if (isset($response['data']) && is_array($response['data'])) {
+            return $response['data'];
         }
 
         return [];
