@@ -2,6 +2,11 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.25] - 2026-03-25
+
+### Fixed
+- Correction d'un texte parasite injecté dans le fichier PHP principal qui empêchait le chargement du module
+
 ## [1.8.24] - 2026-03-25
 
 ### Fixed
