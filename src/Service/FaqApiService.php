@@ -111,9 +111,10 @@ class FaqApiService
     private function fetchFromApi(string $type, string $paramName, int $entityId, string $langIso): array
     {
         $endpoint = '/api/faq/list?' . http_build_query([
+            'is_enabled' => 'true',
+            'status' => 'accepted',
             'type' => $type,
             $paramName => $entityId,
-            'lang' => $langIso,
         ]);
 
         $response = $this->apiLogger->call('GET', $endpoint, null, $type . '_faq');

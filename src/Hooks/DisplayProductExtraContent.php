@@ -71,7 +71,7 @@ class DisplayProductExtraContent
             return 0;
         }
 
-        if (is_object($product)) {
+        if (\Validate::isLoadedObject($product)) {
             return (int) $product->id;
         }
 
