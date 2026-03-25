@@ -2,6 +2,33 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [2.0.0] - 2026-03-25
+
+### Added
+- Nouveau service FaqApiService pour la lecture des FAQs depuis l'API avec cache fichier
+- Classes de responsabilité hook : DisplayProductExtraContent, DisplayFooterCategory
+- Cache fichier dans var/cache/faq/ avec TTL configurable (défaut 1h)
+- Configuration ITRBLUEBOOST_FAQ_CACHE_TTL
+- Script d'upgrade upgrade-2.0.0.php (drop tables FAQ, suppression tabs, création cache)
+
+### Changed
+- Les hooks front-office (displayProductExtraContent, displayFooterCategory) utilisent maintenant FaqApiService au lieu des entités ObjectModel
+- admin-product-toolbar.js ne contient plus que le bouton Images IA (FAQ supprimé)
+- ApiLogger : suppression des méthodes generateProductFaq, generateCategoryFaq, updateFaq, getFaqPrompts
+
+### Removed
+- Suppression complète du système de génération de FAQ local (tables DB, admin CRUD, formulaires, grids)
+- Entités : ProductFaq, CategoryFaq, FaqEntityTrait, FaqStatusTrait
+- Controllers : ProductFaqController, CategoryFaqController, AllProductFaqsController, AllCategoryFaqsController, GeneratedFaqsController
+- Traits : FaqApiSyncTrait
+- Forms : ProductFaqType, CategoryFaqType
+- Grids : ProductFaqGridDefinitionFactory, CategoryFaqGridDefinitionFactory, et tous les data/query builders associés
+- JS : admin-faq.js, admin-category-toolbar.js, admin-product-list-bulk.js, admin-category-list-bulk.js
+- Tables DB : itrblueboost_product_faq(_lang,_shop), itrblueboost_category_faq(_lang,_shop)
+- 5 tabs admin FAQ (All Product FAQs, All Category FAQs, Generated FAQs, Product FAQ, Category FAQ)
+- ~50 routes FAQ dans routes.yml
+- 23 fichiers (entités, controllers, forms, grids, traits, JS)
+
 ## [1.8.25] - 2026-03-25
 
 ### Fixed

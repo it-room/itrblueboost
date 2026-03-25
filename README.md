@@ -5,8 +5,9 @@ Integration module with ITROOM API for intelligent data synchronization with Pre
 ## Overview
 
 ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM API to provide:
-- AI-powered FAQ generation for products and categories
+- AI-powered product and category description generation
 - Intelligent product image generation
+- API-based FAQ fetching with file-based caching (v2.0.0)
 - Complete admin interface for managing generated content
 - Real-time credit tracking
 
@@ -14,8 +15,8 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 
 - **Product Description Generation**: Generate AI-powered product descriptions and short descriptions
 - **Category Description Generation**: Generate AI-powered category descriptions, additional descriptions, and SEO fields (meta title, meta description, meta keywords) (new in v1.8.17, SEO in v1.8.18)
-- **Product FAQ Generation**: Generate frequently asked questions for products using AI
-- **Category FAQ Generation**: Create FAQs at the category level
+- **Product FAQ Display**: Fetch and display frequently asked questions for products from the external API with file-based caching (read-only, v2.0.0)
+- **Category FAQ Display**: Fetch and display FAQs at the category level from the external API with file-based caching (read-only, v2.0.0)
 - **AI Image Generation**: Generate product images using ITROOM API with async processing to prevent HTTP 504 timeouts
 - **Bulk Image Generation with Cover Images**: Automatically sends product cover images to the API for improved generation results
 - **Async Generation Jobs**: Image generation runs in background via Symfony command with progress tracking
@@ -23,7 +24,7 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 - **Job Status Polling**: Frontend automatically polls for job status updates every 2 seconds with fallback to manual refresh
 - **Fallback Processing**: Automatic fallback to inline processing using `fastcgi_finish_request()` if command execution is unavailable
 - **Inline Content Generation**: Generate descriptions directly from product/category edit form with inline buttons
-- **Bulk Operations**: Generate content in bulk for multiple products/categories; perform Accept All, Reject All, and Delete All operations on FAQs and images
+- **Bulk Operations**: Generate content and images in bulk for multiple products/categories; perform Accept All, Reject All, and Delete All operations on generated content
 - **Flexible View Modes**: Toggle between grid view (cards) and list view (table) with automatic preference persistence
 - **Checkbox Selection System**: Select multiple items across grid/list views with synchronized checkboxes and visual feedback
 - **Floating Bulk Toolbar**: Context-aware floating action toolbar appears when items are selected for quick bulk operations
@@ -35,8 +36,8 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 - **Language Support**: Support for all PrestaShop languages
 - **Modern Admin UI**: Symfony-based modern admin controllers
 - **Front-office Display**: Automatically displays generated content (descriptions and FAQs) on product and category pages
-- **Content Listing Badges**: Visual badges in product and category admin listings showing counts of generated content, FAQs, and images at a glance
-- **Complete API Logging**: All API calls (FAQ generation, image generation, content generation, account info) are logged with full request/response details, context, and error messages
+- **Content Listing Badges**: Visual badges in product and category admin listings showing counts of generated content and images at a glance
+- **Complete API Logging**: All API calls (image generation, content generation, account info) are logged with full request/response details, context, and error messages
 - **itrmicrodata Integration**: Hooks into itrmicrodata module to provide AI-generated product descriptions for JSON-LD structured data (Product schema on product pages and ItemList schema on listings), with batch preloading to avoid N+1 queries (new in v1.8.19)
 - **Automatic Webservice Key**: Creates a PrestaShop webservice key at install/upgrade with full permissions on all resources, syncs with ITROOM API automatically (new in v1.8.20)
 - **Module Auto-Updates**: Automatically checks for new GitHub releases and notifies admins when updates are available; one-click update installation with CSRF protection (new in v1.8.21)
@@ -55,9 +56,10 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 4. The module will automatically create database tables and admin menu items
 
 After installation, the module creates:
-- Database tables for storing FAQs and generated images
+- Database tables for storing generated content and images
 - Admin menu in the "Configurer" (Configure) section with sub-menus
 - Default configuration values
+- Cache directory for FAQ caching (`var/cache/faq/`)
 
 ## Configuration
 
@@ -66,9 +68,9 @@ Once installed, configure the module:
 1. Go to **Configurer** → **ITR Blue Boost** → **Settings** in the admin menu
 2. Enter your ITROOM API Key
 3. Enable desired services:
-   - Product FAQ generation
    - Product image generation
-   - Category FAQ generation
+   - Product description generation (optional)
+   - Category description generation (optional)
 
 The remaining API credits are displayed as a badge in the admin header (see **Performance Optimization** below).
 
@@ -113,15 +115,14 @@ This ensures that FAQ accordions work correctly with your theme's Bootstrap impl
 The module uses the following configuration keys (stored in `ps_configuration`):
 
 - `ITRBLUEBOOST_API_KEY`: Your ITROOM API key (required)
-- `ITRBLUEBOOST_ENABLE_PRODUCT_FAQ`: Enable/disable product FAQ generation
 - `ITRBLUEBOOST_ENABLE_PRODUCT_IMAGE`: Enable/disable product image generation
-- `ITRBLUEBOOST_ENABLE_CATEGORY_FAQ`: Enable/disable category FAQ generation
 - `ITRBLUEBOOST_ENABLE_PRODUCT_CONTENT`: Enable/disable product description generation
 - `ITRBLUEBOOST_ENABLE_CATEGORY_CONTENT`: Enable/disable category description generation (new in v1.8.17)
 - `ITRBLUEBOOST_BOOTSTRAP_VERSION`: Selected Bootstrap version (bootstrap4, bootstrap4alpha, or bootstrap5; default: bootstrap5)
 - `ITRBLUEBOOST_API_MODE`: API environment mode (prod or test; default: prod)
 - `ITRBLUEBOOST_CREDITS_REMAINING`: Stores the last known remaining API credits (automatically updated)
 - `ITRBLUEBOOST_UPDATE_CACHE`: Cached GitHub release information for update checks (expires after 1 hour)
+- `ITRBLUEBOOST_FAQ_CACHE_TTL`: FAQ cache time-to-live in seconds (default: 3600 = 1 hour, new in v2.0.0)
 
 ### Module Auto-Updates
 
@@ -182,14 +183,10 @@ The module creates a dropdown menu in the **Configurer** section with the follow
 - **All Product Contents**: Centralized view for managing all AI-generated product descriptions and short descriptions
 - **All Category Contents**: Centralized view for managing all AI-generated category descriptions (new in v1.8.17)
 - **All generated images**: View and manage all AI-generated product images
-- **All product FAQs**: Browse and edit all generated product FAQs
-- **All category FAQs**: Browse and edit all generated category FAQs
 
 Additional contextual tabs are automatically displayed:
-- Product FAQs tab on product edit page (when enabled)
 - AI Images tab on product edit page (when enabled)
 - Content inline generation buttons next to description and short description fields on product/category edit pages (when enabled)
-- Category FAQs tab on category edit page (when enabled)
 - Category Content inline generation button on category edit page (when enabled)
 
 ## Usage
@@ -225,57 +222,24 @@ Product descriptions and short descriptions can be generated directly from the p
 - **Description**: Full product description (long form)
 - **Description courte**: Short description (for list views and summaries)
 
-### Generating Product FAQs
+### Product FAQs (Read-Only from API)
 
-**Individual Product:**
-1. Navigate to a product edit page
-2. Look for the "FAQ" tab with the count of existing FAQs
-3. Click to open FAQ management interface
-4. Use the "Generate FAQ (AI)" button to create new FAQs
+Starting with v2.0.0, product FAQs are now fetched read-only from the external API and cached locally for optimal performance. Admin-side FAQ generation and management have been removed.
 
-**Bulk Operations:**
-1. Go to product list view
-2. Select multiple products
-3. Click "Generate FAQ (AI)" from bulk actions
-4. Confirm to generate FAQs for all selected products
+**How Product FAQs Work:**
 
-### Managing Product FAQs - All Product FAQs Page
+1. **Front-Office Display**: Product FAQs are automatically displayed on product pages via the `displayProductExtraContent` hook
+2. **API Fetching**: When a product page is viewed, FAQs are fetched from the API endpoint `/api/faq/list?type=product&id_product={id}&lang={lang}`
+3. **File-Based Caching**: Fetched FAQs are cached in the file system (`var/cache/faq/`) for subsequent accesses
+4. **Cache TTL**: Cache entries expire after the configured TTL (default: 3600 seconds = 1 hour)
+5. **Language Support**: FAQs are fetched in the current front-office language automatically
 
-The "All Product FAQs" admin page provides comprehensive FAQ management with flexible viewing options and bulk operations.
+**Configuration:**
 
-**View Preferences:**
-- **Grid View** (default): Display FAQs as cards with question, answer, and status information
-- **List View**: Display FAQs as a table with detailed columns
-- View preference is automatically saved to browser localStorage and persists across page reloads
-
-**Filtering and Navigation:**
-- Filter FAQs by status: All, Pending, Accepted, or Rejected
-- Pagination for browsing large numbers of FAQs
-- Search and filter preferences are preserved during navigation
-
-**Bulk Actions:**
-Select multiple FAQs using checkboxes to perform batch operations:
-1. Click individual checkboxes to select specific FAQs, or
-2. Use the "Select All" checkbox in list view to select all FAQs on the current page
-3. A floating bulk action toolbar appears at the bottom when items are selected, displaying:
-   - Selected count indicator
-   - **Accept All**: Approve all selected pending FAQs in one action
-   - **Reject All**: Reject all selected pending FAQs with optional rejection reason
-   - **Delete All**: Remove all selected FAQs permanently
-   - **Deselect All**: Clear all selections
-
-**Checkbox Synchronization:**
-- Checkboxes remain synchronized between grid and list views
-- Selecting an item in grid view automatically checks the corresponding checkbox in list view and vice versa
-- Visual feedback (highlighted cards/rows) shows which items are currently selected
-
-**Single Item Actions:**
-For individual FAQs:
-- **Accept** (pending status): Approve and apply the FAQ
-- **Reject** (pending status): Reject with optional rejection reason sent to the API
-- **Toggle Active/Inactive** (accepted status): Enable or disable the FAQ without deleting
-- **Edit**: Modify the FAQ content
-- **Delete**: Remove the FAQ permanently
+- **FAQ_CACHE_TTL**: Customize the cache expiration time in seconds (default: 3600)
+  - Set to 0 for no caching (FAQs always fetched from API)
+  - Set higher values to reduce API calls and improve performance
+  - Cache is cleared automatically when the module is uninstalled
 
 ### Generating Product Images
 
@@ -297,15 +261,13 @@ When generating images in bulk, the module automatically sends each product's co
 
 ### Bulk Operations Summary
 
-The module supports bulk operations for FAQ, content, and image generation from the product and category list pages:
+The module supports bulk operations for content and image generation from the product and category list pages:
 
 **Product List Bulk Actions:**
-- "Generate FAQ (AI)": Generate FAQs for multiple products simultaneously
 - "Generate Content (AI)": Generate descriptions for multiple products simultaneously
 - "Generate Images (AI)": Generate images for multiple products with the same prompt
 
 **Category List Bulk Actions:**
-- "Generate FAQ (AI)": Generate FAQs for multiple categories simultaneously
 - "Generate Content (AI)": Generate descriptions for multiple categories simultaneously (new in v1.8.17)
 
 These bulk operations use the same asynchronous GenerationJob pattern as single-product operations, ensuring no HTTP timeouts regardless of how many items are processed.
@@ -343,29 +305,27 @@ Category descriptions can be generated directly from the category edit form or t
 **SEO Fields (v1.8.18):**
 The API now returns SEO fields alongside descriptions. On the edit form, each content type (description, additional description, SEO) has its own checkbox to selectively apply fields to the category. Original meta values are displayed for comparison below each SEO field.
 
-### Generating Category FAQs
+### Category FAQs (Read-Only from API)
 
-**Individual Category:**
-1. Navigate to a category edit page
-2. Look for the "FAQ" button/tab
-3. Click to manage category FAQs
-4. Use "Generate FAQ (AI)" to create new content
+Starting with v2.0.0, category FAQs are now fetched read-only from the external API and cached locally for optimal performance. Admin-side FAQ generation and management have been removed.
 
-**Bulk Operations:**
-1. Go to category list view
-2. Select multiple categories
-3. Click "Generate FAQ (AI)" from bulk actions
-4. Optional: Click "Generate Content (AI)" from bulk actions to generate descriptions for multiple categories
+**How Category FAQs Work:**
+
+1. **Front-Office Display**: Category FAQs are automatically displayed in category page footers via the `displayFooterCategory` hook
+2. **API Fetching**: When a category page is viewed, FAQs are fetched from the API endpoint `/api/faq/list?type=category&id_category={id}&lang={lang}`
+3. **File-Based Caching**: Fetched FAQs are cached in the file system (`var/cache/faq/`) for subsequent accesses
+4. **Cache TTL**: Cache entries expire after the configured TTL (default: 3600 seconds = 1 hour)
+5. **Language Support**: FAQs are fetched in the current front-office language automatically
 
 ### Front-Office Display
 
-Generated content automatically appears on the front-office:
+Generated content and FAQs automatically appear on the front-office:
 - **Product Descriptions**: Displayed as part of the product description when accepted
-- **Product FAQs**: Displayed in the product page extra content section
+- **Product FAQs**: Fetched from the API and displayed in the product page extra content section (v2.0.0: read-only from API with file-based caching)
 - **Category Descriptions**: Displayed as part of the category description when accepted (new in v1.8.17)
-- **Category FAQs**: Displayed in the category page footer
+- **Category FAQs**: Fetched from the API and displayed in the category page footer (v2.0.0: read-only from API with file-based caching)
 
-Customers can view and interact with the generated content without any additional configuration. Only accepted and active content is displayed on the front-office.
+Customers can view the generated content and FAQs without any additional configuration. For descriptions, only accepted and active content is displayed on the front-office. For FAQs, all API-fetched content is displayed automatically.
 
 #### Bootstrap Version Compatibility
 
@@ -388,12 +348,10 @@ The `bootstrap_version` variable is automatically passed from the hooks (`hookDi
 The module automatically displays visual badges in admin product and category listing pages, providing a quick overview of AI-generated content for each item.
 
 **Product Listing Badges:**
-- **FAQ** (blue `badge-info`): Shows the count of FAQ entries for the product
 - **Images** (grey `badge-secondary`): Shows the count of generated images
 - **Contenu** (green `badge-success`): Shows the count of generated content items (descriptions)
 
 **Category Listing Badges:**
-- **FAQ** (blue `badge-info`): Shows the count of FAQ entries for the category
 - **Contenu** (green `badge-success`): Shows the count of generated content items (descriptions) (new in v1.8.17)
 
 **How It Works:**
@@ -402,7 +360,7 @@ The module automatically displays visual badges in admin product and category li
 3. Badges update automatically when the listing is reloaded (pagination, filters, sorting)
 4. Badges are only shown for items that have at least one item in any category
 
-This feature requires no configuration — it appears automatically when at least one AI service (FAQ, Images, or Content) is enabled.
+This feature requires no configuration — it appears automatically when at least one AI service (Images or Content) is enabled.
 
 ## Database Tables
 
@@ -414,18 +372,16 @@ The module creates the following database tables:
 - `itrblueboost_category_content`: Category description content data (new in v1.8.17)
 - `itrblueboost_category_content_lang`: Category content in different languages (new in v1.8.17)
 - `itrblueboost_category_content_shop`: Category content to shop associations (new in v1.8.17)
-- `itrblueboost_product_faq`: Product FAQ data
-- `itrblueboost_product_faq_lang`: FAQ content in different languages
-- `itrblueboost_product_faq_shop`: FAQ to shop associations
 - `itrblueboost_product_image`: Generated product images metadata
 - `itrblueboost_product_image_shop`: Image to shop associations
-- `itrblueboost_category_faq`: Category FAQ data
-- `itrblueboost_category_faq_lang`: Category FAQ content by language
-- `itrblueboost_category_faq_shop`: Category FAQ to shop associations
 - `itrblueboost_generation_job`: Tracks async generation job status, progress, and errors
 - `itrblueboost_generation_job_shop`: Generation job to shop associations
 - `itrblueboost_api_log`: Complete log of all API requests
 - `itrblueboost_credit_history`: History of API credit usage
+
+**Note (v2.0.0):** FAQ tables have been removed as FAQs are now fetched read-only from the external API. Upgrade to v2.0.0 automatically drops the following tables if they exist:
+- `itrblueboost_product_faq` (and its _lang, _shop variants)
+- `itrblueboost_category_faq` (and its _lang, _shop variants)
 
 ## Async Image Generation
 
@@ -547,11 +503,11 @@ Navigate to **Configurer** → **ITR Blue Boost** → **API Logs** to view:
 The module registers the following PrestaShop hooks:
 
 - `actionAdminControllerSetMedia`: Load JS/CSS assets on admin pages
-- `displayProductExtraContent`: Display product FAQs and contents on front-office
-- `actionProductDelete`: Clean up FAQs/images/contents when product is deleted
+- `displayProductExtraContent`: Fetch and display product FAQs from API on front-office (v2.0.0: now API-based with caching)
+- `actionProductDelete`: Clean up images/contents when product is deleted
 - `actionObjectImageDeleteAfter`: Update AI image records when PrestaShop images are deleted
-- `displayFooterCategory`: Display category FAQs and contents on front-office
-- `actionCategoryDelete`: Clean up FAQs and contents when category is deleted
+- `displayFooterCategory`: Fetch and display category FAQs from API on front-office (v2.0.0: now API-based with caching)
+- `actionCategoryDelete`: Clean up contents when category is deleted
 - `displayBackOfficeHeader`: Display credit badge in admin header (optimized with Configuration storage)
 - `actionMicrodataProduct`: Provide AI-generated product description to itrmicrodata for Product JSON-LD
 - `actionMicrodataProductList`: Provide AI-generated descriptions for product listing JSON-LD
@@ -565,6 +521,27 @@ The module registers the following PrestaShop hooks:
 - **Multisite**: Fully supported
 
 ## Changelog
+
+### Version 2.0.0 - Major Release
+- **Breaking Change**: All FAQ generation and management removed from admin interface
+- **FAQ Management**: Product and category FAQs are now fetched read-only from the external API (`/api/faq/list`)
+- **FAQ Caching**: Implemented file-based FAQ caching with configurable TTL to improve performance and reduce API calls
+- **Configuration Key**: New `ITRBLUEBOOST_FAQ_CACHE_TTL` setting (default: 3600 seconds)
+- **Cache Directory**: FAQs cached in `var/cache/faq/` directory
+- **Frontend Unchanged**: Front-office FAQ display on product pages and category footers remains fully functional
+- **Removed Features**:
+  - All FAQ admin controllers (viewing, editing, generating, deleting FAQs)
+  - FAQ admin menu items: "All Product FAQs" and "All Category FAQs"
+  - Bulk FAQ generation actions from product/category listing pages
+  - FAQ CRUD operations from product/category edit pages
+  - FAQ database tables (v2.0.0 upgrade automatically drops them)
+- **Removed Files**: 23 files removed including FAQ admin controllers, entities, and CRUD-related classes
+- **New Components**:
+  - `FaqApiService`: Service class for fetching FAQs from API with file-based caching
+  - `DisplayProductExtraContent` hook class: Renders product FAQs from API on product pages
+  - `DisplayFooterCategory` hook class: Renders category FAQs from API in category page footers
+- **Schema Changes**: Dropped all FAQ-related database tables (see **Database Tables** section)
+- **Migration**: v2.0.0 upgrade script automatically cleans up FAQ admin tabs and tables
 
 ### Version 1.8.22
 - **Bugfix**: Fixed category FAQ button not displaying on PrestaShop 8.1+ and 9.x (incompatible DOM selectors for Symfony category form)

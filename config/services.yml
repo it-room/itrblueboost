@@ -103,68 +103,13 @@ services:
         public: true
 
     # ==========================================
-    # FAQ Produit - Services
+    # FAQ API Service
     # ==========================================
 
-    # Form Type FAQ
-    Itrblueboost\Form\ProductFaqType:
-        class: Itrblueboost\Form\ProductFaqType
-        parent: 'form.type.translatable.aware'
-        public: true
-        tags:
-            - { name: form.type }
-
-    # Grid Definition Factory
-    itrblueboost.grid.definition.factory.product_faq:
-        class: Itrblueboost\Grid\Definition\Factory\ProductFaqGridDefinitionFactory
-        parent: 'prestashop.core.grid.definition.factory.abstract_grid_definition'
-        public: true
-
-    # Grid Query Builder
-    itrblueboost.grid.query_builder.product_faq:
-        class: Itrblueboost\Grid\Query\ProductFaqQueryBuilder
+    Itrblueboost\Service\FaqApiService:
+        class: Itrblueboost\Service\FaqApiService
         arguments:
-            - '@doctrine.dbal.default_connection'
-            - '%database_prefix%'
-            - '@prestashop.core.query.doctrine_search_criteria_applicator'
-            - '@=service("prestashop.adapter.legacy.context").getContext().language.id'
-            - '@=service("prestashop.adapter.legacy.context").getContext().shop.id'
-        public: true
-
-    # Grid Data Factory (Doctrine)
-    itrblueboost.grid.data_factory.product_faq_doctrine:
-        class: PrestaShop\PrestaShop\Core\Grid\Data\Factory\DoctrineGridDataFactory
-        arguments:
-            - '@itrblueboost.grid.query_builder.product_faq'
-            - '@prestashop.core.hook.dispatcher'
-            - '@prestashop.core.grid.query.doctrine_query_parser'
-            - 'itrblueboost_product_faq'
-        public: true
-
-    # Grid Data Factory (Decorator)
-    itrblueboost.grid.data_factory.product_faq:
-        class: Itrblueboost\Grid\Data\Factory\ProductFaqGridDataFactory
-        arguments:
-            - '@itrblueboost.grid.data_factory.product_faq_doctrine'
-        public: true
-
-    # Grid Factory
-    itrblueboost.grid.factory.product_faq:
-        class: PrestaShop\PrestaShop\Core\Grid\GridFactory
-        arguments:
-            - '@itrblueboost.grid.definition.factory.product_faq'
-            - '@itrblueboost.grid.data_factory.product_faq'
-            - '@prestashop.core.grid.filter.form_factory'
-            - '@prestashop.core.hook.dispatcher'
-        public: true
-
-    # Controller FAQ
-    Itrblueboost\Controller\Admin\ProductFaqController:
-        class: Itrblueboost\Controller\Admin\ProductFaqController
-        tags:
-            - { name: controller.service_arguments }
-        calls:
-            - [setContainer, ['@service_container']]
+            - '@Itrblueboost\Service\ApiLogger'
         public: true
 
     # ==========================================
@@ -174,71 +119,6 @@ services:
     # Controller Image IA
     Itrblueboost\Controller\Admin\ProductImageController:
         class: Itrblueboost\Controller\Admin\ProductImageController
-        tags:
-            - { name: controller.service_arguments }
-        calls:
-            - [setContainer, ['@service_container']]
-        public: true
-
-    # ==========================================
-    # FAQ Catégorie - Services
-    # ==========================================
-
-    # Form Type FAQ Catégorie
-    Itrblueboost\Form\CategoryFaqType:
-        class: Itrblueboost\Form\CategoryFaqType
-        parent: 'form.type.translatable.aware'
-        public: true
-        tags:
-            - { name: form.type }
-
-    # Grid Definition Factory
-    itrblueboost.grid.definition.factory.category_faq:
-        class: Itrblueboost\Grid\Definition\Factory\CategoryFaqGridDefinitionFactory
-        parent: 'prestashop.core.grid.definition.factory.abstract_grid_definition'
-        public: true
-
-    # Grid Query Builder
-    itrblueboost.grid.query_builder.category_faq:
-        class: Itrblueboost\Grid\Query\CategoryFaqQueryBuilder
-        arguments:
-            - '@doctrine.dbal.default_connection'
-            - '%database_prefix%'
-            - '@prestashop.core.query.doctrine_search_criteria_applicator'
-            - '@=service("prestashop.adapter.legacy.context").getContext().language.id'
-            - '@=service("prestashop.adapter.legacy.context").getContext().shop.id'
-        public: true
-
-    # Grid Data Factory (Doctrine)
-    itrblueboost.grid.data_factory.category_faq_doctrine:
-        class: PrestaShop\PrestaShop\Core\Grid\Data\Factory\DoctrineGridDataFactory
-        arguments:
-            - '@itrblueboost.grid.query_builder.category_faq'
-            - '@prestashop.core.hook.dispatcher'
-            - '@prestashop.core.grid.query.doctrine_query_parser'
-            - 'itrblueboost_category_faq'
-        public: true
-
-    # Grid Data Factory (Decorator)
-    itrblueboost.grid.data_factory.category_faq:
-        class: Itrblueboost\Grid\Data\Factory\CategoryFaqGridDataFactory
-        arguments:
-            - '@itrblueboost.grid.data_factory.category_faq_doctrine'
-        public: true
-
-    # Grid Factory
-    itrblueboost.grid.factory.category_faq:
-        class: PrestaShop\PrestaShop\Core\Grid\GridFactory
-        arguments:
-            - '@itrblueboost.grid.definition.factory.category_faq'
-            - '@itrblueboost.grid.data_factory.category_faq'
-            - '@prestashop.core.grid.filter.form_factory'
-            - '@prestashop.core.hook.dispatcher'
-        public: true
-
-    # Controller FAQ Catégorie
-    Itrblueboost\Controller\Admin\CategoryFaqController:
-        class: Itrblueboost\Controller\Admin\CategoryFaqController
         tags:
             - { name: controller.service_arguments }
         calls:
@@ -269,33 +149,6 @@ services:
     # Controller Generated Images
     Itrblueboost\Controller\Admin\GeneratedImagesController:
         class: Itrblueboost\Controller\Admin\GeneratedImagesController
-        tags:
-            - { name: controller.service_arguments }
-        calls:
-            - [setContainer, ['@service_container']]
-        public: true
-
-    # Controller Generated FAQs (deprecated - use AllProductFaqsController/AllCategoryFaqsController)
-    Itrblueboost\Controller\Admin\GeneratedFaqsController:
-        class: Itrblueboost\Controller\Admin\GeneratedFaqsController
-        tags:
-            - { name: controller.service_arguments }
-        calls:
-            - [setContainer, ['@service_container']]
-        public: true
-
-    # Controller All Product FAQs
-    Itrblueboost\Controller\Admin\AllProductFaqsController:
-        class: Itrblueboost\Controller\Admin\AllProductFaqsController
-        tags:
-            - { name: controller.service_arguments }
-        calls:
-            - [setContainer, ['@service_container']]
-        public: true
-
-    # Controller All Category FAQs
-    Itrblueboost\Controller\Admin\AllCategoryFaqsController:
-        class: Itrblueboost\Controller\Admin\AllCategoryFaqsController
         tags:
             - { name: controller.service_arguments }
         calls:
