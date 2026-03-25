@@ -2,6 +2,13 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [1.8.23] - 2026-03-25
+
+### Fixed
+- Correction critique : le fichier JS du bouton FAQ catégorie n'était jamais chargé sur PS 8.x car `addJS()` était à l'intérieur du `try/catch` du router — si `$router->generate()` échouait (cache routes non chaud), tout le bloc était silencieusement ignoré
+- Extraction de la logique de chargement des assets catégorie dans une méthode dédiée `loadCategoryEditAssets()` avec `addJS()`/`addCSS()` en dehors du try/catch
+- Chaque appel `$router->generate()` est maintenant wrappé individuellement pour que l'échec d'une route n'empêche pas les autres
+
 ## [1.8.22] - 2026-03-25
 
 ### Fixed
