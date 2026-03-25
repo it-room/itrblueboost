@@ -1,6 +1,7 @@
 /**
  * ITROOM API - Admin Category Footer Buttons
- * Injects "Generate FAQs" button in the PS8 category page footer
+ * Injects "FAQs" button in the PS8/PS1.7 category page footer
+ * Compatible with PrestaShop 8.x, 8.1+, 9.x and 1.7.x
  */
 (function() {
     'use strict';
@@ -16,13 +17,25 @@
     });
 
     /**
-     * Check if we are on the category edit page
+     * Check if we are on the category edit page (PS8+, PS1.7.8 Symfony or PS1.7 legacy)
      */
     function isCategoryEditPage() {
         var url = window.location.href;
-        var isCategoriesPage = url.includes('/sell/catalog/categories/');
-        var isEditPage = url.includes('/edit') || url.match(/\/categories\/\d+$/);
-        return isCategoriesPage && isEditPage;
+
+        // PS8+ / PS1.7.8+ Symfony category page: /sell/catalog/categories/{id}/edit
+        var isCategoriesPage = url.indexOf('/sell/catalog/categories/') !== -1;
+        if (isCategoriesPage) {
+            var isEditPage = url.indexOf('/edit') !== -1 || /\/categories\/\d+(?:\?|#|$)/.test(url);
+            if (isEditPage) {
+                return true;
+            }
+        }
+
+        // PS 1.7.x legacy category page
+        var isLegacyPage = url.indexOf('controller=AdminCategories') !== -1
+            && (url.indexOf('updatecategory') !== -1 || url.indexOf('addcategory') !== -1);
+
+        return isLegacyPage;
     }
 
     /**
@@ -35,24 +48,7 @@
         var interval = setInterval(function() {
             attempts++;
 
-            // Try multiple selectors for different PS8 layouts
-            var footer = document.querySelector('.form-footer');
-
-            if (!footer) {
-                footer = document.querySelector('.card-footer');
-            }
-
-            if (!footer) {
-                footer = document.querySelector('.btn-group-action');
-            }
-
-            if (!footer) {
-                // Look for the save button's parent
-                var saveBtn = document.querySelector('button[type="submit"][name="save"], #category_footer_save');
-                if (saveBtn) {
-                    footer = saveBtn.parentElement;
-                }
-            }
+            var footer = findFooter();
 
             if (footer) {
                 clearInterval(interval);
@@ -61,6 +57,72 @@
                 clearInterval(interval);
             }
         }, 100);
+    }
+
+    /**
+     * Find the form footer element across PS versions
+     */
+    function findFooter() {
+        // PS8.1+/9: Symfony form footer with ID pattern category_footer
+        var footer = document.getElementById('category_footer');
+        if (footer) {
+            return footer;
+        }
+
+        // PS8+: form-action-bar (fixed bottom action bar)
+        footer = document.querySelector('.form-action-bar');
+        if (footer) {
+            return footer;
+        }
+
+        // PS8: card-footer inside main form card
+        var mainForm = document.querySelector('form[name="category"]');
+        if (mainForm) {
+            footer = mainForm.querySelector('.card-footer');
+            if (footer) {
+                return footer;
+            }
+        }
+
+        // PS8/PS1.7: generic form footer
+        footer = document.querySelector('.form-footer');
+        if (footer) {
+            return footer;
+        }
+
+        // PS1.7 legacy: card-footer (first match in main content)
+        var mainContent = document.getElementById('content');
+        if (mainContent) {
+            footer = mainContent.querySelector('.card-footer');
+            if (footer) {
+                return footer;
+            }
+        }
+
+        // Fallback: any card-footer
+        footer = document.querySelector('.card-footer');
+        if (footer) {
+            return footer;
+        }
+
+        // PS1.7 legacy: panel-footer
+        footer = document.querySelector('.panel-footer');
+        if (footer) {
+            return footer;
+        }
+
+        // Fallback: find save button and use its parent
+        var saveBtn = document.querySelector(
+            '#category_footer_save, ' +
+            'button[type="submit"][name="submitAddcategory"], ' +
+            'button[type="submit"][name="submitAddcategoryAndStay"], ' +
+            'button[type="submit"][name="category[save]"]'
+        );
+        if (saveBtn) {
+            return saveBtn.parentElement;
+        }
+
+        return null;
     }
 
     /**
@@ -82,7 +144,7 @@
         var button = document.createElement('a');
         button.id = 'itrblueboost-category-faq-btn';
         button.href = faqUrl;
-        button.className = 'btn btn-outline-secondary mr-2';
+        button.className = 'btn btn-outline-secondary itrblueboost-btn mr-2';
         button.title = 'Manage category FAQs';
         button.innerHTML = '<i class="material-icons">help_outline</i> FAQ (' + faqCount + ')';
 

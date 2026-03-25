@@ -43,7 +43,7 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 
 ## Requirements
 
-- PrestaShop: 1.7.8.2 to 8.99.99
+- PrestaShop: 1.7.8.2 to 9.x
 - PHP: 7.1 or higher
 - ITROOM API Key (required for functionality)
 
@@ -559,12 +559,17 @@ The module registers the following PrestaShop hooks:
 
 ## Compatibility
 
-- **PrestaShop Versions**: 1.7.8.2 to 8.99.99
+- **PrestaShop Versions**: 1.7.8.2 to 9.x
 - **PHP Versions**: 7.1+ (tested on 7.1, 7.2, 7.3, 7.4, 8.0, 8.1, 8.2)
 - **Multi-shop**: Fully supported
 - **Multisite**: Fully supported
 
 ## Changelog
+
+### Version 1.8.22
+- **Bugfix**: Fixed category FAQ button not displaying on PrestaShop 8.1+ and 9.x (incompatible DOM selectors for Symfony category form)
+- **Bugfix**: Added legacy category page URL detection for PrestaShop 1.7.x compatibility
+- **Enhancement**: Rewrote `admin-category-toolbar.js` with robust multi-version DOM selectors (PS 1.7, 8.0, 8.1+, 9.x)
 
 ### Version 1.8.21
 - **Bugfix**: Fixed product/category list page detection regex that incorrectly excluded URLs with pagination parameters (e.g., `/products/0/20/name_category/asc`)
@@ -749,7 +754,7 @@ The module registers the following PrestaShop hooks:
 - Implemented dynamic class aliasing for DataColumn, ActionColumn, and BulkActionColumn to support both:
   - PrestaShop 8.x: `PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\DataColumn`
   - PrestaShop 1.7.x: `PrestaShop\PrestaShop\Core\Grid\Column\Type\DataColumn`
-- Grid definitions now work seamlessly across PrestaShop 1.7.8.2 to 8.99.99
+- Grid definitions now work seamlessly across PrestaShop 1.7.8.2 to 9.x
 
 ### Version 1.4.0
 - Aligned "All Product FAQs" page with "All Category FAQs" page for consistent UI/UX

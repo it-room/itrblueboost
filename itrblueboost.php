@@ -45,7 +45,7 @@ class Itrblueboost extends Module
     {
         $this->name = 'itrblueboost';
         $this->tab = 'administration';
-        $this->version = '1.8.21';
+        $this->version = '1.8.22';
         $this->author = 'ITROOM';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
@@ -164,10 +164,14 @@ class Itrblueboost extends Module
             return;
         }
 
-        // Check if we're on category edit page
+        // Check if we're on category edit page (PS8+ Symfony or PS1.7 legacy)
         $isCategoryPage = strpos($requestUri, '/sell/catalog/categories/') !== false;
 
-        if ($isCategoryPage && ($categoryFaqServiceActive || $categoryContentServiceActive)) {
+        // PS 1.7.x legacy category page
+        $isLegacyCategoryPage = strpos($requestUri, 'controller=AdminCategories') !== false
+            && (strpos($requestUri, 'updatecategory') !== false || strpos($requestUri, 'addcategory') !== false);
+
+        if (($isCategoryPage || $isLegacyCategoryPage) && ($categoryFaqServiceActive || $categoryContentServiceActive)) {
             $idCategory = $this->getCategoryIdFromUrl($requestUri);
 
             if ($idCategory > 0) {

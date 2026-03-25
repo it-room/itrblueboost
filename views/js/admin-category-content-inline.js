@@ -17,9 +17,19 @@
 
     function isCategoryEditPage() {
         var url = window.location.href;
+
+        // PS8+ / PS1.7.8+ Symfony category page
         var isCategoriesPage = url.indexOf('/sell/catalog/categories/') !== -1;
-        var isEditPage = url.indexOf('/edit') !== -1 || /\/categories\/\d+$/.test(url);
-        return isCategoriesPage && isEditPage;
+        if (isCategoriesPage) {
+            var isEditPage = url.indexOf('/edit') !== -1 || /\/categories\/\d+(?:\?|#|$)/.test(url);
+            if (isEditPage) {
+                return true;
+            }
+        }
+
+        // PS 1.7.x legacy category page
+        return url.indexOf('controller=AdminCategories') !== -1
+            && (url.indexOf('updatecategory') !== -1 || url.indexOf('addcategory') !== -1);
     }
 
     function waitForDescriptionFields(callback) {
