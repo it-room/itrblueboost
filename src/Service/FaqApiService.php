@@ -36,7 +36,7 @@ class FaqApiService
             return $cached;
         }
 
-        $faqs = $this->fetchFromApi('product', 'id_product', $idProduct, $langIso);
+        $faqs = $this->fetchFromApi('product', 'product_id', $idProduct, $langIso);
 
         $result = [];
         foreach ($faqs as $index => $faq) {

@@ -55,7 +55,7 @@ class DisplayProductExtraContent
         ]);
 
         $extraContent = new ProductExtraContent();
-        $extraContent->setTitle($this->module->trans('FAQ', [], 'Modules.Itrblueboost.Shop'));
+        $extraContent->setTitle('FAQ');
         $extraContent->setContent(
             $this->module->fetch('module:itrblueboost/views/templates/hook/product_faq.tpl')
         );
