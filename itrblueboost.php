@@ -38,6 +38,7 @@ class Itrblueboost extends Module
     public const CONFIG_WEBSERVICE_KEY_ID = 'ITRBLUEBOOST_WEBSERVICE_KEY_ID';
     public const CONFIG_UPDATE_CACHE = 'ITRBLUEBOOST_UPDATE_CACHE';
     public const CONFIG_FAQ_CACHE_TTL = 'ITRBLUEBOOST_FAQ_CACHE_TTL';
+    public const CONFIG_FAQ_CACHE_ENABLED = 'ITRBLUEBOOST_FAQ_CACHE_ENABLED';
 
     public const API_BASE_URL_PROD = 'https://api.blueboost.fr';
     public const API_BASE_URL_TEST = 'https://blueboost.itroom.fr';
@@ -46,7 +47,7 @@ class Itrblueboost extends Module
     {
         $this->name = 'itrblueboost';
         $this->tab = 'administration';
-        $this->version = '2.0.1';
+        $this->version = '2.0.3';
         $this->author = 'ITROOM';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
@@ -83,7 +84,9 @@ class Itrblueboost extends Module
             && $this->registerHook('displayBackOfficeHeader')
             && $this->registerHook('actionMicrodataProduct')
             && $this->registerHook('actionMicrodataProductList')
-            && $this->registerHook('actionMicrodataProductListPreload');
+            && $this->registerHook('actionMicrodataProductListPreload')
+            && $this->registerHook('actionClearCache')
+            && $this->registerHook('displayCMSDisputeInformation');
     }
 
     public function uninstall(): bool
@@ -645,6 +648,32 @@ class Itrblueboost extends Module
     public function hookActionMicrodataProductListPreload(array $params): void
     {
         $hook = new \Itrblueboost\Hooks\ActionMicrodataProductListPreload($this);
+        $hook->execute($params);
+    }
+
+    /**
+     * Hook to display FAQ content on CMS pages (Front-Office).
+     *
+     * @param array<string, mixed> $params Hook parameters
+     *
+     * @return string HTML content
+     */
+    public function hookDisplayCMSDisputeInformation(array $params): string
+    {
+        $faqService = new FaqApiService(new \Itrblueboost\Service\ApiLogger());
+        $hook = new \Itrblueboost\Hooks\DisplayCMSDisputeInformation($this, $faqService);
+
+        return $hook->execute($params);
+    }
+
+    /**
+     * Hook to clear module caches when PrestaShop cache is cleared.
+     *
+     * @param array<string, mixed> $params Hook parameters
+     */
+    public function hookActionClearCache(array $params): void
+    {
+        $hook = new \Itrblueboost\Hooks\ActionClearCache($this);
         $hook->execute($params);
     }
 }

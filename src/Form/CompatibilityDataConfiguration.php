@@ -24,6 +24,7 @@ class CompatibilityDataConfiguration implements DataConfigurationInterface
         return [
             'bootstrap_version' => Configuration::get(Itrblueboost::CONFIG_BOOTSTRAP_VERSION) ?: 'bootstrap5',
             'api_mode' => Configuration::get(Itrblueboost::CONFIG_API_MODE) ?: 'prod',
+            'faq_cache_enabled' => (bool) Configuration::get(Itrblueboost::CONFIG_FAQ_CACHE_ENABLED),
         ];
     }
 
@@ -54,6 +55,11 @@ class CompatibilityDataConfiguration implements DataConfigurationInterface
         Configuration::updateValue(
             Itrblueboost::CONFIG_API_MODE,
             $configuration['api_mode']
+        );
+
+        Configuration::updateValue(
+            Itrblueboost::CONFIG_FAQ_CACHE_ENABLED,
+            (bool) ($configuration['faq_cache_enabled'] ?? true)
         );
 
         return $errors;

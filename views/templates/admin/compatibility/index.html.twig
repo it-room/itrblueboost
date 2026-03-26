@@ -84,6 +84,19 @@
                     </div>
                 </div>
 
+                <div class="form-group row">
+                    <label class="form-control-label col-lg-3" for="{{ form.faq_cache_enabled.vars.id }}">
+                        {{ form_label(form.faq_cache_enabled) }}
+                    </label>
+                    <div class="col-lg-9">
+                        {{ form_widget(form.faq_cache_enabled, {'attr': {'class': 'form-control'}}) }}
+                        {% if form.faq_cache_enabled.vars.help is defined and form.faq_cache_enabled.vars.help %}
+                            <small class="form-text text-muted">{{ form.faq_cache_enabled.vars.help }}</small>
+                        {% endif %}
+                        {{ form_errors(form.faq_cache_enabled) }}
+                    </div>
+                </div>
+
                 <div class="card-footer">
                     <div class="d-flex justify-content-end">
                         <button type="submit" class="btn btn-primary">

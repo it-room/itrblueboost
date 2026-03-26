@@ -31,9 +31,11 @@ class FaqApiService
         $idShop = (int) Context::getContext()->shop->id;
         $cacheKey = $this->getCacheKey('product', $idProduct, $langIso, $idShop);
 
-        $cached = $this->getFromCache($cacheKey);
-        if ($cached !== null) {
-            return $cached;
+        if ($this->isCacheEnabled()) {
+            $cached = $this->getFromCache($cacheKey);
+            if ($cached !== null) {
+                return $cached;
+            }
         }
 
         $faqs = $this->fetchFromApi('product', 'product_id', $idProduct, $langIso);
@@ -47,7 +49,9 @@ class FaqApiService
             ];
         }
 
-        $this->writeToCache($cacheKey, $result);
+        if ($this->isCacheEnabled()) {
+            $this->writeToCache($cacheKey, $result);
+        }
 
         return $result;
     }
@@ -62,9 +66,11 @@ class FaqApiService
         $idShop = (int) Context::getContext()->shop->id;
         $cacheKey = $this->getCacheKey('category', $idCategory, $langIso, $idShop);
 
-        $cached = $this->getFromCache($cacheKey);
-        if ($cached !== null) {
-            return $cached;
+        if ($this->isCacheEnabled()) {
+            $cached = $this->getFromCache($cacheKey);
+            if ($cached !== null) {
+                return $cached;
+            }
         }
 
         $faqs = $this->fetchFromApi('category', 'id_category', $idCategory, $langIso);
@@ -78,7 +84,44 @@ class FaqApiService
             ];
         }
 
-        $this->writeToCache($cacheKey, $result);
+        if ($this->isCacheEnabled()) {
+            $this->writeToCache($cacheKey, $result);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Get CMS page FAQs from API (cached).
+     *
+     * @return array<int, array{question: string, answer: string, id_itrblueboost_cms_faq: int}>
+     */
+    public function getCmsFaqs(int $idCms, string $langIso): array
+    {
+        $idShop = (int) Context::getContext()->shop->id;
+        $cacheKey = $this->getCacheKey('cms', $idCms, $langIso, $idShop);
+
+        if ($this->isCacheEnabled()) {
+            $cached = $this->getFromCache($cacheKey);
+            if ($cached !== null) {
+                return $cached;
+            }
+        }
+
+        $faqs = $this->fetchFromApi('cms', 'id_cms', $idCms, $langIso);
+
+        $result = [];
+        foreach ($faqs as $index => $faq) {
+            $result[] = [
+                'question' => $faq['question'] ?? '',
+                'answer' => $faq['answer'] ?? '',
+                'id_itrblueboost_cms_faq' => $index + 1,
+            ];
+        }
+
+        if ($this->isCacheEnabled()) {
+            $this->writeToCache($cacheKey, $result);
+        }
 
         return $result;
     }
@@ -190,6 +233,11 @@ class FaqApiService
     private function getCachePath(): string
     {
         return _PS_MODULE_DIR_ . 'itrblueboost/var/cache/faq/';
+    }
+
+    private function isCacheEnabled(): bool
+    {
+        return (bool) Configuration::get(Itrblueboost::CONFIG_FAQ_CACHE_ENABLED);
     }
 
     private function getCacheTtl(): int

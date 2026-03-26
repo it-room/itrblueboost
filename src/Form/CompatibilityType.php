@@ -44,6 +44,18 @@ class CompatibilityType extends TranslatorAwareType
                     'Test (blueboost.itroom.fr)' => 'test',
                 ],
                 'required' => true,
+            ])
+            ->add('faq_cache_enabled', ChoiceType::class, [
+                'label' => $this->trans('Cache', 'Modules.Itrblueboost.Admin'),
+                'help' => $this->trans(
+                    'Enable file-based caching for FAQ API calls. Disabling this will fetch FAQs from the API on every page load.',
+                    'Modules.Itrblueboost.Admin'
+                ),
+                'choices' => [
+                    $this->trans('Yes', 'Admin.Global') => 1,
+                    $this->trans('No', 'Admin.Global') => 0,
+                ],
+                'required' => true,
             ]);
     }
 }

@@ -2,6 +2,25 @@
 
 Toutes les modifications notables de ce module sont documentées dans ce fichier.
 
+## [2.0.3] - 2026-03-26
+
+### Added
+- Ajout du hook displayCMSDisputeInformation avec classe de responsabilité DisplayCMSDisputeInformation pour afficher les FAQs sur les pages CMS
+- Nouvelle méthode FaqApiService::getCmsFaqs() pour récupérer les FAQs de type "cms" depuis l'API
+- Template front-office cms_faq.tpl avec support Bootstrap 4/5 et Schema.org FAQPage
+- Script d'upgrade upgrade-2.0.3.php (enregistrement du hook displayCMSDisputeInformation)
+
+## [2.0.2] - 2026-03-26
+
+### Added
+- Ajout du hook actionClearCache avec classe de responsabilité ActionClearCache pour purger le cache FAQ et le cache de mise à jour du module lors du nettoyage du cache PrestaShop depuis le back-office
+- Ajout du switch FAQ cache dans la page Paramètre (compatibilité) pour activer/désactiver le cache des appels API FAQ
+- Nouvelle configuration ITRBLUEBOOST_FAQ_CACHE_ENABLED
+- Script d'upgrade upgrade-2.0.2.php (enregistrement du hook actionClearCache, config cache, masquage tab)
+
+### Changed
+- Le lien "Compatibilité" est retiré du menu admin, remplacé par un bouton "Paramètre" dans la toolbar de la page Configuration
+
 ## [2.0.0] - 2026-03-25
 
 ### Added

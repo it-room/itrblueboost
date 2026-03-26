@@ -491,16 +491,15 @@ class Installer
                 'wording_domain' => 'Modules.Itrblueboost.Admin',
                 'name' => 'All Contenus catégories',
             ],
-            // Sous-menu: Compatibility
+            // Tab caché: Compatibility (accessible via bouton "Paramètre")
             [
                 'class_name' => 'AdminItrblueboostCompatibility',
                 'route_name' => 'itrblueboost_compatibility',
-                'visible' => true,
-                'parent_class_name' => 'AdminItrblueboostParent',
+                'visible' => false,
+                'parent_class_name' => -1,
                 'wording' => 'Compatibility',
                 'wording_domain' => 'Modules.Itrblueboost.Admin',
                 'name' => 'Compatibilité',
-                'icon' => 'settings_suggest',
             ],
             [
                 'class_name' => 'AdminItrblueboostProductImage',
@@ -556,7 +555,8 @@ class Installer
             && Configuration::updateValue(Itrblueboost::CONFIG_CREDITS_REMAINING, '')
             && Configuration::updateValue(Itrblueboost::CONFIG_BOOTSTRAP_VERSION, 'bootstrap5')
             && Configuration::updateValue(Itrblueboost::CONFIG_API_MODE, 'prod')
-            && Configuration::updateValue(Itrblueboost::CONFIG_FAQ_CACHE_TTL, 3600);
+            && Configuration::updateValue(Itrblueboost::CONFIG_FAQ_CACHE_TTL, 3600)
+            && Configuration::updateValue(Itrblueboost::CONFIG_FAQ_CACHE_ENABLED, 1);
     }
 
     /**
@@ -573,7 +573,8 @@ class Installer
             && Configuration::deleteByName(Itrblueboost::CONFIG_CREDITS_REMAINING)
             && Configuration::deleteByName(Itrblueboost::CONFIG_BOOTSTRAP_VERSION)
             && Configuration::deleteByName(Itrblueboost::CONFIG_API_MODE)
-            && Configuration::deleteByName(Itrblueboost::CONFIG_WEBSERVICE_KEY_ID);
+            && Configuration::deleteByName(Itrblueboost::CONFIG_WEBSERVICE_KEY_ID)
+            && Configuration::deleteByName(Itrblueboost::CONFIG_FAQ_CACHE_ENABLED);
     }
 
     /**

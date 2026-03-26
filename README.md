@@ -17,6 +17,7 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 - **Category Description Generation**: Generate AI-powered category descriptions, additional descriptions, and SEO fields (meta title, meta description, meta keywords) (new in v1.8.17, SEO in v1.8.18)
 - **Product FAQ Display**: Fetch and display frequently asked questions for products from the external API with file-based caching (read-only, v2.0.0)
 - **Category FAQ Display**: Fetch and display FAQs at the category level from the external API with file-based caching (read-only, v2.0.0)
+- **CMS Page FAQ Display**: Fetch and display FAQs on CMS content pages from the external API with file-based caching (read-only, v2.0.3)
 - **AI Image Generation**: Generate product images using ITROOM API with async processing to prevent HTTP 504 timeouts
 - **Bulk Image Generation with Cover Images**: Automatically sends product cover images to the API for improved generation results
 - **Async Generation Jobs**: Image generation runs in background via Symfony command with progress tracking
@@ -41,6 +42,7 @@ ITR Blue Boost is a PrestaShop module that seamlessly integrates with the ITROOM
 - **itrmicrodata Integration**: Hooks into itrmicrodata module to provide AI-generated product descriptions for JSON-LD structured data (Product schema on product pages and ItemList schema on listings), with batch preloading to avoid N+1 queries (new in v1.8.19)
 - **Automatic Webservice Key**: Creates a PrestaShop webservice key at install/upgrade with full permissions on all resources, syncs with ITROOM API automatically (new in v1.8.20)
 - **Module Auto-Updates**: Automatically checks for new GitHub releases and notifies admins when updates are available; one-click update installation with CSRF protection (new in v1.8.21)
+- **Cache Management**: Toggle FAQ caching on/off from Settings page; module caches are automatically cleared when PrestaShop cache is cleared (new in v2.0.2)
 
 ## Requirements
 
@@ -78,7 +80,7 @@ The remaining API credits are displayed as a badge in the admin header (see **Pe
 
 To ensure compatibility with your site theme:
 
-1. Go to **Configurer** → **ITR Blue Boost** → **Compatibility** in the admin menu
+1. From the Configuration page, click the **Paramètre** button in the toolbar
 2. Select the Bootstrap version used by your theme from the dropdown:
    - **Bootstrap 4**: Standard Bootstrap 4 framework
    - **Bootstrap 4 Alpha**: Bootstrap 4 alpha version
@@ -91,7 +93,7 @@ The selected version is stored in the configuration and affects frontend present
 
 Configure which ITROOM API environment the module uses:
 
-1. Go to **Configurer** → **ITR Blue Boost** → **Compatibility** in the admin menu
+1. From the Configuration page, click the **Paramètre** button in the toolbar
 2. Select your desired API mode from the dropdown:
    - **Production** (default): Uses `apitr-sf.itroom.fr` - for live operations
    - **Test**: Uses `blueboost.itroom.fr` - for testing and development
@@ -123,6 +125,7 @@ The module uses the following configuration keys (stored in `ps_configuration`):
 - `ITRBLUEBOOST_CREDITS_REMAINING`: Stores the last known remaining API credits (automatically updated)
 - `ITRBLUEBOOST_UPDATE_CACHE`: Cached GitHub release information for update checks (expires after 1 hour)
 - `ITRBLUEBOOST_FAQ_CACHE_TTL`: FAQ cache time-to-live in seconds (default: 3600 = 1 hour, new in v2.0.0)
+- `ITRBLUEBOOST_FAQ_CACHE_ENABLED`: Enable/disable FAQ file-based caching (default: enabled, new in v2.0.2)
 
 ### Module Auto-Updates
 
@@ -512,6 +515,8 @@ The module registers the following PrestaShop hooks:
 - `actionMicrodataProduct`: Provide AI-generated product description to itrmicrodata for Product JSON-LD
 - `actionMicrodataProductList`: Provide AI-generated descriptions for product listing JSON-LD
 - `actionMicrodataProductListPreload`: Batch preload product content before listing loop to avoid N+1 queries
+- `actionClearCache`: Clear module caches (FAQ file cache and update check cache) when PrestaShop cache is cleared (new in v2.0.2)
+- `displayCMSDisputeInformation`: Fetch and display CMS page FAQs from API on front-office (new in v2.0.3)
 
 ## Compatibility
 
